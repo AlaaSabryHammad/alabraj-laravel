@@ -1,0 +1,147 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class Material extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'description',
+        'category',
+        'unit_of_measure',
+        'unit_price',
+        'minimum_stock',
+        'maximum_stock',
+        'current_stock',
+        'supplier_name',
+        'supplier_contact',
+        'brand',
+        'model',
+        'specifications',
+        'status',
+        'storage_location',
+        'last_purchase_date',
+        'last_purchase_price',
+        'notes'
+    ];
+
+    protected $casts = [
+        'specifications' => 'array',
+        'unit_price' => 'decimal:2',
+        'last_purchase_price' => 'decimal:2',
+        'last_purchase_date' => 'date'
+    ];
+
+    /**
+     * Get the unit (returns unit_of_measure for backwards compatibility)
+     */
+    public function getUnitAttribute(): ?string
+    {
+        return $this->unit_of_measure;
+    }
+
+    /**
+     * Get the effective unit for display (ensures we always have a unit)
+     */
+    public function getEffectiveUnitAttribute(): ?string
+    {
+        return $this->unit_of_measure;
+    }
+
+    /**
+     * Get the status in Arabic
+     */
+    public function getStatusTextAttribute(): string
+    {
+        return match($this->status) {
+            'active' => 'نشط',
+            'inactive' => 'غير نشط',
+            'out_of_stock' => 'نفذ المخزون',
+            'discontinued' => 'متوقف',
+            default => $this->status
+        };
+    }
+
+    /**
+     * Get the category name in Arabic
+     */
+    public function getCategoryNameAttribute(): string
+    {
+        return match($this->category) {
+            'cement' => 'أسمنت',
+            'steel' => 'حديد',
+            'aggregate' => 'خرسانة',
+            'tools' => 'أدوات',
+            'electrical' => 'كهربائية',
+            'plumbing' => 'سباكة',
+            'other' => 'أخرى',
+            default => $this->category
+        };
+    }
+
+    /**
+     * Check if material is low on stock
+     */
+    public function isLowStock(): bool
+    {
+        return $this->current_stock <= $this->minimum_stock && $this->current_stock > 0;
+    }
+
+    /**
+     * Check if material is out of stock
+     */
+    public function isOutOfStock(): bool
+    {
+        return $this->current_stock == 0;
+    }
+
+    /**
+     * Get stock status
+     */
+    public function getStockStatusAttribute(): string
+    {
+        if ($this->current_stock == 0) {
+            return 'نفذ المخزون';
+        } elseif ($this->isLowStock()) {
+            return 'مخزون منخفض';
+        } else {
+            return 'متوفر';
+        }
+    }
+
+    /**
+     * Get the status in Arabic (method format)
+     */
+    public function getStatusInArabic(): string
+    {
+        return match($this->status) {
+            'active' => 'نشط',
+            'inactive' => 'غير نشط',
+            'out_of_stock' => 'نفذ المخزون',
+            'discontinued' => 'متوقف',
+            default => $this->status
+        };
+    }
+
+    /**
+     * Get the category name in Arabic (method format)
+     */
+    public function getCategoryInArabic(): string
+    {
+        return match($this->category) {
+            'cement' => 'أسمنت',
+            'steel' => 'حديد',
+            'aggregate' => 'خرسانة',
+            'tools' => 'أدوات',
+            'electrical' => 'كهربائية',
+            'plumbing' => 'سباكة',
+            'other' => 'أخرى',
+            default => $this->category
+        };
+    }
+}

@@ -1,0 +1,330 @@
+@extends('layouts.app')
+
+@section('title', 'تعديل الشاحنة - ' . $externalTruck->plate_number)
+
+@section('content')
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">تعديل الشاحنة - {{ $externalTruck->plate_number }}</h1>
+                <p class="text-gray-600">تحديث بيانات الشاحنة والسائق</p>
+            </div>
+            <div class="flex space-x-3 space-x-reverse">
+                <a href="{{ route('external-trucks.show', $externalTruck) }}"
+                   class="bg-gray-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-600 transition-all duration-200 flex items-center">
+                    <i class="ri-eye-line ml-2"></i>
+                    عرض التفاصيل
+                </a>
+                <a href="{{ route('external-trucks.index') }}"
+                   class="bg-gray-400 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-500 transition-all duration-200 flex items-center">
+                    <i class="ri-arrow-right-line ml-2"></i>
+                    العودة إلى القائمة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-xl font-semibold text-gray-900">تحديث بيانات الشاحنة</h2>
+        </div>
+
+        <form action="{{ route('external-trucks.update', $externalTruck) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+            @csrf
+            @method('PUT')
+
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Plate Number -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">رقم اللوحة *</label>
+                    <input type="text"
+                           name="plate_number"
+                           value="{{ old('plate_number', $externalTruck->plate_number) }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 @error('plate_number') border-red-500 @enderror"
+                           placeholder="مثال: أ ب ج 1234"
+                           required>
+                    @error('plate_number')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">الحالة *</label>
+                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 @error('status') border-red-500 @enderror" required>
+                        <option value="">اختر الحالة</option>
+                        <option value="active" {{ old('status', $externalTruck->status) == 'active' ? 'selected' : '' }}>نشطة</option>
+                        <option value="inactive" {{ old('status', $externalTruck->status) == 'inactive' ? 'selected' : '' }}>غير نشطة</option>
+                        <option value="maintenance" {{ old('status', $externalTruck->status) == 'maintenance' ? 'selected' : '' }}>قيد الصيانة</option>
+                    </select>
+                    @error('status')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Driver Information -->
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">بيانات السائق</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Driver Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">اسم السائق *</label>
+                        <input type="text"
+                               name="driver_name"
+                               value="{{ old('driver_name', $externalTruck->driver_name) }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 @error('driver_name') border-red-500 @enderror"
+                               placeholder="اسم السائق الكامل"
+                               required>
+                        @error('driver_name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Driver Phone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">رقم جوال السائق *</label>
+                        <input type="tel"
+                               name="driver_phone"
+                               value="{{ old('driver_phone', $externalTruck->driver_phone) }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 @error('driver_phone') border-red-500 @enderror"
+                               placeholder="05xxxxxxxx"
+                               required>
+                        @error('driver_phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Type and Capacity -->
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">نوع التحميل والسعة</h3>
+
+                <!-- Loading Type -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">نوع التحميل *</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="loading_type" value="box"
+                                   class="sr-only peer"
+                                   {{ old('loading_type', $externalTruck->loading_type) == 'box' ? 'checked' : '' }}
+                                   onchange="toggleCapacityFields()">
+                            <div class="w-full p-4 border-2 border-gray-300 rounded-lg peer-checked:border-cyan-500 peer-checked:bg-cyan-50 transition-all duration-200">
+                                <div class="flex items-center justify-center">
+                                    <i class="ri-inbox-line text-2xl text-gray-600 peer-checked:text-cyan-600 mb-2"></i>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="font-medium text-gray-900">صندوق</h4>
+                                    <p class="text-sm text-gray-500">قياس بالمتر المكعب</p>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="loading_type" value="tank"
+                                   class="sr-only peer"
+                                   {{ old('loading_type', $externalTruck->loading_type) == 'tank' ? 'checked' : '' }}
+                                   onchange="toggleCapacityFields()">
+                            <div class="w-full p-4 border-2 border-gray-300 rounded-lg peer-checked:border-cyan-500 peer-checked:bg-cyan-50 transition-all duration-200">
+                                <div class="flex items-center justify-center">
+                                    <i class="ri-oil-line text-2xl text-gray-600 peer-checked:text-cyan-600 mb-2"></i>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="font-medium text-gray-900">تانك</h4>
+                                    <p class="text-sm text-gray-500">قياس بالطن</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    @error('loading_type')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Capacity Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Box Capacity -->
+                    <div id="box-capacity" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">سعة الصندوق (متر مكعب) *</label>
+                        <div class="relative">
+                            <input type="number"
+                                   name="capacity_volume"
+                                   value="{{ old('capacity_volume', $externalTruck->capacity_volume) }}"
+                                   step="0.01"
+                                   min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 @error('capacity_volume') border-red-500 @enderror"
+                                   placeholder="0.00">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <span class="text-gray-500 text-sm">م³</span>
+                            </div>
+                        </div>
+                        @error('capacity_volume')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Tank Capacity -->
+                    <div id="tank-capacity" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">سعة التانك (طن) *</label>
+                        <div class="relative">
+                            <input type="number"
+                                   name="capacity_weight"
+                                   value="{{ old('capacity_weight', $externalTruck->capacity_weight) }}"
+                                   step="0.01"
+                                   min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 @error('capacity_weight') border-red-500 @enderror"
+                                   placeholder="0.00">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <span class="text-gray-500 text-sm">طن</span>
+                            </div>
+                        </div>
+                        @error('capacity_weight')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Photos -->
+            @if($externalTruck->photos && count($externalTruck->photos) > 0)
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">الصور الحالية</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    @foreach($externalTruck->photo_urls as $index => $photoUrl)
+                    <div class="relative group">
+                        <img src="{{ $photoUrl }}"
+                             alt="صورة الشاحنة {{ $index + 1 }}"
+                             class="w-full h-24 object-cover rounded-lg shadow-sm">
+                        <div class="absolute top-1 right-1">
+                            <span class="bg-cyan-600 text-white text-xs px-2 py-1 rounded">{{ $index + 1 }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <p class="text-sm text-gray-600 mb-4">سيتم استبدال الصور الحالية عند رفع صور جديدة</p>
+            </div>
+            @endif
+
+            <!-- Photos -->
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ $externalTruck->photos ? 'تحديث صور الشاحنة' : 'رفع صور الشاحنة' }}</h3>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">رفع الصور</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-cyan-400 transition-colors duration-200">
+                        <div class="space-y-1 text-center">
+                            <i class="ri-image-line text-4xl text-gray-400"></i>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="photos" class="relative cursor-pointer bg-white rounded-md font-medium text-cyan-600 hover:text-cyan-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-cyan-500">
+                                    <span>رفع صور جديدة</span>
+                                    <input id="photos" name="photos[]" type="file" class="sr-only" multiple accept="image/*" onchange="displaySelectedFiles(this)">
+                                </label>
+                                <p class="pr-1">أو سحب وإفلات</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, JPEG أقل من 2MB</p>
+                            @if($externalTruck->photos)
+                            <p class="text-xs text-amber-600">ملاحظة: رفع صور جديدة سيستبدل الصور الحالية</p>
+                            @endif
+                        </div>
+                    </div>
+                    <div id="selected-files" class="mt-3 hidden">
+                        <p class="text-sm font-medium text-gray-700 mb-2">الصور المحددة:</p>
+                        <div id="files-list" class="space-y-2"></div>
+                    </div>
+                    @error('photos.*')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="border-t pt-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظات إضافية</label>
+                    <textarea name="notes"
+                              rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 @error('notes') border-red-500 @enderror"
+                              placeholder="أي ملاحظات إضافية حول الشاحنة...">{{ old('notes', $externalTruck->notes) }}</textarea>
+                    @error('notes')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="border-t pt-6">
+                <div class="flex space-x-3 space-x-reverse">
+                    <button type="submit"
+                            class="bg-gradient-to-r from-cyan-600 to-cyan-700 text-white px-8 py-3 rounded-xl font-medium hover:from-cyan-700 hover:to-cyan-800 focus:ring-4 focus:ring-cyan-300 transition-all duration-200">
+                        <i class="ri-save-line ml-2"></i>
+                        حفظ التحديثات
+                    </button>
+                    <a href="{{ route('external-trucks.show', $externalTruck) }}"
+                       class="bg-gray-300 text-gray-700 px-8 py-3 rounded-xl font-medium hover:bg-gray-400 transition-all duration-200">
+                        إلغاء
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    // Toggle capacity fields based on loading type
+    function toggleCapacityFields() {
+        const loadingType = document.querySelector('input[name="loading_type"]:checked')?.value;
+        const boxCapacity = document.getElementById('box-capacity');
+        const tankCapacity = document.getElementById('tank-capacity');
+
+        if (loadingType === 'box') {
+            boxCapacity.classList.remove('hidden');
+            tankCapacity.classList.add('hidden');
+            boxCapacity.querySelector('input').setAttribute('required', 'required');
+            tankCapacity.querySelector('input').removeAttribute('required');
+        } else if (loadingType === 'tank') {
+            tankCapacity.classList.remove('hidden');
+            boxCapacity.classList.add('hidden');
+            tankCapacity.querySelector('input').setAttribute('required', 'required');
+            boxCapacity.querySelector('input').removeAttribute('required');
+        } else {
+            boxCapacity.classList.add('hidden');
+            tankCapacity.classList.add('hidden');
+            boxCapacity.querySelector('input').removeAttribute('required');
+            tankCapacity.querySelector('input').removeAttribute('required');
+        }
+    }
+
+    // Display selected files
+    function displaySelectedFiles(input) {
+        const selectedFiles = document.getElementById('selected-files');
+        const filesList = document.getElementById('files-list');
+
+        if (input.files.length > 0) {
+            selectedFiles.classList.remove('hidden');
+            filesList.innerHTML = '';
+
+            Array.from(input.files).forEach((file, index) => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'flex items-center justify-between p-2 bg-gray-50 rounded';
+                fileDiv.innerHTML = `
+                    <span class="text-sm text-gray-700">${file.name}</span>
+                    <span class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                `;
+                filesList.appendChild(fileDiv);
+            });
+        } else {
+            selectedFiles.classList.add('hidden');
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleCapacityFields();
+    });
+</script>
+@endpush
+@endsection

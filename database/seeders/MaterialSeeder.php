@@ -1,0 +1,153 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\Material;
+
+class MaterialSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $materials = [
+            [
+                'name' => 'أسمنت أبو رحى',
+                'description' => 'أسمنت بورتلاندي عادي من الدرجة الأولى',
+                'category' => 'cement',
+                'unit' => 'كيس',
+                'unit_of_measure' => 'كيس 50 كجم',
+                'current_stock' => 150,
+                'minimum_stock' => 50,
+                'maximum_stock' => 500,
+                'unit_price' => 22.50,
+                'last_purchase_price' => 21.75,
+                'last_purchase_date' => now()->subDays(15),
+                'status' => 'active',
+                'supplier_name' => 'شركة الأسمنت السعودية',
+                'supplier_contact' => '011-4567890',
+                'brand' => 'أبو رحى',
+                'storage_location' => 'المستودع الرئيسي - رف A1',
+                'notes' => 'يُحفظ في مكان جاف بعيداً عن الرطوبة',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'حديد تسليح 16 مم',
+                'description' => 'حديد تسليح من النوع الممتاز قطر 16 مم',
+                'category' => 'steel',
+                'unit' => 'طن',
+                'unit_of_measure' => 'طن متري',
+                'current_stock' => 25,
+                'minimum_stock' => 10,
+                'maximum_stock' => 100,
+                'unit_price' => 2850.00,
+                'last_purchase_price' => 2800.00,
+                'last_purchase_date' => now()->subDays(30),
+                'status' => 'active',
+                'supplier_name' => 'مصنع الراجحي للحديد',
+                'supplier_contact' => '012-3456789',
+                'brand' => 'الراجحي',
+                'model' => 'RB-16',
+                'storage_location' => 'ساحة الحديد - القسم B',
+                'notes' => 'يُحفظ مغطى لتجنب الصدأ',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'خرسانة جاهزة C30',
+                'description' => 'خرسانة جاهزة درجة C30 للاستخدام العام',
+                'category' => 'aggregate',
+                'unit' => 'متر مكعب',
+                'unit_of_measure' => 'م³',
+                'current_stock' => 5,
+                'minimum_stock' => 20,
+                'maximum_stock' => 200,
+                'unit_price' => 180.00,
+                'last_purchase_price' => 175.00,
+                'last_purchase_date' => now()->subDays(7),
+                'status' => 'out_of_stock',
+                'supplier_name' => 'شركة الخرسانة المتقدمة',
+                'supplier_contact' => '013-2345678',
+                'brand' => 'ريدي مكس',
+                'model' => 'C30-Standard',
+                'storage_location' => 'لا يُخزن - توريد مباشر',
+                'notes' => 'يجب طلبها قبل 24 ساعة من الاستخدام',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'بلاط سيراميك 60x60',
+                'description' => 'بلاط سيراميك فاخر مقاس 60x60 سم',
+                'category' => 'other',
+                'unit' => 'متر مربع',
+                'unit_of_measure' => 'م²',
+                'current_stock' => 280,
+                'minimum_stock' => 100,
+                'maximum_stock' => 1000,
+                'unit_price' => 45.00,
+                'last_purchase_price' => 42.00,
+                'last_purchase_date' => now()->subDays(45),
+                'status' => 'active',
+                'supplier_name' => 'معرض الرخام والسيراميك',
+                'supplier_contact' => '014-3456789',
+                'brand' => 'RAK',
+                'model' => 'Premium-6060',
+                'storage_location' => 'مستودع البلاط - رف C',
+                'notes' => 'يُحفظ في صناديق خشبية لحمايته من الكسر',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'كابل كهربائي 2.5 مم',
+                'description' => 'كابل كهربائي نحاسي معزول مقطع 2.5 مم²',
+                'category' => 'electrical',
+                'unit' => 'متر',
+                'unit_of_measure' => 'متر طولي',
+                'current_stock' => 1200,
+                'minimum_stock' => 500,
+                'maximum_stock' => 5000,
+                'unit_price' => 8.50,
+                'last_purchase_price' => 8.25,
+                'last_purchase_date' => now()->subDays(20),
+                'status' => 'active',
+                'supplier_name' => 'شركة الكابلات المتطورة',
+                'supplier_contact' => '015-4567890',
+                'brand' => 'الفنار',
+                'model' => 'CU-2.5-PVC',
+                'storage_location' => 'مستودع الكهرباء - رف D1',
+                'notes' => 'يُحفظ في لفائف منظمة حسب المقطع',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'أنبوب PVC قطر 110 مم',
+                'description' => 'أنبوب بلاستيكي للصرف الصحي قطر 110 مم',
+                'category' => 'plumbing',
+                'unit' => 'متر',
+                'unit_of_measure' => 'متر طولي',
+                'current_stock' => 85,
+                'minimum_stock' => 100,
+                'maximum_stock' => 500,
+                'unit_price' => 25.00,
+                'last_purchase_price' => 24.50,
+                'last_purchase_date' => now()->subDays(35),
+                'status' => 'active',
+                'supplier_name' => 'مؤسسة الأنابيب الحديثة',
+                'supplier_contact' => '016-5678901',
+                'brand' => 'النخيل',
+                'model' => 'PVC-110-STD',
+                'storage_location' => 'ساحة الأنابيب - القسم E',
+                'notes' => 'يُحفظ في الظل بعيداً عن أشعة الشمس المباشرة',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ];
+
+        foreach ($materials as $material) {
+            Material::create($material);
+        }
+    }
+}
