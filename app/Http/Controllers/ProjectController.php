@@ -156,13 +156,15 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        // Load all relationships including project items
+        // Load all relationships including project items and extracts
         $project->load([
             'projectManager',
             'projectFiles',
             'projectImages',
             'deliveryRequests',
-            'projectItems'
+            'projectItems',
+            'projectExtracts.extractItems',
+            'projectExtracts.creator'
         ]);
 
         return view('projects.show', compact('project'));
@@ -173,8 +175,14 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        // Load relationships for editing including project items
-        $project->load(['projectImages', 'projectItems']);
+        // Load relationships for editing including project items, extracts, and images
+        $project->load([
+            'projectImages', 
+            'projectItems',
+            'projectExtracts' => function($query) {
+                $query->orderBy('created_at', 'desc');
+            }
+        ]);
 
         return view('projects.edit', compact('project'));
     }
@@ -322,9 +330,108 @@ class ProjectController extends Controller
      */
     public function createExtract(Project $project)
     {
-        // Load project with items
-        $project->load('projectItems');
+        // Load project with items and previous extracts
+        $project->load(['projectItems', 'projectExtracts.extractItems']);
         
-        return view('projects.extract', compact('project'));
+        // Calculate previous quantities for each project item
+        $previousQuantities = [];
+        $previousValues = [];
+        
+        foreach ($project->projectItems as $index => $item) {
+            $totalPreviousQuantity = 0;
+            $totalPreviousValue = 0;
+            
+            // Sum up quantities from all previous extracts
+            foreach ($project->projectExtracts as $extract) {
+                if ($extract->status !== 'draft') { // Only count non-draft extracts
+                    foreach ($extract->extractItems as $extractItem) {
+                        if ($extractItem->project_item_index == $index) {
+                            $totalPreviousQuantity += $extractItem->quantity;
+                            $totalPreviousValue += $extractItem->total_value;
+                        }
+                    }
+                }
+            }
+            
+            $previousQuantities[$index] = $totalPreviousQuantity;
+            $previousValues[$index] = $totalPreviousValue;
+        }
+        
+        // Generate next extract number
+        $nextExtractNumber = 'EXT-' . $project->id . '-' . str_pad($project->projectExtracts->count() + 1, 3, '0', STR_PAD_LEFT);
+        
+        return view('projects.extract', compact('project', 'previousQuantities', 'previousValues', 'nextExtractNumber'));
+    }
+
+    /**
+     * Store a new extract for the project
+     */
+    public function storeExtract(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'extract_number' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:project_extracts,extract_number,NULL,id,project_id,' . $project->id
+            ],
+            'extract_description' => 'nullable|string|max:1000',
+            'extract_date' => 'required|date',
+            'extract_status' => 'required|in:draft,submitted,approved,paid',
+            'extract_total' => 'required|numeric|min:0',
+            'extract_items' => 'required|json',
+            'extract_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240'
+        ], [
+            'extract_number.unique' => 'رقم المستخلص موجود مسبقاً لهذا المشروع',
+            'extract_number.required' => 'رقم المستخلص مطلوب',
+            'extract_date.required' => 'تاريخ المستخلص مطلوب',
+            'extract_total.min' => 'قيمة المستخلص يجب أن تكون أكبر من صفر',
+            'extract_items.required' => 'بيانات بنود المستخلص مطلوبة',
+            'extract_file.mimes' => 'نوع الملف غير مدعوم',
+            'extract_file.max' => 'حجم الملف كبير جداً (الحد الأقصى: 10 ميجابايت)',
+        ]);
+
+        try {
+            // Handle file upload
+            $filePath = null;
+            if ($request->hasFile('extract_file')) {
+                $file = $request->file('extract_file');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('project_extracts', $fileName, 'public');
+            }
+
+            // Parse extract items
+            $extractItems = json_decode($validated['extract_items'], true);
+
+            // Create the extract record
+            $extract = $project->projectExtracts()->create([
+                'extract_number' => $validated['extract_number'],
+                'description' => $validated['extract_description'],
+                'extract_date' => $validated['extract_date'],
+                'status' => $validated['extract_status'],
+                'total_amount' => $validated['extract_total'],
+                'file_path' => $filePath,
+                'items_data' => json_encode($extractItems),
+                'created_by' => auth()->id(),
+            ]);
+
+            // Store individual extract items
+            foreach ($extractItems as $itemData) {
+                $extract->extractItems()->create([
+                    'project_item_index' => $itemData['item_index'],
+                    'quantity' => $itemData['quantity'],
+                    'unit_price' => $itemData['unit_price'],
+                    'total_value' => $itemData['total_value'],
+                ]);
+            }
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم حفظ المستخلص بنجاح');
+
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'حدث خطأ أثناء حفظ المستخلص: ' . $e->getMessage());
+        }
     }
 }

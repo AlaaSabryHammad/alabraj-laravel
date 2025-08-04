@@ -209,6 +209,7 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         
         // Project Extract Routes
         Route::get('/{project}/extract/create', [ProjectController::class, 'createExtract'])->name('projects.extract.create');
+        Route::post('/{project}/extract/store', [ProjectController::class, 'storeExtract'])->name('projects.extract.store');
     });
 
     // Settings Management Routes

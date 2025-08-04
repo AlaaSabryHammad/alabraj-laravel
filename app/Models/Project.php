@@ -123,4 +123,9 @@ class Project extends Model
     {
         return $this->hasMany(ProjectItem::class);
     }
+
+    public function projectExtracts()
+    {
+        return $this->hasMany(ProjectExtract::class);
+    }
 }

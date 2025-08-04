@@ -16,13 +16,8 @@
                 </div>
             </div>
 
-            <!-- Extract Button -->
+            <!-- Header Buttons -->
             <div class="flex items-center gap-3">
-                <button onclick="generateExtract()"
-                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2">
-                    <i class="ri-file-text-line"></i>
-                    إنشاء مستخلص
-                </button>
                 <a href="{{ route('projects.show', $project) }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2">
                     <i class="ri-eye-line"></i>
@@ -89,6 +84,210 @@
                 </div>
             </div>
 
+            <!-- آخر التحديثات -->
+            <div class="bg-white rounded-xl shadow-sm border mb-6">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="ri-time-line text-blue-600"></i>
+                        آخر التحديثات
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <!-- Recent Extracts -->
+                    @if ($project->projectExtracts && $project->projectExtracts->count() > 0)
+                        <div class="mb-6">
+                            <h3 class="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
+                                <i class="ri-file-list-3-line text-green-600"></i>
+                                المستخلصات الأخيرة
+                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                                    {{ $project->projectExtracts->count() }}
+                                </span>
+                            </h3>
+                            <div class="space-y-2">
+                                @foreach ($project->projectExtracts->sortByDesc('created_at')->take(3) as $extract)
+                                    <div
+                                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-2 h-2 rounded-full 
+                                                @if ($extract->status === 'paid') bg-green-500
+                                                @elseif($extract->status === 'approved') bg-blue-500
+                                                @elseif($extract->status === 'submitted') bg-yellow-500
+                                                @else bg-gray-400 @endif">
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-gray-900">{{ $extract->extract_number }}</p>
+                                                <p class="text-sm text-gray-600">
+                                                    {{ $extract->extract_date->format('d/m/Y') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="font-medium text-gray-900">
+                                                {{ number_format($extract->total_amount, 2) }} ر.س</p>
+                                            <span
+                                                class="text-xs px-2 py-1 rounded-full
+                                                @if ($extract->status === 'paid') bg-green-100 text-green-700
+                                                @elseif($extract->status === 'approved') bg-blue-100 text-blue-700
+                                                @elseif($extract->status === 'submitted') bg-yellow-100 text-yellow-700
+                                                @else bg-gray-100 text-gray-700 @endif">
+                                                {{ $extract->status_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if ($project->projectExtracts->count() > 3)
+                                <div class="mt-3 text-center">
+                                    <a href="{{ route('projects.show', $project) }}#extracts"
+                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center gap-1">
+                                        <i class="ri-arrow-left-line"></i>
+                                        عرض جميع المستخلصات ({{ $project->projectExtracts->count() }})
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        <div class="mb-6">
+                            <h3 class="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
+                                <i class="ri-file-list-3-line text-gray-400"></i>
+                                المستخلصات
+                            </h3>
+                            <div class="text-center p-6 bg-gray-50 rounded-lg">
+                                <i class="ri-file-list-3-line text-4xl text-gray-300 mb-2"></i>
+                                <p class="text-gray-500 mb-3">لا توجد مستخلصات بعد</p>
+                                <a href="{{ route('projects.extract.create', $project) }}" target="_blank"
+                                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                    <i class="ri-add-line"></i>
+                                    إنشاء أول مستخلص
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Project Timeline -->
+                    <div class="mb-6">
+                        <h3 class="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
+                            <i class="ri-history-line text-purple-600"></i>
+                            الجدول الزمني
+                        </h3>
+                        <div class="space-y-3">
+                            <!-- Project Creation -->
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900">تم إنشاء المشروع</p>
+                                    <p class="text-sm text-gray-600">{{ $project->created_at->format('d/m/Y - H:i') }}</p>
+                                </div>
+                                <i class="ri-add-circle-line text-gray-500"></i>
+                            </div>
+
+                            <!-- Last Update -->
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900">آخر تحديث</p>
+                                    <p class="text-sm text-gray-600">{{ $project->updated_at->format('d/m/Y - H:i') }}</p>
+                                </div>
+                                <i class="ri-edit-line text-blue-500"></i>
+                            </div>
+
+                            @if ($project->start_date)
+                                <!-- Start Date -->
+                                <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900">تاريخ البداية</p>
+                                        <p class="text-sm text-gray-600">{{ $project->start_date->format('d/m/Y') }}</p>
+                                    </div>
+                                    <i class="ri-play-circle-line text-green-500"></i>
+                                </div>
+                            @endif
+
+                            @if ($project->end_date)
+                                <!-- End Date -->
+                                <div
+                                    class="flex items-center gap-3 p-3 
+                                    @if ($project->end_date->isPast()) bg-red-50 @else bg-orange-50 @endif rounded-lg">
+                                    <div
+                                        class="w-2 h-2 
+                                        @if ($project->end_date->isPast()) bg-red-500 @else bg-orange-500 @endif rounded-full">
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900">
+                                            @if ($project->end_date->isPast())
+                                                انتهى المشروع
+                                            @else
+                                                تاريخ النهاية المتوقع
+                                            @endif
+                                        </p>
+                                        <p class="text-sm text-gray-600">{{ $project->end_date->format('d/m/Y') }}</p>
+                                    </div>
+                                    <i
+                                        class="@if ($project->end_date->isPast()) ri-stop-circle-line text-red-500 @else ri-time-line text-orange-500 @endif"></i>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                            <div class="flex items-center justify-center mb-2">
+                                <i class="ri-list-check-2 text-2xl text-blue-600"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-blue-600">{{ $project->projectItems->count() }}</div>
+                            <div class="text-sm text-blue-600">البنود</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                            <div class="flex items-center justify-center mb-2">
+                                <i class="ri-file-list-3-line text-2xl text-green-600"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-green-600">{{ $project->projectExtracts->count() }}</div>
+                            <div class="text-sm text-green-600">المستخلصات</div>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                            <div class="flex items-center justify-center mb-2">
+                                <i class="ri-image-line text-2xl text-purple-600"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-purple-600">{{ $project->projectImages->count() }}</div>
+                            <div class="text-sm text-purple-600">الصور</div>
+                        </div>
+                        <div class="text-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                            <div class="flex items-center justify-center mb-2">
+                                <i class="ri-calendar-line text-2xl text-orange-600"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-orange-600">
+                                {{ $project->created_at->diffInDays() }}
+                            </div>
+                            <div class="text-sm text-orange-600">يوم منذ الإنشاء</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Summary -->
+                    @if ($project->projectExtracts->count() > 0)
+                        <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">ملخص الأنشطة الحديثة</h4>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        آخر مستخلص:
+                                        {{ $project->projectExtracts->sortByDesc('created_at')->first()->extract_number }}
+                                        ({{ $project->projectExtracts->sortByDesc('created_at')->first()->created_at->diffForHumans() }})
+                                    </p>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-lg font-bold text-blue-600">
+                                        {{ number_format($project->projectExtracts->where('status', '!=', 'draft')->sum('total_amount'), 0) }}
+                                        ر.س
+                                    </p>
+                                    <p class="text-sm text-gray-600">إجمالي المستخلصات</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             <!-- Edit Form -->
             <div class="bg-white rounded-xl shadow-sm border">
                 <div class="p-6 border-b border-gray-200">
@@ -106,7 +305,8 @@
                             <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
                                 اسم المشروع <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="name" id="name" value="{{ old('name', $project->name) }}"
+                            <input type="text" name="name" id="name"
+                                value="{{ old('name', $project->name) }}"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-300 @enderror"
                                 required>
                             @error('name')
@@ -751,7 +951,8 @@
 
         function showMessage(message, type) {
             const div = document.createElement('div');
-            div.className = `fixed top-4 right-4 p-4 rounded-lg z-50 ${type === 'success' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`;
+            div.className =
+                `fixed top-4 right-4 p-4 rounded-lg z-50 ${type === 'success' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`;
             div.textContent = message;
             document.body.appendChild(div);
             setTimeout(() => div.remove(), 3000);
@@ -880,10 +1081,14 @@
             if (num === 0) return 'صفر ريال سعودي';
             num = Math.round(num);
 
-            const ones = ['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة'];
-            const tens = ['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
-            const teens = ['عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
-            const hundreds = ['','مائة','مائتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
+            const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+            const tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+            const teens = ['عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر',
+                'ثمانية عشر', 'تسعة عشر'
+            ];
+            const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة',
+                'تسعمائة'
+            ];
 
             function convertGroup(n) {
                 let result = '';
@@ -925,93 +1130,6 @@
             }
 
             return result + ' ريال سعودي';
-        }
-
-        function generateExtract() {
-            const projectName = document.querySelector('input[name="name"]').value;
-            const clientName = document.querySelector('input[name="client_name"]').value;
-            const projectLocation = document.querySelector('input[name="location"]').value;
-            const startDate = document.querySelector('input[name="start_date"]').value;
-            const endDate = document.querySelector('input[name="end_date"]').value;
-
-            const subtotal = document.getElementById('edit-subtotal-display').textContent;
-            const taxAmount = document.getElementById('edit-tax-amount-display').textContent;
-            const finalTotal = document.getElementById('edit-final-total-display').textContent;
-            const amountInWords = document.getElementById('edit-amount-in-words').textContent;
-
-            let items = [];
-            document.querySelectorAll('.existing-item-row, .new-item-row').forEach(row => {
-                const name = row.querySelector('input[name*="[name]"]').value;
-                if (name.trim()) {
-                    items.push({
-                        name: name,
-                        quantity: row.querySelector('[name*="[quantity]"]').value,
-                        unit: row.querySelector('[name*="[unit]"]').value,
-                        unitPrice: row.querySelector('[name*="[unit_price]"]').value,
-                        totalPrice: row.querySelector('[name*="[total_price]"]').value
-                    });
-                }
-            });
-
-            let extractContent = `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; max-width: 800px; margin: 0 auto; padding: 20px;">
-                    <div style="text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px;">
-                        <h1 style="color: #1e40af; margin-bottom: 10px;">مستخلص مشروع</h1>
-                        <h2 style="color: #374151; font-size: 24px;">${projectName || 'غير محدد'}</h2>
-                    </div>
-                    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-                        <h3 style="color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">معلومات المشروع</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div><strong>اسم العميل:</strong> ${clientName || 'غير محدد'}</div>
-                            <div><strong>موقع المشروع:</strong> ${projectLocation || 'غير محدد'}</div>
-                            <div><strong>تاريخ البداية:</strong> ${startDate || 'غير محدد'}</div>
-                            <div><strong>تاريخ النهاية:</strong> ${endDate || 'غير محدد'}</div>
-                        </div>
-                    </div>`;
-
-            if (items.length > 0) {
-                extractContent += `
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">بنود المشروع</h3>
-                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #d1d5db;">
-                            <thead style="background: #f3f4f6;"><tr>
-                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">#</th>
-                                <th style="border: 1px solid #d1d5db; padding: 12px;">اسم البند</th>
-                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">الكمية</th>
-                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">الوحدة</th>
-                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">السعر الإفرادي</th>
-                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">السعر الإجمالي</th>
-                            </tr></thead><tbody>`;
-                items.forEach((item, index) => {
-                    extractContent += `
-                        <tr>
-                            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${index + 1}</td>
-                            <td style="border: 1px solid #d1d5db; padding: 10px;">${item.name}</td>
-                            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${item.quantity}</td>
-                            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${item.unit}</td>
-                            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${item.unitPrice} ر.س</td>
-                            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${item.totalPrice} ر.س</td>
-                        </tr>`;
-                });
-                extractContent += `</tbody></table></div>`;
-            }
-
-            extractContent += `
-                <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 2px solid #3b82f6;">
-                    <h3 style="color: #1e40af; margin-bottom: 15px;">الملخص المالي</h3>
-                    <div style="space-y: 10px;">
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1d5db;"><span>الإجمالي قبل الضريبة:</span><strong>${subtotal}</strong></div>
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1d5db;"><span>ضريبة القيمة المضافة:</span><strong>${taxAmount}</strong></div>
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; font-size: 18px; font-weight: bold; color: #1e40af; border-top: 2px solid #3b82f6;"><span>الإجمالي النهائي:</span><span>${finalTotal}</span></div>
-                    </div>
-                    <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #d1d5db;"><strong>المبلغ بالحروف:</strong><br><span style="font-size: 16px; color: #374151;">${amountInWords}</span></div>
-                </div>
-                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #d1d5db; color: #6b7280;"><p>تم إنشاء هذا المستخلص في ${new Date().toLocaleDateString('ar-SA')}</p></div>
-            </div>`;
-
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`<!DOCTYPE html><html lang="ar"><head><meta charset="UTF-8"><title>مستخلص مشروع - ${projectName}</title></head><body>${extractContent}<script>window.onload=function(){window.print();}<\/script></body></html>`);
-            printWindow.document.close();
         }
     </script>
 @endsection

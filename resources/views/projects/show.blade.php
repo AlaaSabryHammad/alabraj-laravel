@@ -2,6 +2,10 @@
 
 @section('title', $project->name)
 
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 @section('content')
     <div class="p-6" dir="rtl">
         <!-- زر عمل مستخلص جديد -->
@@ -357,100 +361,9 @@
                             </div>
                         @endif
 
-                        <!-- جدول كميات المشروع -->
-                        @if ($project->projectItems && $project->projectItems->count() > 0)
-                            <div class="mt-8">
-                                <h3 class="text-sm font-medium text-gray-700 mb-3">جدول كميات المشروع</h3>
-                                <div class="overflow-x-auto bg-gray-50 rounded-lg p-4">
-                                    <table class="min-w-full text-sm text-right border">
-                                        <thead class="bg-gray-100">
-                                            <tr>
-                                                <th class="px-3 py-2 border">اسم البند</th>
-                                                <th class="px-3 py-2 border">الكمية</th>
-                                                <th class="px-3 py-2 border">الوحدة</th>
-                                                <th class="px-3 py-2 border">السعر الإفرادي</th>
-                                                <th class="px-3 py-2 border">الإجمالي</th>
-                                                <th class="px-3 py-2 border">الإجمالي مع الضريبة</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php
-                                                $total = 0;
-                                                $totalWithTax = 0;
-                                            @endphp
-                                            @foreach ($project->projectItems as $item)
-                                                <tr>
-                                                    <td class="px-3 py-2 border">{{ $item->name }}</td>
-                                                    <td class="px-3 py-2 border">{{ number_format($item->quantity, 2) }}
-                                                    </td>
-                                                    <td class="px-3 py-2 border">{{ $item->unit }}</td>
-                                                    <td class="px-3 py-2 border">{{ number_format($item->unit_price, 2) }}
-                                                    </td>
-                                                    <td class="px-3 py-2 border">
-                                                        {{ number_format($item->total_price, 2) }}</td>
-                                                    <td class="px-3 py-2 border">
-                                                        {{ number_format($item->total_with_tax, 2) }}</td>
-                                                </tr>
-                                                @php
-                                                    $total += $item->total_price;
-                                                    $totalWithTax += $item->total_with_tax;
-                                                @endphp
-                                            @endforeach
-                                            <tr class="font-bold bg-gray-200">
-                                                <td class="px-3 py-2 border text-center" colspan="4">الإجمالي</td>
-                                                <td class="px-3 py-2 border">{{ number_format($total, 2) }}</td>
-                                                <td class="px-3 py-2 border">{{ number_format($totalWithTax, 2) }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        @endif
-
                         <!-- Project Images -->
 
                         <!-- صور المشروع (تم نقلها لأسفل الصفحة) -->
-
-                        <!-- Delivery Requests -->
-                        @if ($project->deliveryRequests && $project->deliveryRequests->count() > 0)
-                            <div>
-                                <h3 class="text-sm font-medium text-gray-700 mb-3">طلبات استلام الأعمال</h3>
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <div class="space-y-3">
-                                        @foreach ($project->deliveryRequests as $request)
-                                            <div class="bg-white rounded-lg p-4 border">
-                                                <div class="flex items-center justify-between">
-                                                    <div class="flex items-center gap-3">
-                                                        <i class="ri-file-list-3-line text-gray-600"></i>
-                                                        <div>
-                                                            @if ($request->number)
-                                                                <p class="font-medium text-gray-900">طلب رقم:
-                                                                    {{ $request->number }}</p>
-                                                            @endif
-                                                            @if ($request->description)
-                                                                <p class="text-sm text-gray-600">
-                                                                    {{ $request->description }}</p>
-                                                            @endif
-                                                            @if ($request->created_at)
-                                                                <p class="text-xs text-gray-500">تاريخ الإنشاء:
-                                                                    {{ $request->created_at->format('d/m/Y H:i') }}</p>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                    @if ($request->file_path)
-                                                        <a href="{{ asset('storage/' . $request->file_path) }}"
-                                                            target="_blank"
-                                                            class="text-blue-600 hover:text-blue-800 transition-colors">
-                                                            <i class="ri-download-line"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -543,6 +456,307 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- جداول المشروع بعرض كامل -->
+    <div class="p-6" dir="rtl">
+        <!-- جدول كميات المشروع -->
+        @if ($project->projectItems && $project->projectItems->count() > 0)
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-list-check text-blue-600"></i>
+                    </div>
+                    جدول كميات المشروع
+                </h2>
+                <div class="overflow-x-auto bg-gray-50 rounded-lg p-4">
+                    <table class="w-full text-sm text-right border">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-3 border">اسم البند</th>
+                                <th class="px-4 py-3 border">الكمية</th>
+                                <th class="px-4 py-3 border">الوحدة</th>
+                                <th class="px-4 py-3 border">السعر الإفرادي</th>
+                                <th class="px-4 py-3 border">الإجمالي</th>
+                                <th class="px-4 py-3 border">الإجمالي مع الضريبة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $total = 0;
+                                $totalWithTax = 0;
+                            @endphp
+                            @foreach ($project->projectItems as $item)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 border font-medium">{{ $item->name }}</td>
+                                    <td class="px-4 py-3 border text-center">{{ number_format($item->quantity, 2) }}</td>
+                                    <td class="px-4 py-3 border text-center">{{ $item->unit }}</td>
+                                    <td class="px-4 py-3 border text-center">{{ number_format($item->unit_price, 2) }} ر.س
+                                    </td>
+                                    <td class="px-4 py-3 border text-center">{{ number_format($item->total_price, 2) }}
+                                        ر.س</td>
+                                    <td class="px-4 py-3 border text-center">{{ number_format($item->total_with_tax, 2) }}
+                                        ر.س</td>
+                                </tr>
+                                @php
+                                    $total += $item->total_price;
+                                    $totalWithTax += $item->total_with_tax;
+                                @endphp
+                            @endforeach
+                            <tr class="font-bold bg-blue-50 border-t-2 border-blue-200">
+                                <td class="px-4 py-4 border text-center" colspan="4">الإجمالي النهائي</td>
+                                <td class="px-4 py-4 border text-center text-blue-600">{{ number_format($total, 2) }} ر.س
+                                </td>
+                                <td class="px-4 py-4 border text-center text-blue-600">
+                                    {{ number_format($totalWithTax, 2) }} ر.س</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        <!-- جدول طلبات استلام الأعمال -->
+        @if ($project->deliveryRequests && $project->deliveryRequests->count() > 0)
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-file-list-3-line text-green-600"></i>
+                    </div>
+                    طلبات استلام الأعمال
+                </h2>
+                <div class="overflow-x-auto bg-gray-50 rounded-lg p-4">
+                    <table class="w-full text-sm text-right border">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-3 border">#</th>
+                                <th class="px-4 py-3 border">رقم الطلب</th>
+                                <th class="px-4 py-3 border">الوصف</th>
+                                <th class="px-4 py-3 border">تاريخ الإنشاء</th>
+                                <th class="px-4 py-3 border">الملف</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($project->deliveryRequests as $index => $request)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 border text-center font-medium">{{ $index + 1 }}</td>
+                                    <td class="px-4 py-3 border">
+                                        @if ($request->number)
+                                            <span
+                                                class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                                {{ $request->number }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">غير محدد</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 border">
+                                        @if ($request->description)
+                                            <p class="text-gray-700">{{ $request->description }}</p>
+                                        @else
+                                            <span class="text-gray-400">لا يوجد وصف</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 border text-center">
+                                        @if ($request->created_at)
+                                            <span class="text-gray-600">{{ $request->created_at->format('d/m/Y') }}</span>
+                                            <br>
+                                            <span
+                                                class="text-xs text-gray-400">{{ $request->created_at->format('H:i') }}</span>
+                                        @else
+                                            <span class="text-gray-400">غير محدد</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 border text-center">
+                                        @if ($request->file_path)
+                                            <a href="{{ asset('storage/' . $request->file_path) }}" target="_blank"
+                                                class="inline-flex items-center gap-2 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-full text-xs font-medium transition-colors">
+                                                <i class="ri-download-line"></i>
+                                                تحميل الملف
+                                            </a>
+                                        @else
+                                            <span class="text-gray-400">لا يوجد ملف</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+    </div>
+
+    <!-- قسم المستخلصات -->
+    <div class="p-6" dir="rtl">
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-file-list-3-line text-indigo-600"></i>
+                </div>
+                مستخلصات المشروع
+            </h2>
+
+            @if ($project->projectExtracts && $project->projectExtracts->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-right border">رقم المستخلص</th>
+                                <th class="px-4 py-3 text-right border">التاريخ</th>
+                                <th class="px-4 py-3 text-right border">الوصف</th>
+                                <th class="px-4 py-3 text-center border">المبلغ</th>
+                                <th class="px-4 py-3 text-center border">الحالة</th>
+                                <th class="px-4 py-3 text-center border">المنشئ</th>
+                                <th class="px-4 py-3 text-center border">الملف</th>
+                                <th class="px-4 py-3 text-center border">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($project->projectExtracts->sortByDesc('extract_date') as $extract)
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 border font-medium">{{ $extract->extract_number }}</td>
+                                    <td class="px-4 py-3 border text-sm text-gray-600">
+                                        {{ $extract->extract_date->format('d/m/Y') }}
+                                    </td>
+                                    <td class="px-4 py-3 border">
+                                        {{ $extract->description ?? 'بدون وصف' }}
+                                    </td>
+                                    <td class="px-4 py-3 border text-center font-medium">
+                                        {{ number_format($extract->total_amount, 2) }} ر.س
+                                    </td>
+                                    <td class="px-4 py-3 border text-center">
+                                        <span
+                                            class="px-2 py-1 rounded-full text-xs font-medium
+                                            @if ($extract->status === 'draft') bg-gray-100 text-gray-700
+                                            @elseif($extract->status === 'submitted') bg-blue-100 text-blue-700
+                                            @elseif($extract->status === 'approved') bg-green-100 text-green-700
+                                            @elseif($extract->status === 'paid') bg-purple-100 text-purple-700
+                                            @else bg-red-100 text-red-700 @endif">
+                                            {{ $extract->status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 border text-center text-sm text-gray-600">
+                                        {{ $extract->creator->name ?? 'غير محدد' }}
+                                    </td>
+                                    <td class="px-4 py-3 border text-center">
+                                        @if ($extract->file_path)
+                                            <a href="{{ Storage::url($extract->file_path) }}" target="_blank"
+                                                class="text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1">
+                                                <i class="ri-file-download-line"></i>
+                                                تحميل
+                                            </a>
+                                        @else
+                                            <span class="text-gray-400 text-xs">لا يوجد ملف</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 border text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <button onclick="viewExtractDetails({{ $extract->id }})"
+                                                class="text-blue-600 hover:text-blue-800 p-1 rounded"
+                                                title="عرض التفاصيل">
+                                                <i class="ri-eye-line"></i>
+                                            </button>
+                                            @if ($extract->status === 'draft')
+                                                <button onclick="editExtract({{ $extract->id }})"
+                                                    class="text-green-600 hover:text-green-800 p-1 rounded"
+                                                    title="تعديل">
+                                                    <i class="ri-edit-line"></i>
+                                                </button>
+                                                <button onclick="deleteExtract({{ $extract->id }})"
+                                                    class="text-red-600 hover:text-red-800 p-1 rounded" title="حذف">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-50 font-bold">
+                            <tr>
+                                <td colspan="3" class="px-4 py-3 border text-right">إجمالي المستخلصات:</td>
+                                <td class="px-4 py-3 border text-center">
+                                    {{ number_format($project->projectExtracts->where('status', '!=', 'draft')->sum('total_amount'), 2) }}
+                                    ر.س
+                                </td>
+                                <td colspan="4" class="px-4 py-3 border"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Extract Summary -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-blue-100 p-2 rounded-lg">
+                                <i class="ri-file-list-line text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-blue-600">إجمالي المستخلصات</p>
+                                <p class="text-lg font-bold text-blue-900">{{ $project->projectExtracts->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-100 p-2 rounded-lg">
+                                <i class="ri-money-dollar-circle-line text-green-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-green-600">إجمالي المبالغ</p>
+                                <p class="text-lg font-bold text-green-900">
+                                    {{ number_format($project->projectExtracts->where('status', '!=', 'draft')->sum('total_amount'), 0) }}
+                                    ر.س
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-purple-100 p-2 rounded-lg">
+                                <i class="ri-check-double-line text-purple-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-purple-600">المستخلصات المدفوعة</p>
+                                <p class="text-lg font-bold text-purple-900">
+                                    {{ $project->projectExtracts->where('status', 'paid')->count() }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-orange-100 p-2 rounded-lg">
+                                <i class="ri-percentage-line text-orange-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-orange-600">نسبة الإنجاز المالي</p>
+                                <p class="text-lg font-bold text-orange-900">
+                                    {{ $project->budget > 0 ? number_format(($project->projectExtracts->where('status', '!=', 'draft')->sum('total_amount') / $project->budget) * 100, 1) : 0 }}%
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-file-list-3-line text-gray-400 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500 mb-4">لا توجد مستخلصات لهذا المشروع</p>
+                    <a href="{{ route('projects.extract.create', $project) }}" target="_blank"
+                        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="ri-add-line"></i>
+                        إنشاء أول مستخلص
+                    </a>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -754,5 +968,23 @@
             // Add print class to quick actions section
             document.querySelector('.space-y-6')?.classList.add('print-hide');
         });
+
+        // Extract Management Functions
+        function viewExtractDetails(extractId) {
+            // يمكن تطوير هذه الدالة لعرض تفاصيل المستخلص في modal
+            alert('عرض تفاصيل المستخلص رقم: ' + extractId);
+        }
+
+        function editExtract(extractId) {
+            // يمكن إضافة صفحة تعديل المستخلص لاحقاً
+            alert('تعديل المستخلص رقم: ' + extractId);
+        }
+
+        function deleteExtract(extractId) {
+            if (confirm('هل أنت متأكد من حذف هذا المستخلص؟')) {
+                // يمكن إضافة طلب AJAX لحذف المستخلص
+                alert('تم حذف المستخلص رقم: ' + extractId);
+            }
+        }
     </script>
 @endsection
