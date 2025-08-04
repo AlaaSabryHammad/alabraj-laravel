@@ -378,7 +378,7 @@
                             <input type="number" id="edit_tax_rate" value="15" min="0" max="100"
                                 step="0.1"
                                 class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                onchange="calculateEditTotals()">
+                                oninput="calculateAllTotals()">
                             <span class="text-sm text-gray-600 mr-2">القيمة الافتراضية: 15%</span>
                         </div>
 
@@ -421,8 +421,7 @@
                                                             name="existing_items[{{ $item->id }}][quantity]"
                                                             value="{{ $item->quantity }}" min="0" step="0.1"
                                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center existing-quantity-input"
-                                                            onchange="calculateExistingRowTotal(this)"
-                                                            oninput="calculateExistingRowTotal(this)">
+                                                            oninput="calculateRowTotal(this.closest('tr'))">
                                                     </td>
                                                     <td class="px-4 py-3">
                                                         <select name="existing_items[{{ $item->id }}][unit]"
@@ -462,8 +461,7 @@
                                                             value="{{ $item->unit_price }}" min="0"
                                                             step="0.01"
                                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center existing-unit-price-input"
-                                                            onchange="calculateExistingRowTotal(this)"
-                                                            oninput="calculateExistingRowTotal(this)">
+                                                            oninput="calculateRowTotal(this.closest('tr'))">
                                                     </td>
                                                     <td class="px-4 py-3">
                                                         <input type="text"
@@ -527,8 +525,7 @@
                                                 <input type="number" name="new_items[0][quantity]" placeholder="0"
                                                     min="0" step="0.1"
                                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-quantity-input"
-                                                    onchange="calculateNewRowTotal(this)"
-                                                    oninput="calculateNewRowTotal(this)">
+                                                    oninput="calculateRowTotal(this.closest('tr'))">
                                             </td>
                                             <td class="px-4 py-3">
                                                 <select name="new_items[0][unit]"
@@ -551,8 +548,7 @@
                                                 <input type="number" name="new_items[0][unit_price]" placeholder="0.00"
                                                     min="0" step="0.01"
                                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-unit-price-input"
-                                                    onchange="calculateNewRowTotal(this)"
-                                                    oninput="calculateNewRowTotal(this)">
+                                                    oninput="calculateRowTotal(this.closest('tr'))">
                                             </td>
                                             <td class="px-4 py-3">
                                                 <input type="text" name="new_items[0][total_price]"
@@ -648,27 +644,36 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const startDateInput = document.getElementById('start_date');
-            const endDateInput = document.getElementById('end_date');
-            const progressInput = document.getElementById('progress');
-            const progressValue = document.getElementById('progress-value');
+        let newItemIndex = 1;
 
-            // Update progress display
-            progressInput.addEventListener('input', function() {
-                progressValue.textContent = this.value + '%';
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Main Setup ---
+            initializePage();
+            attachEventListeners();
+        });
+
+        function initializePage() {
+            // Add one empty row for new items on page load for immediate use.
+            addNewItemRow();
+            // Recalculate all totals on page load to format existing items correctly.
+            calculateAllTotals();
+        }
+
+        function attachEventListeners() {
+            // --- General Form Listeners ---
+            document.getElementById('progress').addEventListener('input', function() {
+                document.getElementById('progress-value').textContent = this.value + '%';
             });
 
-            // Set minimum end date to start date
-            startDateInput.addEventListener('change', function() {
+            document.getElementById('start_date').addEventListener('change', function() {
+                const endDateInput = document.getElementById('end_date');
                 endDateInput.min = this.value;
                 if (endDateInput.value && endDateInput.value < this.value) {
                     endDateInput.value = '';
                 }
             });
 
-            // Auto-complete project when progress reaches 100%
-            progressInput.addEventListener('change', function() {
+            document.getElementById('progress').addEventListener('change', function() {
                 const statusSelect = document.getElementById('status');
                 if (this.value == 100 && statusSelect.value !== 'completed') {
                     if (confirm('تم الوصول إلى 100% من الإنجاز. هل تريد تغيير حالة المشروع إلى "مكتمل"؟')) {
@@ -676,13 +681,26 @@
                     }
                 }
             });
-        });
 
-        // Image management functions
+            document.getElementById('new_images').addEventListener('change', function() {
+                previewNewImages(this);
+            });
+
+            // --- Project Items Listeners ---
+            document.getElementById('add-new-item-btn').addEventListener('click', addNewItemRow);
+            document.getElementById('edit_tax_rate').addEventListener('input', calculateAllTotals);
+
+            // Add listeners to initially loaded existing items
+            document.querySelectorAll('.existing-item-row').forEach(row => {
+                row.querySelectorAll('.existing-quantity-input, .existing-unit-price-input').forEach(input => {
+                    input.addEventListener('input', () => calculateRowTotal(row));
+                });
+            });
+        }
+
+        // --- Image Management ---
         function deleteImage(imageId) {
-            if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) {
-                return;
-            }
+            if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
 
             fetch(`/projects/images/${imageId}`, {
                     method: 'DELETE',
@@ -695,11 +713,9 @@
                 .then(data => {
                     if (data.success) {
                         document.getElementById(`image-${imageId}`).remove();
-
-                        // Show success message
                         showMessage('تم حذف الصورة بنجاح', 'success');
                     } else {
-                        showMessage('حدث خطأ في حذف الصورة', 'error');
+                        showMessage(data.message || 'حدث خطأ في حذف الصورة', 'error');
                     }
                 })
                 .catch(error => {
@@ -711,106 +727,90 @@
         function previewNewImages(input) {
             const previewContainer = document.getElementById('new-images-preview');
             previewContainer.innerHTML = '';
-
-            if (input.files && input.files.length > 0) {
-                previewContainer.classList.remove('hidden');
-
-                Array.from(input.files).forEach((file, index) => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const imageDiv = document.createElement('div');
-                        imageDiv.className = 'relative group';
-                        imageDiv.innerHTML = `
-                    <img src="${e.target.result}" 
-                         alt="معاينة صورة ${index + 1}"
-                         class="w-full h-24 object-cover rounded-lg border-2 border-green-300">
-                    <div class="absolute top-1 right-1">
-                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded">جديد</span>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1 text-center truncate">${file.name}</p>
-                `;
-                        previewContainer.appendChild(imageDiv);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            } else {
+            if (!input.files.length) {
                 previewContainer.classList.add('hidden');
+                return;
             }
+
+            previewContainer.classList.remove('hidden');
+            Array.from(input.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border-2 border-green-300">
+                        <div class="absolute top-1 right-1"><span class="bg-green-500 text-white text-xs px-2 py-1 rounded">جديد</span></div>
+                        <p class="text-xs text-gray-600 mt-1 text-center truncate">${file.name}</p>
+                    `;
+                    previewContainer.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         function showMessage(message, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `fixed top-4 right-4 p-4 rounded-lg z-50 ${
-        type === 'success' 
-            ? 'bg-green-100 text-green-700 border border-green-300' 
-            : 'bg-red-100 text-red-700 border border-red-300'
-    }`;
-            messageDiv.textContent = message;
-
-            document.body.appendChild(messageDiv);
-
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 3000);
+            const div = document.createElement('div');
+            div.className = `fixed top-4 right-4 p-4 rounded-lg z-50 ${type === 'success' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`;
+            div.textContent = message;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
         }
 
-        // Project Items Management Functions
-        let newItemIndex = 1;
-        let deletedExistingItems = [];
-
-        // Calculate totals for existing items
-        function calculateExistingRowTotal(input) {
-            const row = input.closest('tr');
-            const quantity = parseFloat(row.querySelector('.existing-quantity-input').value) || 0;
-            const unitPrice = parseFloat(row.querySelector('.existing-unit-price-input').value) || 0;
+        // --- Project Items Calculations ---
+        function calculateRowTotal(row) {
+            const quantity = parseFloat(row.querySelector('[name*="[quantity]"]').value) || 0;
+            const unitPrice = parseFloat(row.querySelector('[name*="[unit_price]"]').value) || 0;
             const taxRate = parseFloat(document.getElementById('edit_tax_rate').value) || 0;
 
             const totalPrice = quantity * unitPrice;
             const totalWithTax = totalPrice * (1 + taxRate / 100);
 
-            row.querySelector('.existing-total-price-display').value = totalPrice.toFixed(2);
-            row.querySelector('.existing-total-with-tax-display').value = totalWithTax.toFixed(2);
+            row.querySelector('[name*="[total_price]"]').value = totalPrice.toFixed(2);
+            row.querySelector('[name*="[total_with_tax]"]').value = totalWithTax.toFixed(2);
 
-            calculateEditTotals();
+            calculateAllTotals();
         }
 
-        // Calculate totals for new items
-        function calculateNewRowTotal(input) {
-            const row = input.closest('tr');
-            const quantity = parseFloat(row.querySelector('.new-quantity-input').value) || 0;
-            const unitPrice = parseFloat(row.querySelector('.new-unit-price-input').value) || 0;
+        function calculateAllTotals() {
+            let subtotal = 0;
             const taxRate = parseFloat(document.getElementById('edit_tax_rate').value) || 0;
 
-            const totalPrice = quantity * unitPrice;
-            const totalWithTax = totalPrice * (1 + taxRate / 100);
+            document.querySelectorAll('.existing-item-row, .new-item-row').forEach(row => {
+                const totalPriceInput = row.querySelector('[name*="[total_price]"]');
+                if (totalPriceInput && totalPriceInput.value) {
+                    subtotal += parseFloat(totalPriceInput.value.replace(/,/g, '')) || 0;
+                }
+            });
 
-            row.querySelector('.new-total-price-display').value = totalPrice.toFixed(2);
-            row.querySelector('.new-total-with-tax-display').value = totalWithTax.toFixed(2);
+            const taxAmount = subtotal * (taxRate / 100);
+            const finalTotal = subtotal + taxAmount;
 
-            calculateEditTotals();
+            document.getElementById('edit-subtotal-display').textContent = subtotal.toFixed(2) + ' ر.س';
+            document.getElementById('edit-tax-amount-display').textContent = taxAmount.toFixed(2) + ' ر.س';
+            document.getElementById('edit-final-total-display').textContent = finalTotal.toFixed(2) + ' ر.س';
+            document.getElementById('edit-tax-rate-display').textContent = taxRate;
+
+            document.getElementById('edit-subtotal-input').value = subtotal.toFixed(2);
+            document.getElementById('edit-tax-amount-input').value = taxAmount.toFixed(2);
+            document.getElementById('edit-final-total-input').value = finalTotal.toFixed(2);
+            document.getElementById('edit-tax-rate-input').value = taxRate;
+
+            document.getElementById('edit-amount-in-words').textContent = numberToArabicWords(finalTotal);
         }
 
-        // Add new item row
         function addNewItemRow() {
             const tbody = document.getElementById('new-items-table-body');
             const newRow = document.createElement('tr');
             newRow.className = 'new-item-row border-b border-gray-200';
-            newRow.innerHTML = `
+            const newRowHtml = `
                 <td class="px-4 py-3">
-                    <input type="text" 
-                           name="new_items[${newItemIndex}][name]" 
-                           placeholder="اسم البند الجديد"
+                    <input type="text" name="new_items[${newItemIndex}][name]" placeholder="اسم البند الجديد"
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </td>
                 <td class="px-4 py-3">
-                    <input type="number" 
-                           name="new_items[${newItemIndex}][quantity]" 
-                           placeholder="0"
-                           min="0"
-                           step="0.1"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-quantity-input"
-                           onchange="calculateNewRowTotal(this)"
-                           oninput="calculateNewRowTotal(this)">
+                    <input type="number" name="new_items[${newItemIndex}][quantity]" placeholder="0" min="0" step="0.1"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-quantity-input">
                 </td>
                 <td class="px-4 py-3">
                     <select name="new_items[${newItemIndex}][unit]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -829,253 +829,140 @@
                     </select>
                 </td>
                 <td class="px-4 py-3">
-                    <input type="number" 
-                           name="new_items[${newItemIndex}][unit_price]" 
-                           placeholder="0.00"
-                           min="0"
-                           step="0.01"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-unit-price-input"
-                           onchange="calculateNewRowTotal(this)"
-                           oninput="calculateNewRowTotal(this)">
+                    <input type="number" name="new_items[${newItemIndex}][unit_price]" placeholder="0.00" min="0" step="0.01"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-unit-price-input">
                 </td>
                 <td class="px-4 py-3">
-                    <input type="text" 
-                           name="new_items[${newItemIndex}][total_price]" 
-                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-center new-total-price-display"
-                           readonly
-                           placeholder="0.00">
+                    <input type="text" name="new_items[${newItemIndex}][total_price]" readonly placeholder="0.00"
+                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-center">
                 </td>
                 <td class="px-4 py-3">
-                    <input type="text" 
-                           name="new_items[${newItemIndex}][total_with_tax]" 
-                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-center new-total-with-tax-display"
-                           readonly
-                           placeholder="0.00">
+                    <input type="text" name="new_items[${newItemIndex}][total_with_tax]" readonly placeholder="0.00"
+                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-center">
                 </td>
                 <td class="px-4 py-3 text-center">
-                    <button type="button" 
-                            onclick="removeNewItemRow(this)"
-                            class="text-red-600 hover:text-red-800 transition-colors p-1">
+                    <button type="button" class="text-red-600 hover:text-red-800 transition-colors p-1 remove-new-item-btn">
                         <i class="ri-delete-bin-line"></i>
                     </button>
                 </td>
             `;
+            newRow.innerHTML = newRowHtml;
             tbody.appendChild(newRow);
 
-            // Add event listeners to the new inputs for real-time calculation
-            const quantityInput = newRow.querySelector('.new-quantity-input');
-            const priceInput = newRow.querySelector('.new-unit-price-input');
-
-            quantityInput.addEventListener('input', function() {
-                calculateNewRowTotal(this);
+            // Add event listeners for the new row
+            newRow.querySelectorAll('.new-quantity-input, .new-unit-price-input').forEach(input => {
+                input.addEventListener('input', () => calculateRowTotal(newRow));
             });
-
-            priceInput.addEventListener('input', function() {
-                calculateNewRowTotal(this);
+            newRow.querySelector('.remove-new-item-btn').addEventListener('click', () => {
+                newRow.remove();
+                calculateAllTotals();
             });
 
             newItemIndex++;
         }
 
-        // Remove new item row
-        function removeNewItemRow(button) {
-            const row = button.closest('tr');
-            row.remove();
-            calculateEditTotals();
-        }
-
-        // Delete existing item
         function deleteExistingItem(itemId, button) {
             if (confirm('هل أنت متأكد من حذف هذا البند؟')) {
                 const row = button.closest('tr');
                 row.remove();
-                deletedExistingItems.push(itemId);
-
-                // Add hidden input for deleted items
+                const form = document.querySelector('form');
                 const hiddenInput = document.createElement('input');
                 hiddenInput.type = 'hidden';
                 hiddenInput.name = 'deleted_items[]';
                 hiddenInput.value = itemId;
-                document.querySelector('form').appendChild(hiddenInput);
-
-                calculateEditTotals();
+                form.appendChild(hiddenInput);
+                calculateAllTotals();
             }
         }
 
-        // Calculate all totals
-        function calculateEditTotals() {
-            let subtotal = 0;
-            const taxRate = parseFloat(document.getElementById('edit_tax_rate').value) || 0;
-
-            // Calculate existing items totals
-            document.querySelectorAll('.existing-total-price-display').forEach(input => {
-                subtotal += parseFloat(input.value) || 0;
-            });
-
-            // Calculate new items totals
-            document.querySelectorAll('.new-total-price-display').forEach(input => {
-                subtotal += parseFloat(input.value) || 0;
-            });
-
-            const taxAmount = subtotal * (taxRate / 100);
-            const finalTotal = subtotal + taxAmount;
-
-            // Update displays
-            document.getElementById('edit-subtotal-display').textContent = subtotal.toFixed(2) + ' ر.س';
-            document.getElementById('edit-tax-amount-display').textContent = taxAmount.toFixed(2) + ' ر.س';
-            document.getElementById('edit-final-total-display').textContent = finalTotal.toFixed(2) + ' ر.س';
-            document.getElementById('edit-tax-rate-display').textContent = taxRate;
-
-            // Update hidden inputs
-            document.getElementById('edit-subtotal-input').value = subtotal.toFixed(2);
-            document.getElementById('edit-tax-amount-input').value = taxAmount.toFixed(2);
-            document.getElementById('edit-final-total-input').value = finalTotal.toFixed(2);
-            document.getElementById('edit-tax-rate-input').value = taxRate;
-
-            // Update amount in words
-            const amountInWords = numberToArabicWords(Math.round(finalTotal));
-            document.getElementById('edit-amount-in-words').textContent = amountInWords;
-        }
-
-        // Convert number to Arabic words (same function as in create page)
+        // --- Utility Functions ---
         function numberToArabicWords(num) {
             if (num === 0) return 'صفر ريال سعودي';
+            num = Math.round(num);
 
-            const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
-            const tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
-            const teens = ['عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر',
-                'ثمانية عشر', 'تسعة عشر'
-            ];
-            const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة',
-                'تسعمائة'
-            ];
+            const ones = ['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة'];
+            const tens = ['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+            const teens = ['عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
+            const hundreds = ['','مائة','مائتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
 
             function convertGroup(n) {
                 let result = '';
-
                 const h = Math.floor(n / 100);
                 const t = Math.floor((n % 100) / 10);
                 const o = n % 10;
-
-                if (h > 0) {
-                    result += hundreds[h];
-                }
-
+                if (h > 0) result += hundreds[h];
                 if (t === 1) {
-                    if (result) result += ' ';
+                    if (result) result += ' و';
                     result += teens[o];
                 } else {
-                    if (t > 1) {
-                        if (result) result += ' ';
-                        result += tens[t];
-                    }
                     if (o > 0) {
-                        if (result) result += ' ';
+                        if (result) result += ' و';
                         result += ones[o];
                     }
+                    if (t > 1) {
+                        if (result) result += ' و';
+                        result += tens[t];
+                    }
                 }
-
                 return result;
             }
 
-            if (num < 1000) {
-                return convertGroup(num) + ' ريال سعودي';
-            } else if (num < 1000000) {
-                const thousands = Math.floor(num / 1000);
-                const remainder = num % 1000;
-                let result = convertGroup(thousands) + ' ألف';
-                if (remainder > 0) {
-                    result += ' ' + convertGroup(remainder);
-                }
-                return result + ' ريال سعودي';
-            } else {
-                const millions = Math.floor(num / 1000000);
-                const remainder = num % 1000000;
-                let result = convertGroup(millions) + ' مليون';
-                if (remainder > 0) {
-                    if (remainder >= 1000) {
-                        const thousands = Math.floor(remainder / 1000);
-                        const final = remainder % 1000;
-                        result += ' ' + convertGroup(thousands) + ' ألف';
-                        if (final > 0) {
-                            result += ' ' + convertGroup(final);
-                        }
-                    } else {
-                        result += ' ' + convertGroup(remainder);
-                    }
-                }
-                return result + ' ريال سعودي';
+            let result = '';
+            const millions = Math.floor(num / 1000000);
+            const thousands = Math.floor((num % 1000000) / 1000);
+            const remainder = num % 1000;
+
+            if (millions > 0) {
+                result += convertGroup(millions) + (millions === 1 ? ' مليون' : millions === 2 ? 'مليونان' : ' ملايين');
             }
+            if (thousands > 0) {
+                if (result) result += ' و';
+                result += convertGroup(thousands) + (thousands === 1 ? ' ألف' : thousands === 2 ? ' ألفان' : ' آلاف');
+            }
+            if (remainder > 0) {
+                if (result) result += ' و';
+                result += convertGroup(remainder);
+            }
+
+            return result + ' ريال سعودي';
         }
 
-        // Generate extract
         function generateExtract() {
-            // Get project data
             const projectName = document.querySelector('input[name="name"]').value;
-            const contractorName = document.querySelector('input[name="contractor_name"]').value;
+            const clientName = document.querySelector('input[name="client_name"]').value;
             const projectLocation = document.querySelector('input[name="location"]').value;
             const startDate = document.querySelector('input[name="start_date"]').value;
             const endDate = document.querySelector('input[name="end_date"]').value;
 
-            // Get totals
             const subtotal = document.getElementById('edit-subtotal-display').textContent;
             const taxAmount = document.getElementById('edit-tax-amount-display').textContent;
             const finalTotal = document.getElementById('edit-final-total-display').textContent;
             const amountInWords = document.getElementById('edit-amount-in-words').textContent;
 
-            // Collect all items (existing + new)
             let items = [];
-
-            // Existing items
-            document.querySelectorAll('.existing-item-row').forEach((row, index) => {
+            document.querySelectorAll('.existing-item-row, .new-item-row').forEach(row => {
                 const name = row.querySelector('input[name*="[name]"]').value;
-                const quantity = row.querySelector('.existing-quantity-input').value;
-                const unit = row.querySelector('select[name*="[unit]"]').value;
-                const unitPrice = row.querySelector('.existing-unit-price-input').value;
-                const totalPrice = row.querySelector('.existing-total-price-display').value;
-
                 if (name.trim()) {
                     items.push({
-                        name,
-                        quantity,
-                        unit,
-                        unitPrice,
-                        totalPrice
+                        name: name,
+                        quantity: row.querySelector('[name*="[quantity]"]').value,
+                        unit: row.querySelector('[name*="[unit]"]').value,
+                        unitPrice: row.querySelector('[name*="[unit_price]"]').value,
+                        totalPrice: row.querySelector('[name*="[total_price]"]').value
                     });
                 }
             });
 
-            // New items
-            document.querySelectorAll('.new-item-row').forEach((row, index) => {
-                const name = row.querySelector('input[name*="[name]"]').value;
-                const quantity = row.querySelector('.new-quantity-input').value;
-                const unit = row.querySelector('select[name*="[unit]"]').value;
-                const unitPrice = row.querySelector('.new-unit-price-input').value;
-                const totalPrice = row.querySelector('.new-total-price-display').value;
-
-                if (name.trim()) {
-                    items.push({
-                        name,
-                        quantity,
-                        unit,
-                        unitPrice,
-                        totalPrice
-                    });
-                }
-            });
-
-            // Create extract content
             let extractContent = `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; max-width: 800px; margin: 0 auto; padding: 20px;">
                     <div style="text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px;">
                         <h1 style="color: #1e40af; margin-bottom: 10px;">مستخلص مشروع</h1>
                         <h2 style="color: #374151; font-size: 24px;">${projectName || 'غير محدد'}</h2>
                     </div>
-                    
                     <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
                         <h3 style="color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">معلومات المشروع</h3>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div><strong>اسم المقاول:</strong> ${contractorName || 'غير محدد'}</div>
+                            <div><strong>اسم العميل:</strong> ${clientName || 'غير محدد'}</div>
                             <div><strong>موقع المشروع:</strong> ${projectLocation || 'غير محدد'}</div>
                             <div><strong>تاريخ البداية:</strong> ${startDate || 'غير محدد'}</div>
                             <div><strong>تاريخ النهاية:</strong> ${endDate || 'غير محدد'}</div>
@@ -1087,18 +974,14 @@
                     <div style="margin-bottom: 30px;">
                         <h3 style="color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">بنود المشروع</h3>
                         <table style="width: 100%; border-collapse: collapse; border: 1px solid #d1d5db;">
-                            <thead style="background: #f3f4f6;">
-                                <tr>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">#</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px;">اسم البند</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">الكمية</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">الوحدة</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">السعر الإفرادي</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">السعر الإجمالي</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-
+                            <thead style="background: #f3f4f6;"><tr>
+                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">#</th>
+                                <th style="border: 1px solid #d1d5db; padding: 12px;">اسم البند</th>
+                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">الكمية</th>
+                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">الوحدة</th>
+                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">السعر الإفرادي</th>
+                                <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">السعر الإجمالي</th>
+                            </tr></thead><tbody>`;
                 items.forEach((item, index) => {
                     extractContent += `
                         <tr>
@@ -1110,94 +993,25 @@
                             <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${item.totalPrice} ر.س</td>
                         </tr>`;
                 });
-
-                extractContent += `
-                            </tbody>
-                        </table>
-                    </div>`;
+                extractContent += `</tbody></table></div>`;
             }
 
             extractContent += `
-                    <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 2px solid #3b82f6;">
-                        <h3 style="color: #1e40af; margin-bottom: 15px;">الملخص المالي</h3>
-                        <div style="space-y: 10px;">
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1d5db;">
-                                <span>الإجمالي قبل الضريبة:</span>
-                                <strong>${subtotal}</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1d5db;">
-                                <span>ضريبة القيمة المضافة:</span>
-                                <strong>${taxAmount}</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 12px 0; font-size: 18px; font-weight: bold; color: #1e40af; border-top: 2px solid #3b82f6;">
-                                <span>الإجمالي النهائي:</span>
-                                <span>${finalTotal}</span>
-                            </div>
-                        </div>
-                        <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #d1d5db;">
-                            <strong>المبلغ بالحروف:</strong><br>
-                            <span style="font-size: 16px; color: #374151;">${amountInWords}</span>
-                        </div>
+                <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 2px solid #3b82f6;">
+                    <h3 style="color: #1e40af; margin-bottom: 15px;">الملخص المالي</h3>
+                    <div style="space-y: 10px;">
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1d5db;"><span>الإجمالي قبل الضريبة:</span><strong>${subtotal}</strong></div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1d5db;"><span>ضريبة القيمة المضافة:</span><strong>${taxAmount}</strong></div>
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; font-size: 18px; font-weight: bold; color: #1e40af; border-top: 2px solid #3b82f6;"><span>الإجمالي النهائي:</span><span>${finalTotal}</span></div>
                     </div>
-                    
-                    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #d1d5db; color: #6b7280;">
-                        <p>تم إنشاء هذا المستخلص في ${new Date().toLocaleDateString('ar-SA')}</p>
-                    </div>
-                </div>`;
+                    <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #d1d5db;"><strong>المبلغ بالحروف:</strong><br><span style="font-size: 16px; color: #374151;">${amountInWords}</span></div>
+                </div>
+                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #d1d5db; color: #6b7280;"><p>تم إنشاء هذا المستخلص في ${new Date().toLocaleDateString('ar-SA')}</p></div>
+            </div>`;
 
-            // Open in new window
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html lang="ar">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>مستخلص مشروع - ${projectName}</title>
-                            <style>
-                                @media print {
-                                    body { margin: 0; padding: 20px; }
-                                    @page { margin: 20mm; }
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            ${extractContent}
-                            <script>
-                                window.onload = function() {
-                                    window.print();
-                                }
-    </script>
-    </body>
-
-    </html>
-    `);
-    printWindow.document.close();
-    }
-
-    // Initialize calculations on page load
-    document.addEventListener('DOMContentLoaded', function() {
-    // Calculate totals for existing items first
-    calculateEditTotals();
-
-    // Set up event listeners for dynamic calculation
-    document.getElementById('edit_tax_rate').addEventListener('input', function() {
-    calculateEditTotals();
-    });
-
-    // Add event listeners to all existing quantity and price inputs
-    document.querySelectorAll('.existing-quantity-input, .existing-unit-price-input').forEach(input => {
-    input.addEventListener('input', function() {
-    calculateExistingRowTotal(this);
-    });
-    });
-
-    // Add event listeners to all new item inputs
-    document.querySelectorAll('.new-quantity-input, .new-unit-price-input').forEach(input => {
-    input.addEventListener('input', function() {
-    calculateNewRowTotal(this);
-    });
-    });
-    });
+            printWindow.document.write(`<!DOCTYPE html><html lang="ar"><head><meta charset="UTF-8"><title>مستخلص مشروع - ${projectName}</title></head><body>${extractContent}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+            printWindow.document.close();
+        }
     </script>
 @endsection

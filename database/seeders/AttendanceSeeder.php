@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Employee;
@@ -29,14 +30,14 @@ class AttendanceSeeder extends Seeder
 
             switch ($status) {
                 case 'present':
-                    $checkIn = $today->copy()->setTime(rand(7, 8), rand(0, 59));
-                    $checkOut = $today->copy()->setTime(rand(16, 18), rand(0, 59));
+                    $checkIn = $today->copy()->setTime(random_int(7, 8), random_int(0, 59));
+                    $checkOut = $today->copy()->setTime(random_int(16, 18), random_int(0, 59));
                     $workingHours = $checkOut->diffInHours($checkIn, true);
                     break;
 
                 case 'late':
-                    $checkIn = $today->copy()->setTime(rand(8, 10), rand(0, 59));
-                    $checkOut = $today->copy()->setTime(rand(16, 18), rand(0, 59));
+                    $checkIn = $today->copy()->setTime(random_int(8, 10), random_int(0, 59));
+                    $checkOut = $today->copy()->setTime(random_int(16, 18), random_int(0, 59));
                     $lateMinutes = max(0, $checkIn->diffInMinutes($today->copy()->setTime(8, 0)));
                     $workingHours = $checkOut->diffInHours($checkIn, true);
                     break;

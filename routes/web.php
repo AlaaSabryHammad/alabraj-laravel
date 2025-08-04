@@ -206,6 +206,9 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::put('/{project}', [ProjectController::class, 'update'])->name('projects.update');
         Route::delete('/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
         Route::delete('/images/{image}', [ProjectController::class, 'deleteImage'])->name('projects.images.delete');
+        
+        // Project Extract Routes
+        Route::get('/{project}/extract/create', [ProjectController::class, 'createExtract'])->name('projects.extract.create');
     });
 
     // Settings Management Routes

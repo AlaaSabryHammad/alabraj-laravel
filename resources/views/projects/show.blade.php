@@ -4,6 +4,14 @@
 
 @section('content')
     <div class="p-6" dir="rtl">
+        <!-- زر عمل مستخلص جديد -->
+        <div class="mb-6 flex justify-end">
+            <a href="{{ route('projects.extract.create', $project) }}" target="_blank"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 shadow">
+                <i class="ri-file-list-3-line text-lg"></i>
+                عمل مستخلص جديد
+            </a>
+        </div>
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-4">
@@ -319,6 +327,7 @@
                         </div>
 
                         <!-- Project Files -->
+
                         @if ($project->projectFiles && $project->projectFiles->count() > 0)
                             <div>
                                 <h3 class="text-sm font-medium text-gray-700 mb-3">ملفات المشروع</h3>
@@ -348,33 +357,59 @@
                             </div>
                         @endif
 
-                        <!-- Project Images -->
-                        @if ($project->projectImages && $project->projectImages->count() > 0)
-                            <div>
-                                <h3 class="text-sm font-medium text-gray-700 mb-3">صور المشروع</h3>
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                        @foreach ($project->projectImages as $image)
-                                            <div class="relative group">
-                                                <img src="{{ asset('storage/' . $image->image_path) }}"
-                                                    alt="{{ $image->name ?? 'صورة المشروع' }}"
-                                                    class="w-full h-32 object-cover rounded-lg cursor-pointer hover:shadow-lg transition-all"
-                                                    onclick="showImageModal('{{ asset('storage/' . $image->image_path) }}', '{{ $image->name ?? 'صورة المشروع' }}')">
-                                                <div
-                                                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all flex items-center justify-center">
-                                                    <i
-                                                        class="ri-eye-line text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                                </div>
-                                                @if ($image->name)
-                                                    <p class="text-xs text-gray-600 mt-1 text-center">{{ $image->name }}
-                                                    </p>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
+                        <!-- جدول كميات المشروع -->
+                        @if ($project->projectItems && $project->projectItems->count() > 0)
+                            <div class="mt-8">
+                                <h3 class="text-sm font-medium text-gray-700 mb-3">جدول كميات المشروع</h3>
+                                <div class="overflow-x-auto bg-gray-50 rounded-lg p-4">
+                                    <table class="min-w-full text-sm text-right border">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="px-3 py-2 border">اسم البند</th>
+                                                <th class="px-3 py-2 border">الكمية</th>
+                                                <th class="px-3 py-2 border">الوحدة</th>
+                                                <th class="px-3 py-2 border">السعر الإفرادي</th>
+                                                <th class="px-3 py-2 border">الإجمالي</th>
+                                                <th class="px-3 py-2 border">الإجمالي مع الضريبة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $total = 0;
+                                                $totalWithTax = 0;
+                                            @endphp
+                                            @foreach ($project->projectItems as $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 border">{{ $item->name }}</td>
+                                                    <td class="px-3 py-2 border">{{ number_format($item->quantity, 2) }}
+                                                    </td>
+                                                    <td class="px-3 py-2 border">{{ $item->unit }}</td>
+                                                    <td class="px-3 py-2 border">{{ number_format($item->unit_price, 2) }}
+                                                    </td>
+                                                    <td class="px-3 py-2 border">
+                                                        {{ number_format($item->total_price, 2) }}</td>
+                                                    <td class="px-3 py-2 border">
+                                                        {{ number_format($item->total_with_tax, 2) }}</td>
+                                                </tr>
+                                                @php
+                                                    $total += $item->total_price;
+                                                    $totalWithTax += $item->total_with_tax;
+                                                @endphp
+                                            @endforeach
+                                            <tr class="font-bold bg-gray-200">
+                                                <td class="px-3 py-2 border text-center" colspan="4">الإجمالي</td>
+                                                <td class="px-3 py-2 border">{{ number_format($total, 2) }}</td>
+                                                <td class="px-3 py-2 border">{{ number_format($totalWithTax, 2) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         @endif
+
+                        <!-- Project Images -->
+
+                        <!-- صور المشروع (تم نقلها لأسفل الصفحة) -->
 
                         <!-- Delivery Requests -->
                         @if ($project->deliveryRequests && $project->deliveryRequests->count() > 0)
@@ -510,6 +545,50 @@
             </div>
         </div>
     </div>
+
+    <!-- صور المشروع في آخر الصفحة -->
+    @if ($project->projectImages && $project->projectImages->count() > 0)
+        <div class="p-6" dir="rtl">
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <div class="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-image-line text-pink-600"></i>
+                    </div>
+                    صور المشروع
+                </h2>
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        @foreach ($project->projectImages as $image)
+                            <div class="relative group">
+                                <img src="{{ asset('storage/' . $image->image_path) }}"
+                                    alt="{{ $image->name ?? 'صورة المشروع' }}"
+                                    class="w-full h-40 object-cover rounded-lg cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                                    onclick="showImageModal('{{ asset('storage/' . $image->image_path) }}', '{{ $image->name ?? 'صورة المشروع' }}')">
+                                <div
+                                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-lg transition-all flex items-center justify-center">
+                                    <i
+                                        class="ri-eye-line text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                </div>
+                                @if ($image->name)
+                                    <div
+                                        class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 rounded-b-lg">
+                                        <p class="text-xs text-center truncate">{{ $image->name }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if ($project->projectImages->count() > 0)
+                        <div class="mt-4 text-center text-sm text-gray-600">
+                            <i class="ri-information-line"></i>
+                            اضغط على أي صورة لعرضها بالحجم الكامل
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4">

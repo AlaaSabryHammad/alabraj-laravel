@@ -316,4 +316,15 @@ class ProjectController extends Controller
         return redirect()->route('projects.index')
             ->with('success', 'تم حذف المشروع بنجاح');
     }
+
+    /**
+     * Show the form for creating a new extract
+     */
+    public function createExtract(Project $project)
+    {
+        // Load project with items
+        $project->load('projectItems');
+        
+        return view('projects.extract', compact('project'));
+    }
 }
