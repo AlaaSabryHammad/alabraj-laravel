@@ -602,7 +602,7 @@
                                 @endif
                                 @if($employee->national_id_expiry_date)
                                     <span>•</span>
-                                    <span class="font-medium">تنتهي: {{ $employee->national_id_expiry_date->format('Y/m/d') }}</span>
+                                    <span class="font-medium">تنتهي: {{ $employee->national_id_expiry_date ? $employee->national_id_expiry_date->format('Y/m/d') : 'غير محدد' }}</span>
                                 @endif
                             </div>
                         </div>
@@ -637,7 +637,7 @@
                                 @endif
                                 @if($employee->passport_expiry_date)
                                     <span>•</span>
-                                    <span class="font-medium">ينتهي: {{ $employee->passport_expiry_date->format('Y/m/d') }}</span>
+                                    <span class="font-medium">ينتهي: {{ $employee->passport_expiry_date ? $employee->passport_expiry_date->format('Y/m/d') : 'غير محدد' }}</span>
                                 @endif
                             </div>
                         </div>
@@ -672,7 +672,7 @@
                                 @endif
                                 @if($employee->work_permit_expiry_date)
                                     <span>•</span>
-                                    <span class="font-medium">تنتهي: {{ $employee->work_permit_expiry_date->format('Y/m/d') }}</span>
+                                    <span class="font-medium">تنتهي: {{ $employee->work_permit_expiry_date ? $employee->work_permit_expiry_date->format('Y/m/d') : 'غير محدد' }}</span>
                                 @endif
                             </div>
                         </div>
@@ -704,7 +704,7 @@
                             </div>
                             <div class="flex items-center gap-4 text-lg text-gray-600">
                                 @if($employee->driving_license_expiry_date)
-                                    <span class="font-medium">تنتهي: {{ $employee->driving_license_expiry_date->format('Y/m/d') }}</span>
+                                    <span class="font-medium">تنتهي: {{ $employee->driving_license_expiry_date ? $employee->driving_license_expiry_date->format('Y/m/d') : 'غير محدد' }}</span>
                                 @endif
                             </div>
                         </div>

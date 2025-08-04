@@ -19,6 +19,8 @@ use App\Http\Controllers\EmployeeReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\CorrespondenceController;
+use App\Http\Controllers\MyTasksController;
 
 // Authentication Routes (Public)
 Route::middleware('guest')->group(function () {
@@ -206,10 +208,14 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::put('/{project}', [ProjectController::class, 'update'])->name('projects.update');
         Route::delete('/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
         Route::delete('/images/{image}', [ProjectController::class, 'deleteImage'])->name('projects.images.delete');
-        
+
         // Project Extract Routes
         Route::get('/{project}/extract/create', [ProjectController::class, 'createExtract'])->name('projects.extract.create');
         Route::post('/{project}/extract/store', [ProjectController::class, 'storeExtract'])->name('projects.extract.store');
+        Route::get('/{project}/extract/{extract}', [ProjectController::class, 'showExtract'])->name('projects.extract.show');
+        Route::get('/{project}/extract/{extract}/edit', [ProjectController::class, 'editExtract'])->name('projects.extract.edit');
+        Route::put('/{project}/extract/{extract}', [ProjectController::class, 'updateExtract'])->name('projects.extract.update');
+        Route::delete('/{project}/extract/{extract}', [ProjectController::class, 'destroyExtract'])->name('projects.extract.destroy');
     });
 
     // Settings Management Routes
@@ -256,5 +262,26 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
         Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
         Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+    });
+
+    // Correspondence Management Routes
+    Route::prefix('correspondences')->group(function () {
+        Route::get('/', [CorrespondenceController::class, 'index'])->name('correspondences.index');
+        Route::get('/create', [CorrespondenceController::class, 'create'])->name('correspondences.create');
+        Route::post('/', [CorrespondenceController::class, 'store'])->name('correspondences.store');
+        Route::get('/{correspondence}', [CorrespondenceController::class, 'show'])->name('correspondences.show');
+        Route::get('/{correspondence}/edit', [CorrespondenceController::class, 'edit'])->name('correspondences.edit');
+        Route::put('/{correspondence}', [CorrespondenceController::class, 'update'])->name('correspondences.update');
+        Route::delete('/{correspondence}', [CorrespondenceController::class, 'destroy'])->name('correspondences.destroy');
+        Route::get('/{correspondence}/download', [CorrespondenceController::class, 'download'])->name('correspondences.download');
+    });
+
+    // My Tasks Routes
+    Route::prefix('my-tasks')->group(function () {
+        Route::get('/', [MyTasksController::class, 'index'])->name('my-tasks.index');
+        Route::get('/{correspondence}', [MyTasksController::class, 'show'])->name('my-tasks.show');
+        Route::post('/{correspondence}/reply', [MyTasksController::class, 'storeReply'])->name('my-tasks.reply');
+        Route::patch('/{correspondence}/status', [MyTasksController::class, 'updateStatus'])->name('my-tasks.update-status');
+        Route::get('/reply/{reply}/download', [MyTasksController::class, 'downloadReply'])->name('my-tasks.download-reply');
     });
 }); // End of auth middleware group

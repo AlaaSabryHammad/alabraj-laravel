@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Project;
+use App\Models\ProjectExtract;
 
 class ProjectController extends Controller
 {
@@ -13,7 +16,14 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects = Project::latest()->paginate(10);
+        // Clear any model cache and get fresh data
+        $projects = Project::with('projectManager')->latest()->paginate(10);
+
+        // Ensure fresh attributes are loaded
+        $projects->getCollection()->each(function ($project) {
+            $project->refresh();
+        });
+
         return view('projects.index', compact('projects'));
     }
 
@@ -164,10 +174,19 @@ class ProjectController extends Controller
             'deliveryRequests',
             'projectItems',
             'projectExtracts.extractItems',
-            'projectExtracts.creator'
+            'projectExtracts.creator',
+            'locations.equipment',
+            'locations.employees',
+            'locations.manager'
         ]);
 
-        return view('projects.show', compact('project'));
+        // Get correspondences related to this project
+        $correspondences = \App\Models\Correspondence::with(['assignedEmployee', 'user'])
+            ->where('project_id', $project->id)
+            ->latest()
+            ->get();
+
+        return view('projects.show', compact('project', 'correspondences'));
     }
 
     /**
@@ -177,14 +196,17 @@ class ProjectController extends Controller
     {
         // Load relationships for editing including project items, extracts, and images
         $project->load([
-            'projectImages', 
+            'projectImages',
             'projectItems',
             'projectExtracts' => function($query) {
                 $query->orderBy('created_at', 'desc');
             }
         ]);
 
-        return view('projects.edit', compact('project'));
+        // Get active employees for project manager dropdown
+        $employees = \App\Models\Employee::where('status', 'active')->orderBy('name')->get();
+
+        return view('projects.edit', compact('project', 'employees'));
     }
 
     /**
@@ -195,12 +217,11 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'client_name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'budget' => 'required|numeric|min:0',
             'location' => 'required|string|max:255',
-            'project_manager' => 'required|string|max:255',
+            'project_manager_id' => 'required|exists:employees,id',
             'status' => 'required|in:planning,active,on_hold,completed,cancelled',
             'progress' => 'nullable|integer|min:0|max:100',
             // New fields
@@ -230,66 +251,42 @@ class ProjectController extends Controller
             'tax_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
+        // Debug: Log all received data
+        Log::info('Project Update - All Data:', $validated);
+        Log::info('Project Update - Request Data:', $request->all());
+
+        // Debug: Log the status value before update
+        Log::info('Project Update - Status received:', ['status' => $validated['status'], 'project_id' => $project->id]);
+
+                // Update project with validated data
         $project->update($validated);
 
-        // Handle new images upload
-        if ($request->hasFile('new_images')) {
-            foreach ($request->file('new_images') as $image) {
-                $imagePath = $image->store('projects/images', 'public');
+        // Log successful update for debugging
+        Log::info('Project Update Success:', [
+            'project_id' => $project->id,
+            'updated_fields' => array_keys($validated),
+            'timestamp' => now()->toDateTimeString()
+        ]);
 
-                $project->projectImages()->create([
-                    'image_path' => $imagePath,
-                    'name' => $image->getClientOriginalName()
-                ]);
-            }
-        }
+        // Prepare success message with dynamic content
+        $updatedProject = $project->fresh();
+        $successMessage = sprintf(
+            'تم تحديث المشروع "%s" بنجاح! الحالة الحالية: %s - نسبة الإنجاز: %d%%',
+            $updatedProject->name,
+            $updatedProject->status_label,
+            $updatedProject->progress ?? 0
+        );
 
-        // Handle deleted items
-        if ($request->has('deleted_items') && is_array($request->deleted_items)) {
-            foreach ($request->deleted_items as $itemId) {
-                $project->projectItems()->where('id', $itemId)->delete();
-            }
-        }
-
-        // Handle existing items updates
-        if ($request->has('existing_items')) {
-            foreach ($request->existing_items as $itemId => $itemData) {
-                if (!empty($itemData['name']) && !empty($itemData['quantity']) && !empty($itemData['unit_price'])) {
-                    $project->projectItems()->where('id', $itemId)->update([
-                        'name' => $itemData['name'],
-                        'quantity' => $itemData['quantity'],
-                        'unit' => $itemData['unit'] ?? '',
-                        'unit_price' => $itemData['unit_price'],
-                        'total_price' => $itemData['total_price'] ?? ($itemData['quantity'] * $itemData['unit_price']),
-                        'total_with_tax' => $itemData['total_with_tax'] ?? 0,
-                    ]);
-                }
-            }
-        }
-
-        // Handle new items
-        if ($request->has('new_items')) {
-            foreach ($request->new_items as $itemData) {
-                if (!empty($itemData['name']) && !empty($itemData['quantity']) && !empty($itemData['unit_price'])) {
-                    $project->projectItems()->create([
-                        'name' => $itemData['name'],
-                        'quantity' => $itemData['quantity'],
-                        'unit' => $itemData['unit'] ?? '',
-                        'unit_price' => $itemData['unit_price'],
-                        'total_price' => $itemData['total_price'] ?? ($itemData['quantity'] * $itemData['unit_price']),
-                        'total_with_tax' => $itemData['total_with_tax'] ?? 0,
-                    ]);
-                }
-            }
-        }
-
-        // Update project budget with final total if items exist
-        if ($request->filled('final_total') && $request->final_total > 0) {
-            $project->update(['budget' => $request->final_total]);
-        }
-
+        // Return with enhanced success message and data
         return redirect()->route('projects.show', $project)
-            ->with('success', 'تم تحديث بيانات المشروع والبنود بنجاح');
+            ->with('success', $successMessage)
+            ->with('project_updated', true)
+            ->with('updated_data', [
+                'name' => $updatedProject->name,
+                'status' => $updatedProject->status_label,
+                'progress' => $updatedProject->progress,
+                'manager' => $updatedProject->projectManager->name ?? 'غير محدد'
+            ]);
     }
 
     /**
@@ -332,15 +329,15 @@ class ProjectController extends Controller
     {
         // Load project with items and previous extracts
         $project->load(['projectItems', 'projectExtracts.extractItems']);
-        
+
         // Calculate previous quantities for each project item
         $previousQuantities = [];
         $previousValues = [];
-        
+
         foreach ($project->projectItems as $index => $item) {
             $totalPreviousQuantity = 0;
             $totalPreviousValue = 0;
-            
+
             // Sum up quantities from all previous extracts
             foreach ($project->projectExtracts as $extract) {
                 if ($extract->status !== 'draft') { // Only count non-draft extracts
@@ -352,14 +349,14 @@ class ProjectController extends Controller
                     }
                 }
             }
-            
+
             $previousQuantities[$index] = $totalPreviousQuantity;
             $previousValues[$index] = $totalPreviousValue;
         }
-        
+
         // Generate next extract number
         $nextExtractNumber = 'EXT-' . $project->id . '-' . str_pad($project->projectExtracts->count() + 1, 3, '0', STR_PAD_LEFT);
-        
+
         return view('projects.extract', compact('project', 'previousQuantities', 'previousValues', 'nextExtractNumber'));
     }
 
@@ -412,7 +409,7 @@ class ProjectController extends Controller
                 'total_amount' => $validated['extract_total'],
                 'file_path' => $filePath,
                 'items_data' => json_encode($extractItems),
-                'created_by' => auth()->id(),
+                'created_by' => Auth::id(),
             ]);
 
             // Store individual extract items
@@ -432,6 +429,205 @@ class ProjectController extends Controller
             return back()
                 ->withInput()
                 ->with('error', 'حدث خطأ أثناء حفظ المستخلص: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show extract details
+     */
+    public function showExtract(Project $project, ProjectExtract $extract)
+    {
+        // Ensure extract belongs to project
+        if ($extract->project_id !== $project->id) {
+            abort(404);
+        }
+
+        $project->load(['projectItems', 'projectExtracts']);
+        $extract->load(['extractItems']);
+
+        return view('projects.extract-show', compact('project', 'extract'));
+    }
+
+    /**
+     * Show form for editing extract
+     */
+    public function editExtract(Project $project, ProjectExtract $extract)
+    {
+        // Ensure extract belongs to project
+        if ($extract->project_id !== $project->id) {
+            abort(404);
+        }
+
+        // Only draft extracts can be edited
+        if ($extract->status !== 'draft') {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'لا يمكن تعديل المستخلص إلا في حالة المسودة');
+        }
+
+        // Load project with items and previous extracts (excluding current)
+        $project->load(['projectItems', 'projectExtracts']);
+        $extract->load(['extractItems']);
+
+        // Calculate previous quantities for each project item (excluding current extract)
+        $previousQuantities = [];
+        $previousValues = [];
+        $currentQuantities = [];
+
+        foreach ($project->projectItems as $index => $item) {
+            $totalPreviousQuantity = 0;
+            $totalPreviousValue = 0;
+            $currentQuantity = 0;
+
+            // Sum up quantities from all previous extracts (excluding current)
+            foreach ($project->projectExtracts as $existingExtract) {
+                if ($existingExtract->status !== 'draft' && $existingExtract->id !== $extract->id) {
+                    foreach ($existingExtract->extractItems as $extractItem) {
+                        if ($extractItem->project_item_index == $index) {
+                            $totalPreviousQuantity += $extractItem->quantity;
+                            $totalPreviousValue += $extractItem->total_value;
+                        }
+                    }
+                }
+            }
+
+            // Get current extract quantities
+            foreach ($extract->extractItems as $extractItem) {
+                if ($extractItem->project_item_index == $index) {
+                    $currentQuantity = $extractItem->quantity;
+                    break;
+                }
+            }
+
+            $previousQuantities[$index] = $totalPreviousQuantity;
+            $previousValues[$index] = $totalPreviousValue;
+            $currentQuantities[$index] = $currentQuantity;
+        }
+
+        return view('projects.extract-edit', compact('project', 'extract', 'previousQuantities', 'previousValues', 'currentQuantities'));
+    }
+
+    /**
+     * Update extract
+     */
+    public function updateExtract(Request $request, Project $project, ProjectExtract $extract)
+    {
+        // Ensure extract belongs to project
+        if ($extract->project_id !== $project->id) {
+            abort(404);
+        }
+
+        // Only draft extracts can be edited
+        if ($extract->status !== 'draft') {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'لا يمكن تعديل المستخلص إلا في حالة المسودة');
+        }
+
+        $validated = $request->validate([
+            'extract_number' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:project_extracts,extract_number,' . $extract->id . ',id,project_id,' . $project->id
+            ],
+            'extract_description' => 'nullable|string|max:1000',
+            'extract_date' => 'required|date',
+            'extract_status' => 'required|in:draft,submitted,approved,paid',
+            'extract_total' => 'required|numeric|min:0',
+            'extract_items' => 'required|json',
+            'extract_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240'
+        ], [
+            'extract_number.unique' => 'رقم المستخلص موجود مسبقاً لهذا المشروع',
+            'extract_number.required' => 'رقم المستخلص مطلوب',
+            'extract_date.required' => 'تاريخ المستخلص مطلوب',
+            'extract_total.min' => 'قيمة المستخلص يجب أن تكون أكبر من صفر',
+            'extract_items.required' => 'بيانات بنود المستخلص مطلوبة',
+            'extract_file.mimes' => 'نوع الملف غير مدعوم',
+            'extract_file.max' => 'حجم الملف كبير جداً (الحد الأقصى: 10 ميجابايت)',
+        ]);
+
+        try {
+            // Handle file upload
+            $filePath = $extract->file_path;
+            if ($request->hasFile('extract_file')) {
+                // Delete old file if exists
+                if ($filePath && Storage::disk('public')->exists($filePath)) {
+                    Storage::disk('public')->delete($filePath);
+                }
+
+                $file = $request->file('extract_file');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('project_extracts', $fileName, 'public');
+            }
+
+            // Parse extract items
+            $extractItems = json_decode($validated['extract_items'], true);
+
+            // Update the extract record
+            $extract->update([
+                'extract_number' => $validated['extract_number'],
+                'description' => $validated['extract_description'],
+                'extract_date' => $validated['extract_date'],
+                'status' => $validated['extract_status'],
+                'total_amount' => $validated['extract_total'],
+                'file_path' => $filePath,
+                'items_data' => json_encode($extractItems),
+            ]);
+
+            // Delete existing extract items and create new ones
+            $extract->extractItems()->delete();
+            foreach ($extractItems as $itemData) {
+                $extract->extractItems()->create([
+                    'project_item_index' => $itemData['item_index'],
+                    'quantity' => $itemData['quantity'],
+                    'unit_price' => $itemData['unit_price'],
+                    'total_value' => $itemData['total_value'],
+                ]);
+            }
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم تحديث المستخلص بنجاح');
+
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'حدث خطأ أثناء تحديث المستخلص: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete extract
+     */
+    public function destroyExtract(Project $project, ProjectExtract $extract)
+    {
+        // Ensure extract belongs to project
+        if ($extract->project_id !== $project->id) {
+            abort(404);
+        }
+
+        // Only draft extracts can be deleted
+        if ($extract->status !== 'draft') {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'لا يمكن حذف المستخلص إلا في حالة المسودة');
+        }
+
+        try {
+            // Delete file if exists
+            if ($extract->file_path && Storage::disk('public')->exists($extract->file_path)) {
+                Storage::disk('public')->delete($extract->file_path);
+            }
+
+            // Delete extract items
+            $extract->extractItems()->delete();
+
+            // Delete extract
+            $extract->delete();
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم حذف المستخلص بنجاح');
+
+        } catch (\Exception $e) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'حدث خطأ أثناء حذف المستخلص: ' . $e->getMessage());
         }
     }
 }

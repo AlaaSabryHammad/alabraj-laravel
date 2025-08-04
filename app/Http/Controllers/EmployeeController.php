@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\ManagerAssignment;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class EmployeeController extends Controller
 {
@@ -96,6 +97,7 @@ class EmployeeController extends Controller
             'phone' => 'required|string|max:20',
             'hire_date' => 'required|date',
             'salary' => 'required|numeric|min:0',
+            'working_hours' => 'required|numeric|min:1|max:24',
             'national_id' => [
                 'required',
                 'string',
@@ -282,6 +284,7 @@ class EmployeeController extends Controller
             'phone' => 'required|string|max:20',
             'hire_date' => 'required|date',
             'salary' => 'required|numeric|min:0',
+            'working_hours' => 'required|numeric|min:1|max:24',
             'national_id' => 'required|string|max:20|unique:employees,national_id,' . $employee->id,
             'national_id_expiry_date' => 'nullable|date|after:today',
             'address' => 'nullable|string',
@@ -448,7 +451,8 @@ class EmployeeController extends Controller
             'present' => 0,
             'absent' => 0,
             'late' => 0,
-            'leave' => 0
+            'leave' => 0,
+            'total_overtime_hours' => 0
         ];
 
         foreach ($employees as $employee) {
@@ -468,6 +472,13 @@ class EmployeeController extends Controller
                     case 'sick_leave':
                         $stats['leave']++;
                         break;
+                }
+
+                // Calculate overtime hours
+                $contractHours = $employee->working_hours ?? 8;
+                $actualHours = $attendance->working_hours ?? 0;
+                if ($actualHours > $contractHours) {
+                    $stats['total_overtime_hours'] += ($actualHours - $contractHours);
                 }
             } else {
                 // If no attendance record, consider as absent
@@ -755,7 +766,15 @@ class EmployeeController extends Controller
     public function assignManager(Request $request, Employee $employee)
     {
         $request->validate([
-            'direct_manager_id' => 'required|exists:employees,id|different:id'
+            'direct_manager_id' => [
+                'required',
+                'exists:employees,id',
+                function ($attribute, $value, $fail) use ($employee) {
+                    if ($value == $employee->id) {
+                        $fail('لا يمكن للموظف أن يكون مديراً لنفسه');
+                    }
+                },
+            ]
         ]);
 
         $manager = Employee::find($request->direct_manager_id);
@@ -775,7 +794,8 @@ class EmployeeController extends Controller
 
         // التأكد من عدم إنشاء دورة في التبعية (الموظف لا يمكن أن يكون مدير لمديره)
         if ($this->wouldCreateCycle($employee->id, $request->direct_manager_id)) {
-            return redirect()->back()->with('error', 'لا يمكن تعيين هذا المدير لأنه سيؤدي إلى تضارب في التبعية');
+            $managerName = $manager->name;
+            return redirect()->back()->with('error', "لا يمكن تعيين {$managerName} كمدير مباشر لأن ذلك سيؤدي إلى تضارب في التسلسل الإداري (دورة في التبعية)");
         }
 
         $employee->update(['direct_manager_id' => $request->direct_manager_id]);
@@ -798,7 +818,7 @@ class EmployeeController extends Controller
         ManagerAssignment::create([
             'employee_id' => $employee->id,
             'manager_id' => $request->direct_manager_id,
-            'assigned_by' => 1, // يمكن تحديث هذا لاحقاً ليكون معرف المستخدم الحالي
+            'assigned_by' => Auth::id(),
             'assigned_at' => now(),
             'assignment_type' => 'تعيين',
             'notes' => $notes
@@ -830,7 +850,7 @@ class EmployeeController extends Controller
             ManagerAssignment::create([
                 'employee_id' => $employee->id,
                 'manager_id' => $oldManager,
-                'assigned_by' => 1, // يمكن تحديث هذا لاحقاً ليكون معرف المستخدم الحالي
+                'assigned_by' => Auth::id(),
                 'assigned_at' => now(),
                 'assignment_type' => 'إزالة',
                 'notes' => 'إزالة المدير المباشر'
@@ -845,6 +865,12 @@ class EmployeeController extends Controller
      */
     private function wouldCreateCycle($employeeId, $managerId, $visited = [])
     {
+        // التحقق الأساسي: الموظف لا يمكن أن يكون مديراً لنفسه
+        if ($employeeId == $managerId) {
+            return true;
+        }
+
+        // التحقق من الدورة: إذا كان المدير المقترح يتبع للموظف بطريقة غير مباشرة
         if (in_array($managerId, $visited)) {
             return true; // دورة موجودة
         }
@@ -853,9 +879,11 @@ class EmployeeController extends Controller
 
         $manager = Employee::find($managerId);
         if ($manager && $manager->direct_manager_id) {
+            // إذا كان المدير المقترح يتبع للموظف نفسه، فهذا يؤدي لدورة
             if ($manager->direct_manager_id == $employeeId) {
-                return true; // الموظف هو مدير للمدير المقترح
+                return true;
             }
+            // فحص السلسلة الكاملة
             return $this->wouldCreateCycle($employeeId, $manager->direct_manager_id, $visited);
         }
 

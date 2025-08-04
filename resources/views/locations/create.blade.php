@@ -70,6 +70,30 @@
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <!-- Project Selection - Only shown for "موقع" type -->
+                    <div id="project_selection" style="display: none;">
+                        <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            المشروع <span class="text-red-500">*</span>
+                        </label>
+                        <select id="project_id"
+                                name="project_id"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent @error('project_id') border-red-500 @enderror">
+                            <option value="">اختر المشروع</option>
+                            @foreach($projects as $project)
+                                <option value="{{ $project->id }}"
+                                        {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                    {{ $project->name }}
+                                    @if($project->client_name)
+                                        - {{ $project->client_name }}
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('project_id')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
@@ -272,6 +296,32 @@ document.addEventListener('DOMContentLoaded', function() {
     @if(old('manager_id'))
         updateManagerInfo(document.getElementById('manager_id'));
     @endif
+
+    // Handle location type change to show/hide project selection
+    const locationTypeSelect = document.getElementById('location_type_id');
+    const projectSelection = document.getElementById('project_selection');
+    const projectSelect = document.getElementById('project_id');
+
+    function toggleProjectSelection() {
+        const selectedOption = locationTypeSelect.options[locationTypeSelect.selectedIndex];
+        const selectedText = selectedOption.text.toLowerCase();
+
+        // Check if the selected location type contains "موقع" or "site"
+        if (selectedText.includes('موقع') || selectedText.includes('site')) {
+            projectSelection.style.display = 'block';
+            projectSelect.setAttribute('required', 'required');
+        } else {
+            projectSelection.style.display = 'none';
+            projectSelect.removeAttribute('required');
+            projectSelect.value = ''; // Clear selection
+        }
+    }
+
+    // Initial check
+    toggleProjectSelection();
+
+    // Listen for changes
+    locationTypeSelect.addEventListener('change', toggleProjectSelection);
 });
 </script>
 @endsection

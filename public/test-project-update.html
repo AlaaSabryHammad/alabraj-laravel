@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار تحديث المشروع</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005a87; }
+        .result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>اختبار تحديث المشروع رقم 11</h1>
+
+    <form id="updateForm">
+        <div class="form-group">
+            <label>اسم المشروع:</label>
+            <input type="text" id="name" value="اختبار تحديث من HTML">
+        </div>
+
+        <div class="form-group">
+            <label>مدير المشروع:</label>
+            <select id="project_manager_id">
+                <option value="">-- اختر مدير المشروع --</option>
+                <option value="1">أحمد محمد الأحمد</option>
+                <option value="2">سارة أحمد علي</option>
+                <option value="9">Alaa Sabry Hammad</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>تاريخ البداية:</label>
+            <input type="date" id="start_date" value="2025-01-01">
+        </div>
+
+        <div class="form-group">
+            <label>تاريخ النهاية:</label>
+            <input type="date" id="end_date" value="2025-12-31">
+        </div>
+
+        <div class="form-group">
+            <label>الموازنة:</label>
+            <input type="number" id="budget" value="100000">
+        </div>
+
+        <div class="form-group">
+            <label>الموقع:</label>
+            <input type="text" id="location" value="الرياض">
+        </div>
+
+        <div class="form-group">
+            <label>الحالة:</label>
+            <select id="status">
+                <option value="planning">في التخطيط</option>
+                <option value="active" selected>نشط</option>
+                <option value="on_hold">معلق</option>
+                <option value="completed">مكتمل</option>
+                <option value="cancelled">ملغي</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>نسبة الإنجاز:</label>
+            <input type="number" id="progress" value="50" min="0" max="100">
+        </div>
+
+        <button type="submit">تحديث المشروع</button>
+    </form>
+
+    <div id="result" class="result" style="display: none;"></div>
+
+    <script>
+        document.getElementById('updateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'جارٍ التحديث...';
+
+            // Get CSRF token first
+            try {
+                const tokenResponse = await fetch('/sanctum/csrf-cookie');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                                 getCsrfFromCookie();
+
+                const formData = new FormData();
+                formData.append('_method', 'PUT');
+                formData.append('_token', csrfToken);
+                formData.append('name', document.getElementById('name').value);
+                formData.append('project_manager_id', document.getElementById('project_manager_id').value);
+                formData.append('start_date', document.getElementById('start_date').value);
+                formData.append('end_date', document.getElementById('end_date').value);
+                formData.append('budget', document.getElementById('budget').value);
+                formData.append('location', document.getElementById('location').value);
+                formData.append('status', document.getElementById('status').value);
+                formData.append('progress', document.getElementById('progress').value);
+
+                const response = await fetch('/projects/11', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span style="color: green;">✅ تم تحديث المشروع بنجاح!</span>';
+
+                    // Show updated data
+                    setTimeout(() => {
+                        window.location.href = '/projects/11';
+                    }, 2000);
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = '<span style="color: red;">❌ خطأ في التحديث: ' + response.status + '</span><br><pre>' + errorText.substring(0, 500) + '</pre>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<span style="color: red;">❌ خطأ في الاتصال: ' + error.message + '</span>';
+            }
+        });
+
+        function getCsrfFromCookie() {
+            const name = 'XSRF-TOKEN=';
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const ca = decodedCookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return decodeURIComponent(c.substring(name.length, c.length));
+                }
+            }
+            return '';
+        }
+    </script>
+</body>
+</html>

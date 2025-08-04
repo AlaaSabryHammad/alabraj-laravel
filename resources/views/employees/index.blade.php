@@ -335,7 +335,7 @@
                                     <!-- Mobile info -->
                                     <div class="md:hidden text-xs text-gray-600 mt-1">
                                         <div>{{ $employee->position }}</div>
-                                        <div>{{ $employee->hire_date->format('Y/m/d') }}</div>
+                                        <div>{{ $employee->hire_date ? $employee->hire_date->format('Y/m/d') : 'غير محدد' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -376,7 +376,7 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">{{ $employee->hire_date->format('Y/m/d') }}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">{{ $employee->hire_date ? $employee->hire_date->format('Y/m/d') : 'غير محدد' }}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden xl:table-cell">{{ number_format($employee->salary) }} ر.س</td>
                         <td class="px-3 py-3 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $employee->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">

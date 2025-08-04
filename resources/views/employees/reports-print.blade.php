@@ -152,7 +152,7 @@
                         </div>
                         <div>
                             <span class="text-sm font-medium text-gray-600">تاريخ التوظيف:</span>
-                            <p class="font-semibold text-gray-900">{{ $employee->hire_date->format('Y/m/d') }}</p>
+                            <p class="font-semibold text-gray-900">{{ $employee->hire_date ? $employee->hire_date->format('Y/m/d') : 'غير محدد' }}</p>
                         </div>
                     </div>
                 </div>

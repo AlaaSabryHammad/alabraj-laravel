@@ -33,7 +33,7 @@
         </div>
 
         <!-- Attendance Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
             <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-6 border border-green-200">
                 <div class="flex items-center justify-between">
                     <div>
@@ -81,6 +81,19 @@
                     </div>
                 </div>
             </div>
+
+            <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-600 text-sm font-medium mb-1">ساعات إضافية</p>
+                        <h3 class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_overtime_hours'] ?? 0, 1) }}</h3>
+                        <p class="text-xs text-purple-500 mt-1">ساعة اليوم</p>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl">
+                        <i class="ri-timer-2-fill text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Attendance List -->
@@ -100,7 +113,14 @@
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وقت
                                 الانصراف</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                ساعات العمل</th>
+                                <span title="عدد ساعات العمل المحددة في عقد الموظف">ساعات العقد</span>
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <span title="ساعات العمل الفعلية المنجزة">ساعات العمل الفعلية</span>
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <span title="الساعات الإضافية عن ساعات العقد المحددة">ساعات إضافية</span>
+                            </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 الحالة</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -122,10 +142,19 @@
                                 ];
                                 $arrivalTime = $attendance && $attendance->check_in ? $attendance->check_in : '-';
                                 $departureTime = $attendance && $attendance->check_out ? $attendance->check_out : '-';
-                                $workingHours =
-                                    $attendance && $attendance->working_hours
-                                        ? number_format($attendance->working_hours, 1) . ' ساعة'
-                                        : '-';
+
+                                // Contract hours (from employee model)
+                                $contractHours = $employee->working_hours ?? 8;
+
+                                // Actual working hours
+                                $actualWorkingHours = $attendance && $attendance->working_hours ? $attendance->working_hours : 0;
+
+                                // Calculate overtime hours
+                                $overtimeHours = $actualWorkingHours > $contractHours ? $actualWorkingHours - $contractHours : 0;
+
+                                $workingHours = $actualWorkingHours > 0 ? number_format($actualWorkingHours, 1) . ' ساعة' : '-';
+                                $contractHoursDisplay = number_format($contractHours, 1) . ' ساعة';
+                                $overtimeDisplay = $overtimeHours > 0 ? number_format($overtimeHours, 1) . ' ساعة' : '-';
                             @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -149,7 +178,20 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $departureTime }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span class="text-blue-600 font-medium">{{ $contractHoursDisplay }}</span>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $workingHours }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    @if($overtimeHours > 0)
+                                        <span class="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-md">
+                                            <i class="ri-time-line text-xs"></i>
+                                            {{ $overtimeDisplay }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColors[$attendanceStatus] ?? 'bg-gray-100 text-gray-800' }}">

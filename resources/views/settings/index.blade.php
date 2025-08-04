@@ -442,12 +442,21 @@ function showSettingsSection(section) {
     // Configure add button
     const addBtn = document.getElementById('add-new-btn');
     addBtn.onclick = function() {
-        if (section === 'equipment-types') {
-            openEquipmentTypeModal();
-        } else if (section === 'location-types') {
-            openLocationTypeModal();
-        } else if (section === 'materials') {
-            openMaterialModal();
+        console.log('Add button clicked for section:', section);
+        try {
+            if (section === 'equipment-types') {
+                console.log('Calling openEquipmentTypeModal...');
+                openEquipmentTypeModal();
+            } else if (section === 'location-types') {
+                console.log('Calling openLocationTypeModal...');
+                openLocationTypeModal();
+            } else if (section === 'materials') {
+                console.log('Calling openMaterialModal...');
+                openMaterialModal();
+            }
+        } catch (error) {
+            console.error('Error in add button click handler:', error);
+            alert('حدث خطأ: ' + error.message);
         }
     };
 
@@ -515,12 +524,19 @@ function loadSectionContent(url) {
 
 // Equipment Type Modal Functions
 function openEquipmentTypeModal() {
-    document.getElementById('equipment-modal-title').textContent = 'إضافة نوع معدة جديد';
-    document.getElementById('equipment-save-btn').textContent = 'إضافة';
-    document.getElementById('equipment-type-form').action = '{{ route("settings.equipment-types.store") }}';
-    document.getElementById('equipment-form-method').value = '';
-    clearEquipmentTypeForm();
-    document.getElementById('equipment-type-modal').classList.remove('hidden');
+    console.log('Opening equipment type modal...');
+    try {
+        document.getElementById('equipment-modal-title').textContent = 'إضافة نوع معدة جديد';
+        document.getElementById('equipment-save-btn').textContent = 'إضافة';
+        document.getElementById('equipment-type-form').action = '{{ route("settings.equipment-types.store") }}';
+        document.getElementById('equipment-form-method').value = '';
+        clearEquipmentTypeForm();
+        document.getElementById('equipment-type-modal').classList.remove('hidden');
+        console.log('Equipment type modal opened successfully');
+    } catch (error) {
+        console.error('Error opening equipment type modal:', error);
+        alert('حدث خطأ في فتح النافذة: ' + error.message);
+    }
 }
 
 function closeEquipmentTypeModal() {
@@ -1207,6 +1223,21 @@ document.addEventListener('keydown', function(e) {
             closeDeleteEquipmentTypeModal();
         }
     }
+});
+
+// Debug: Test if functions are properly loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Settings page JavaScript loaded');
+    console.log('openEquipmentTypeModal function exists:', typeof openEquipmentTypeModal === 'function');
+    console.log('showSettingsSection function exists:', typeof showSettingsSection === 'function');
+
+    // Test modal element exists
+    const modal = document.getElementById('equipment-type-modal');
+    console.log('Equipment type modal element exists:', modal !== null);
+
+    // Test add button exists
+    const addBtn = document.getElementById('add-new-btn');
+    console.log('Add new button exists:', addBtn !== null);
 });
 </script>
 @endsection

@@ -25,7 +25,7 @@ class Project extends Model
         'consulting_office',
         'project_scope',
         'project_manager_id',
-        'progress_percentage'
+        'progress'
     ];
 
     protected $casts = [
@@ -127,5 +127,10 @@ class Project extends Model
     public function projectExtracts()
     {
         return $this->hasMany(ProjectExtract::class);
+    }
+
+    public function locations()
+    {
+        return $this->hasMany(Location::class, 'project_id');
     }
 }

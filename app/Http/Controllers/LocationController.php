@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Location;
 use App\Models\Employee;
 use App\Models\LocationType;
+use App\Models\Project;
 
 class LocationController extends Controller
 {
@@ -34,7 +35,8 @@ class LocationController extends Controller
     {
         $employees = Employee::where('status', 'active')->get();
         $locationTypes = LocationType::where('is_active', true)->get();
-        return view('locations.create', compact('employees', 'locationTypes'));
+        $projects = Project::where('status', 'active')->get();
+        return view('locations.create', compact('employees', 'locationTypes', 'projects'));
     }
 
     /**
@@ -62,9 +64,23 @@ class LocationController extends Controller
      */
     public function store(Request $request)
     {
+        // First validate basic fields
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'location_type_id' => 'required|exists:location_types,id',
+        ]);
+
+        // Check if location type requires project selection
+        $locationType = LocationType::find($request->location_type_id);
+        $isProjectRequired = $locationType && (
+            stripos($locationType->name, 'موقع') !== false ||
+            stripos($locationType->name, 'site') !== false
+        );
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location_type_id' => 'required|exists:location_types,id',
+            'project_id' => $isProjectRequired ? 'required|exists:projects,id' : 'nullable|exists:projects,id',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:255',
             'region' => 'nullable|string|max:255',

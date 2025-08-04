@@ -22,7 +22,8 @@ class Location extends Model
         'manager_name',
         'contact_phone',
         'area_size',
-        'location_type_id'
+        'location_type_id',
+        'project_id'
     ];
 
     protected $casts = [
@@ -45,5 +46,17 @@ class Location extends Model
     public function locationType()
     {
         return $this->belongsTo(LocationType::class, 'location_type_id');
+    }
+
+    // Project relationship
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    // Employees relationship
+    public function employees()
+    {
+        return $this->hasMany(Employee::class, 'location_id');
     }
 }

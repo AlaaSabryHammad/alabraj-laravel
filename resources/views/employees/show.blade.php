@@ -8,6 +8,41 @@
 
 @section('content')
 <div class="p-6" dir="rtl">
+    <!-- Flash Messages -->
+    @if(session('success'))
+    <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <i class="ri-check-circle-line text-green-600 text-xl ml-2"></i>
+            <span class="text-green-800 font-medium">{{ session('success') }}</span>
+        </div>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <i class="ri-error-warning-line text-red-600 text-xl ml-2"></i>
+            <span class="text-red-800 font-medium">{{ session('error') }}</span>
+        </div>
+    </div>
+    @endif
+
+    @if($errors->any())
+    <div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-start">
+            <i class="ri-error-warning-line text-red-600 text-xl ml-2 mt-0.5"></i>
+            <div>
+                <h4 class="text-red-800 font-medium mb-2">يرجى تصحيح الأخطاء التالية:</h4>
+                <ul class="text-red-700 text-sm space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Header (Hidden in Print) -->
     <div class="flex items-center justify-between mb-6 no-print">
         <div class="flex items-center gap-4">
@@ -108,7 +143,7 @@
                             @if($employee->location_assignment_date)
                             <div class="flex items-center gap-2">
                                 <span class="font-medium text-gray-700 min-w-0">تاريخ التعيين في الموقع:</span>
-                                <span class="text-gray-600">{{ \Carbon\Carbon::parse($employee->location_assignment_date)->format('Y/m/d') }}</span>
+                                <span class="text-gray-600">{{ $employee->location_assignment_date ? \Carbon\Carbon::parse($employee->location_assignment_date)->format('Y/m/d') : 'غير محدد' }}</span>
                             </div>
                             @endif
                         </div>
@@ -174,96 +209,64 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- National ID Status -->
                 @if($employee->national_id_expiry_date)
+                @php $nationalIdStatus = $employee->getDocumentStatus('national_id_expiry_date'); @endphp
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">الهوية الوطنية</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($employee->national_id_expiry_date->isPast()) bg-red-100 text-red-800
-                            @elseif($employee->national_id_expiry_date->diffInDays() <= 90) bg-yellow-100 text-yellow-800
-                            @else bg-green-100 text-green-800 @endif">
-                            @if($employee->national_id_expiry_date->isPast())
-                                منتهي الصلاحية
-                            @elseif($employee->national_id_expiry_date->diffInDays() <= 90)
-                                ينتهي قريباً
-                            @else
-                                ساري
-                            @endif
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $nationalIdStatus['class'] }}">
+                            {{ $nationalIdStatus['status'] }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-600">
-                        ينتهي: {{ $employee->national_id_expiry_date->format('Y/m/d') }}
+                        ينتهي: {{ $employee->national_id_expiry_date ? $employee->national_id_expiry_date->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 @endif
 
                 <!-- Passport Status -->
                 @if($employee->passport_expiry_date)
+                @php $passportStatus = $employee->getDocumentStatus('passport_expiry_date'); @endphp
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">جواز السفر</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($employee->passport_expiry_date->isPast()) bg-red-100 text-red-800
-                            @elseif($employee->passport_expiry_date->diffInDays() <= 90) bg-yellow-100 text-yellow-800
-                            @else bg-green-100 text-green-800 @endif">
-                            @if($employee->passport_expiry_date->isPast())
-                                منتهي الصلاحية
-                            @elseif($employee->passport_expiry_date->diffInDays() <= 90)
-                                ينتهي قريباً
-                            @else
-                                ساري
-                            @endif
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $passportStatus['class'] }}">
+                            {{ $passportStatus['status'] }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-600">
-                        ينتهي: {{ $employee->passport_expiry_date->format('Y/m/d') }}
+                        ينتهي: {{ $employee->passport_expiry_date ? $employee->passport_expiry_date->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 @endif
 
                 <!-- Work Permit Status -->
                 @if($employee->work_permit_expiry_date)
+                @php $workPermitStatus = $employee->getDocumentStatus('work_permit_expiry_date'); @endphp
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">بطاقة التشغيل</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($employee->work_permit_expiry_date->isPast()) bg-red-100 text-red-800
-                            @elseif($employee->work_permit_expiry_date->diffInDays() <= 90) bg-yellow-100 text-yellow-800
-                            @else bg-green-100 text-green-800 @endif">
-                            @if($employee->work_permit_expiry_date->isPast())
-                                منتهي الصلاحية
-                            @elseif($employee->work_permit_expiry_date->diffInDays() <= 90)
-                                ينتهي قريباً
-                            @else
-                                ساري
-                            @endif
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $workPermitStatus['class'] }}">
+                            {{ $workPermitStatus['status'] }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-600">
-                        ينتهي: {{ $employee->work_permit_expiry_date->format('Y/m/d') }}
+                        ينتهي: {{ $employee->work_permit_expiry_date ? $employee->work_permit_expiry_date->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 @endif
 
                 <!-- Driving License Status -->
                 @if($employee->driving_license_expiry_date)
+                @php $drivingLicenseStatus = $employee->getDocumentStatus('driving_license_expiry_date'); @endphp
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">رخصة القيادة</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($employee->driving_license_expiry_date->isPast()) bg-red-100 text-red-800
-                            @elseif($employee->driving_license_expiry_date->diffInDays() <= 90) bg-yellow-100 text-yellow-800
-                            @else bg-green-100 text-green-800 @endif">
-                            @if($employee->driving_license_expiry_date->isPast())
-                                منتهي الصلاحية
-                            @elseif($employee->driving_license_expiry_date->diffInDays() <= 90)
-                                ينتهي قريباً
-                            @else
-                                ساري
-                            @endif
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $drivingLicenseStatus['class'] }}">
+                            {{ $drivingLicenseStatus['status'] }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-600">
-                        ينتهي: {{ $employee->driving_license_expiry_date->format('Y/m/d') }}
+                        ينتهي: {{ $employee->driving_license_expiry_date ? $employee->driving_license_expiry_date->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 @endif
@@ -314,13 +317,19 @@
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <label class="block text-xs font-medium text-gray-600 mb-1">تاريخ التوظيف</label>
                     <p class="text-sm font-medium text-gray-900">
-                        {{ optional($employee->hire_date)->format('Y/m/d') ?? 'غير محدد' }}
+                        {{ $employee->hire_date ? $employee->hire_date->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <label class="block text-xs font-medium text-gray-600 mb-1">الراتب الأساسي</label>
                     <p class="text-sm font-medium text-gray-900">
                         {{ $employee->salary ? number_format((float)$employee->salary, 2) . ' ريال' : 'غير محدد' }}
+                    </p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">ساعات العمل اليومية</label>
+                    <p class="text-sm font-medium text-gray-900">
+                        {{ $employee->working_hours ? $employee->working_hours . ' ساعة' : '8 ساعات (افتراضي)' }}
                     </p>
                 </div>
                 @if($employee->hire_date)
@@ -341,7 +350,7 @@
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <label class="block text-xs font-medium text-gray-600 mb-1">تاريخ الميلاد</label>
                     <p class="text-sm font-medium text-gray-900">
-                        {{ optional($employee->birth_date)->format('Y/m/d') ?? $employee->birth_date }}
+                        {{ $employee->birth_date ? $employee->birth_date->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 @endif
@@ -425,7 +434,7 @@
                     <div class="bg-blue-50 p-3 rounded-lg">
                         <label class="block text-xs font-medium text-blue-600 mb-1">تاريخ التعيين في الموقع</label>
                         <p class="text-sm font-medium text-blue-900">
-                            {{ $employee->location_assignment_date->format('Y/m/d') }}
+                            {{ $employee->location_assignment_date ? $employee->location_assignment_date->format('Y/m/d') : 'غير محدد' }}
                         </p>
                     </div>
                     @endif
@@ -468,12 +477,12 @@
                 </div>
                 <div class="bg-green-50 p-3 rounded-lg">
                     <label class="block text-xs font-medium text-green-600 mb-1">تاريخ إنشاء الحساب</label>
-                    <p class="text-sm font-medium text-green-900">{{ $employee->user->created_at->format('Y/m/d H:i') }}</p>
+                    <p class="text-sm font-medium text-green-900">{{ $employee->user ? $employee->user->created_at->format('Y/m/d H:i') : 'لا يوجد حساب مستخدم' }}</p>
                 </div>
                 <div class="bg-green-50 p-3 rounded-lg">
                     <label class="block text-xs font-medium text-green-600 mb-1">آخر تسجيل دخول</label>
                     <p class="text-sm font-medium text-green-900">
-                        {{ $employee->user->updated_at ? $employee->user->updated_at->format('Y/m/d H:i') : 'لم يسجل دخول بعد' }}
+                        {{ $employee->user && $employee->user->updated_at ? $employee->user->updated_at->format('Y/m/d H:i') : 'لم يسجل دخول بعد' }}
                     </p>
                 </div>
 
@@ -652,14 +661,15 @@
                         <div class="space-y-1 text-xs">
                             <p><span class="font-medium">رقم الجواز:</span> {{ $employee->passport_number }}</p>
                             @if($employee->passport_issue_date)
-                                <p><span class="font-medium">الإصدار:</span> {{ $employee->passport_issue_date->format('Y/m/d') }}</p>
+                                <p><span class="font-medium">الإصدار:</span> {{ $employee->passport_issue_date ? $employee->passport_issue_date->format('Y/m/d') : 'غير محدد' }}</p>
                             @endif
                             @if($employee->passport_expiry_date)
-                                <p class="@if($employee->passport_expiry_date->isPast()) text-red-600 @elseif($employee->passport_expiry_date->diffInDays() <= 30) text-orange-600 @endif">
-                                    <span class="font-medium">الانتهاء:</span> {{ $employee->passport_expiry_date->format('Y/m/d') }}
+                                @php $daysUntilExpiry = now()->diffInDays($employee->passport_expiry_date, false); @endphp
+                                <p class="@if($employee->passport_expiry_date->isPast()) text-red-600 @elseif($daysUntilExpiry >= 0 && $daysUntilExpiry <= 30) text-orange-600 @endif">
+                                    <span class="font-medium">الانتهاء:</span> {{ $employee->passport_expiry_date ? $employee->passport_expiry_date->format('Y/m/d') : 'غير محدد' }}
                                     @if($employee->passport_expiry_date->isPast())
                                         <span class="font-semibold">(منتهي)</span>
-                                    @elseif($employee->passport_expiry_date->diffInDays() <= 30)
+                                    @elseif($daysUntilExpiry >= 0 && $daysUntilExpiry <= 30)
                                         <span class="font-semibold">(ينتهي قريباً)</span>
                                     @endif
                                 </p>
@@ -692,14 +702,15 @@
                         <div class="space-y-1 text-xs">
                             <p><span class="font-medium">رقم التصريح:</span> {{ $employee->work_permit_number }}</p>
                             @if($employee->work_permit_issue_date)
-                                <p><span class="font-medium">الإصدار:</span> {{ $employee->work_permit_issue_date->format('Y/m/d') }}</p>
+                                <p><span class="font-medium">الإصدار:</span> {{ $employee->work_permit_issue_date ? $employee->work_permit_issue_date->format('Y/m/d') : 'غير محدد' }}</p>
                             @endif
                             @if($employee->work_permit_expiry_date)
-                                <p class="@if($employee->work_permit_expiry_date->isPast()) text-red-600 @elseif($employee->work_permit_expiry_date->diffInDays() <= 30) text-orange-600 @endif">
-                                    <span class="font-medium">الانتهاء:</span> {{ $employee->work_permit_expiry_date->format('Y/m/d') }}
+                                @php $daysUntilExpiry = now()->diffInDays($employee->work_permit_expiry_date, false); @endphp
+                                <p class="@if($employee->work_permit_expiry_date->isPast()) text-red-600 @elseif($daysUntilExpiry >= 0 && $daysUntilExpiry <= 30) text-orange-600 @endif">
+                                    <span class="font-medium">الانتهاء:</span> {{ $employee->work_permit_expiry_date ? $employee->work_permit_expiry_date->format('Y/m/d') : 'غير محدد' }}
                                     @if($employee->work_permit_expiry_date->isPast())
                                         <span class="font-semibold">(منتهي)</span>
-                                    @elseif($employee->work_permit_expiry_date->diffInDays() <= 30)
+                                    @elseif($daysUntilExpiry >= 0 && $daysUntilExpiry <= 30)
                                         <span class="font-semibold">(ينتهي قريباً)</span>
                                     @endif
                                 </p>
@@ -733,14 +744,15 @@
                     @if($employee->driving_license_issue_date || $employee->driving_license_expiry_date)
                         <div class="space-y-1 text-xs">
                             @if($employee->driving_license_issue_date)
-                                <p><span class="font-medium">الإصدار:</span> {{ $employee->driving_license_issue_date->format('Y/m/d') }}</p>
+                                <p><span class="font-medium">الإصدار:</span> {{ $employee->driving_license_issue_date ? $employee->driving_license_issue_date->format('Y/m/d') : 'غير محدد' }}</p>
                             @endif
                             @if($employee->driving_license_expiry_date)
-                                <p class="@if($employee->driving_license_expiry_date->isPast()) text-red-600 @elseif($employee->driving_license_expiry_date->diffInDays() <= 30) text-orange-600 @endif">
-                                    <span class="font-medium">الانتهاء:</span> {{ $employee->driving_license_expiry_date->format('Y/m/d') }}
+                                @php $daysUntilExpiry = now()->diffInDays($employee->driving_license_expiry_date, false); @endphp
+                                <p class="@if($employee->driving_license_expiry_date->isPast()) text-red-600 @elseif($daysUntilExpiry >= 0 && $daysUntilExpiry <= 30) text-orange-600 @endif">
+                                    <span class="font-medium">الانتهاء:</span> {{ $employee->driving_license_expiry_date ? $employee->driving_license_expiry_date->format('Y/m/d') : 'غير محدد' }}
                                     @if($employee->driving_license_expiry_date->isPast())
                                         <span class="font-semibold">(منتهية)</span>
-                                    @elseif($employee->driving_license_expiry_date->diffInDays() <= 30)
+                                    @elseif($daysUntilExpiry >= 0 && $daysUntilExpiry <= 30)
                                         <span class="font-semibold">(تنتهي قريباً)</span>
                                     @endif
                                 </p>
@@ -848,7 +860,7 @@
 
                             @if($equipment->purchase_date)
                             <div>
-                                <span class="font-medium">تاريخ الشراء:</span> {{ \Carbon\Carbon::parse($equipment->purchase_date)->format('Y/m/d') }}
+                                <span class="font-medium">تاريخ الشراء:</span> {{ $equipment->purchase_date ? \Carbon\Carbon::parse($equipment->purchase_date)->format('Y/m/d') : 'غير محدد' }}
                             </div>
                             @endif
                         </div>

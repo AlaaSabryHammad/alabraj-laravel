@@ -139,7 +139,9 @@
                                     <div class="text-sm text-gray-900">{{ $project->client_name }}</div>
                                 </td>
                                 <td class="px-4 py-4 hidden md:table-cell">
-                                    <div class="text-sm text-gray-900">{{ $project->project_manager }}</div>
+                                    <div class="text-sm text-gray-900">
+                                        {{ $project->projectManager ? $project->projectManager->name : ($project->project_manager ?: 'غير محدد') }}
+                                    </div>
                                 </td>
                                 <td class="px-4 py-4 hidden lg:table-cell text-sm text-gray-900">
                                     {{ $project->start_date->format('Y-m-d') }}

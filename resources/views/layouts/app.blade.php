@@ -12,6 +12,9 @@
     <!-- Remix Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
+    <!-- Enhanced Project Edit Styles -->
+    <link href="{{ asset('css/project-edit-enhanced.css') }}" rel="stylesheet">
+
     <!-- Custom CSS for RTL -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');

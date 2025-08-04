@@ -87,6 +87,20 @@
                 'color' => 'from-indigo-600 to-indigo-700'
             ],
             [
+                'id' => 'correspondences',
+                'title' => 'الاتصالات الإدارية',
+                'icon' => 'ri-mail-line',
+                'route' => 'correspondences.index',
+                'color' => 'from-pink-600 to-pink-700'
+            ],
+            [
+                'id' => 'my-tasks',
+                'title' => 'المعاملات الخاصة',
+                'icon' => 'ri-task-line',
+                'route' => 'my-tasks.index',
+                'color' => 'from-purple-600 to-purple-700'
+            ],
+            [
                 'id' => 'suppliers',
                 'title' => 'إدارة الموردين',
                 'icon' => 'ri-truck-line',

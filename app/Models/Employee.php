@@ -49,7 +49,8 @@ class Employee extends Model
         'location_type',
         'additional_documents',
         'rating',
-        'direct_manager_id'
+        'direct_manager_id',
+        'working_hours'
     ];
 
     protected $casts = [
@@ -83,6 +84,28 @@ class Employee extends Model
             return null;
         }
         return round($this->$field->diffInDays());
+    }
+
+    // Helper method to get document status
+    public function getDocumentStatus($field)
+    {
+        if (!$this->$field) {
+            return ['status' => 'غير محدد', 'class' => 'bg-gray-100 text-gray-800'];
+        }
+
+        // Check if expired (past date)
+        if ($this->$field->isPast()) {
+            return ['status' => 'منتهي الصلاحية', 'class' => 'bg-red-100 text-red-800'];
+        }
+
+        // Check if expires soon (within 30 days from now)
+        $daysUntilExpiry = now()->diffInDays($this->$field, false);
+        if ($daysUntilExpiry >= 0 && $daysUntilExpiry <= 30) {
+            return ['status' => 'ينتهي قريباً', 'class' => 'bg-yellow-100 text-yellow-800'];
+        }
+
+        // Valid (more than 30 days remaining)
+        return ['status' => 'ساري', 'class' => 'bg-green-100 text-green-800'];
     }
 
     // Location relationship

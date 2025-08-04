@@ -3,51 +3,106 @@
 @section('title', 'تعديل المشروع: ' . $project->name)
 
 @section('content')
-    <div class="p-6" dir="rtl">
-        <!-- Header -->
-        <div class="flex items-center justify-between gap-4 mb-6">
-            <div class="flex items-center gap-4">
-                <a href="{{ route('projects.index') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
-                    <i class="ri-arrow-right-line text-xl"></i>
-                </a>
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">تعديل المشروع</h1>
-                    <p class="text-gray-600 mt-1">{{ $project->name }}</p>
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" dir="rtl">
+    <!-- Modern Header with Project Branding -->
+    <div class="bg-white/80 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button onclick="window.history.back()"
+                        class="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg transition-all duration-300">
+                        <i class="ri-arrow-right-line text-xl"></i>
+                    </button>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            {{ substr($project->name, 0, 2) }}
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-800 bg-clip-text text-transparent">
+                                تحرير المشروع
+                            </h1>
+                            <p class="text-gray-600 font-medium">{{ $project->name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('projects.show', $project) }}"
+                        class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
+                        <i class="ri-eye-line"></i>
+                        عرض المشروع
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto p-6">
+        <!-- Project Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Progress Card -->
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                        <i class="ri-progress-line text-white text-lg"></i>
+                    </div>
+                    <span class="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">نسبة الإنجاز</span>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">{{ number_format($project->progress ?? 0) }}%</div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                         style="width: {{ $project->progress ?? 0 }}%"></div>
                 </div>
             </div>
 
-            <!-- Header Buttons -->
-            <div class="flex items-center gap-3">
-                <a href="{{ route('projects.show', $project) }}"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2">
-                    <i class="ri-eye-line"></i>
-                    عرض التفاصيل
-                </a>
+            <!-- Budget Card -->
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center">
+                        <i class="ri-money-dollar-box-line text-white text-lg"></i>
+                    </div>
+                    <span class="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">الميزانية</span>
+                </div>
+                <div class="text-3xl font-bold text-gray-800">{{ number_format($project->budget ?? 0) }}</div>
+                <div class="text-sm text-gray-600 mt-1">ريال سعودي</div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-r
+                        @if($project->status === 'active') from-green-500 to-green-600
+                        @elseif($project->status === 'planning') from-yellow-500 to-yellow-600
+                        @elseif($project->status === 'completed') from-gray-500 to-gray-600
+                        @else from-red-500 to-red-600 @endif
+                        flex items-center justify-center">
+                        <i class="ri-pulse-line text-white text-lg"></i>
+                    </div>
+                    <span class="text-sm font-medium
+                        @if($project->status === 'active') text-green-600 bg-green-50
+                        @elseif($project->status === 'planning') text-yellow-600 bg-yellow-50
+                        @elseif($project->status === 'completed') text-gray-600 bg-gray-50
+                        @else text-red-600 bg-red-50 @endif
+                        px-3 py-1 rounded-full">الحالة</span>
+                </div>
+                <div class="text-xl font-bold text-gray-800">{{ $project->status_label ?? 'غير محدد' }}</div>
+            </div>
+
+            <!-- Manager Card -->
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                        <i class="ri-user-crown-line text-white text-lg"></i>
+                    </div>
+                    <span class="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">مدير المشروع</span>
+                </div>
+                <div class="text-lg font-semibold text-gray-800">
+                    {{ $project->projectManager->name ?? $project->project_manager ?? 'غير محدد' }}
+                </div>
             </div>
         </div>
-
-        <div class="max-w-4xl">
-            <!-- Project Status Card -->
-            <div class="bg-white rounded-xl shadow-sm border mb-6">
-                <div class="p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">حالة المشروع</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-blue-600">{{ number_format($project->progress) }}%</div>
-                            <div class="text-sm text-gray-600">نسبة الإنجاز</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-green-600">{{ number_format($project->budget, 0) }} ر.س
-                            </div>
-                            <div class="text-sm text-gray-600">الميزانية الإجمالية</div>
-                        </div>
-                        <div class="text-center">
-                            <div
-                                class="text-2xl font-bold
-                            @if ($project->status === 'active') text-green-600
-                            @elseif($project->status === 'planning') text-blue-600
-                            @elseif($project->status === 'completed') text-gray-600
-                            @else text-red-600 @endif">
                                 @if ($project->status === 'active')
                                     نشط
                                 @elseif($project->status === 'planning')
@@ -109,7 +164,7 @@
                                         class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                         <div class="flex items-center gap-3">
                                             <div
-                                                class="w-2 h-2 rounded-full 
+                                                class="w-2 h-2 rounded-full
                                                 @if ($extract->status === 'paid') bg-green-500
                                                 @elseif($extract->status === 'approved') bg-blue-500
                                                 @elseif($extract->status === 'submitted') bg-yellow-500
@@ -206,10 +261,10 @@
                             @if ($project->end_date)
                                 <!-- End Date -->
                                 <div
-                                    class="flex items-center gap-3 p-3 
+                                    class="flex items-center gap-3 p-3
                                     @if ($project->end_date->isPast()) bg-red-50 @else bg-orange-50 @endif rounded-lg">
                                     <div
-                                        class="w-2 h-2 
+                                        class="w-2 h-2
                                         @if ($project->end_date->isPast()) bg-red-500 @else bg-orange-500 @endif rounded-full">
                                     </div>
                                     <div class="flex-1">
@@ -288,44 +343,340 @@
                 </div>
             </div>
 
-            <!-- Edit Form -->
-            <div class="bg-white rounded-xl shadow-sm border">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">تعديل بيانات المشروع</h2>
+        <!-- Modern Edit Form -->
+        <div class="bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            <!-- Form Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <i class="ri-edit-box-line text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">تحرير بيانات المشروع</h2>
+                        <p class="text-blue-100 mt-1">قم بتحديث معلومات المشروع وحفظ التغييرات</p>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Form Content -->
+            <form action="{{ route('projects.update', $project) }}" method="POST"
+                  enctype="multipart/form-data"
+                  class="p-8"
+                  id="projectEditForm">
+                @csrf
+                @method('PUT')
+
+                <!-- Basic Information Section -->
+                <div class="mb-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                            <i class="ri-information-line text-white text-sm"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">المعلومات الأساسية</h3>
+                        <div class="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Project Name -->
+                        <div class="space-y-3">
+                            <label for="name" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-file-text-line text-blue-600"></i>
+                                اسم المشروع
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text"
+                                       name="name"
+                                       id="name"
+                                       value="{{ old('name', $project->name) }}"
+                                       class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('name') border-red-300 @enderror"
+                                       placeholder="أدخل اسم المشروع"
+                                       required>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <i class="ri-building-line text-gray-400"></i>
+                                </div>
+                            </div>
+                            @error('name')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- Project Manager -->
+                        <div class="space-y-3">
+                            <label for="project_manager_id" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-user-crown-line text-purple-600"></i>
+                                مدير المشروع
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select name="project_manager_id"
+                                        id="project_manager_id"
+                                        class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('project_manager_id') border-red-300 @enderror appearance-none"
+                                        required>
+                                    <option value="">-- اختر مدير المشروع --</option>
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->id }}"
+                                            {{ (old('project_manager_id', $project->project_manager_id) == $employee->id) ? 'selected' : '' }}>
+                                            {{ $employee->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <i class="ri-arrow-down-s-line text-gray-400"></i>
+                                </div>
+                            </div>
+                            @error('project_manager_id')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- Location -->
+                        <div class="space-y-3">
+                            <label for="location" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-map-pin-line text-emerald-600"></i>
+                                موقع المشروع
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text"
+                                       name="location"
+                                       id="location"
+                                       value="{{ old('location', $project->location) }}"
+                                       class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('location') border-red-300 @enderror"
+                                       placeholder="أدخل موقع المشروع"
+                                       required>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <i class="ri-map-2-line text-gray-400"></i>
+                                </div>
+                            </div>
+                            @error('location')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- Status -->
+                        <div class="space-y-3">
+                            <label for="status" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-pulse-line text-orange-600"></i>
+                                حالة المشروع
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select name="status"
+                                        id="status"
+                                        class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('status') border-red-300 @enderror appearance-none"
+                                        required>
+                                    <option value="planning" {{ old('status', $project->status) == 'planning' ? 'selected' : '' }}>في التخطيط</option>
+                                    <option value="active" {{ old('status', $project->status) == 'active' ? 'selected' : '' }}>نشط</option>
+                                    <option value="on_hold" {{ old('status', $project->status) == 'on_hold' ? 'selected' : '' }}>معلق</option>
+                                    <option value="completed" {{ old('status', $project->status) == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                                    <option value="cancelled" {{ old('status', $project->status) == 'cancelled' ? 'selected' : '' }}>ملغي</option>
+                                </select>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <i class="ri-arrow-down-s-line text-gray-400"></i>
+                                </div>
+                            </div>
+                            @error('status')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Details Section -->
+                <div class="mb-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center">
+                            <i class="ri-calendar-line text-white text-sm"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">تفاصيل المشروع</h3>
+                        <div class="flex-1 h-px bg-gradient-to-r from-emerald-200 to-transparent"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                        <!-- Start Date -->
+                        <div class="space-y-3">
+                            <label for="start_date" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-calendar-event-line text-green-600"></i>
+                                تاريخ البداية
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date"
+                                   name="start_date"
+                                   id="start_date"
+                                   value="{{ old('start_date', $project->start_date ? $project->start_date->format('Y-m-d') : '') }}"
+                                   class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('start_date') border-red-300 @enderror"
+                                   required>
+                            @error('start_date')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="space-y-3">
+                            <label for="end_date" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-calendar-check-line text-red-600"></i>
+                                تاريخ النهاية
+                            </label>
+                            <input type="date"
+                                   name="end_date"
+                                   id="end_date"
+                                   value="{{ old('end_date', $project->end_date ? $project->end_date->format('Y-m-d') : '') }}"
+                                   class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('end_date') border-red-300 @enderror">
+                            @error('end_date')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- Budget -->
+                        <div class="space-y-3">
+                            <label for="budget" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-money-dollar-circle-line text-yellow-600"></i>
+                                الميزانية
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number"
+                                       name="budget"
+                                       id="budget"
+                                       value="{{ old('budget', $project->budget) }}"
+                                       class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('budget') border-red-300 @enderror"
+                                       placeholder="0"
+                                       min="0"
+                                       step="0.01"
+                                       required>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <span class="text-gray-400 text-sm">ر.س</span>
+                                </div>
+                            </div>
+                            @error('budget')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- Progress -->
+                        <div class="space-y-3">
+                            <label for="progress" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="ri-progress-3-line text-indigo-600"></i>
+                                نسبة الإنجاز
+                            </label>
+                            <div class="relative">
+                                <input type="number"
+                                       name="progress"
+                                       id="progress"
+                                       value="{{ old('progress', $project->progress) }}"
+                                       class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('progress') border-red-300 @enderror"
+                                       placeholder="0"
+                                       min="0"
+                                       max="100">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <span class="text-gray-400 text-sm">%</span>
+                                </div>
+                            </div>
+                            @error('progress')
+                                <p class="text-sm text-red-600 flex items-center gap-1">
+                                    <i class="ri-error-warning-line"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description Section -->
+                <div class="mb-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                            <i class="ri-file-text-line text-white text-sm"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">وصف المشروع</h3>
+                        <div class="flex-1 h-px bg-gradient-to-r from-purple-200 to-transparent"></div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label for="description" class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <i class="ri-draft-line text-purple-600"></i>
+                            الوصف التفصيلي
+                        </label>
+                        <textarea name="description"
+                                  id="description"
+                                  rows="6"
+                                  class="w-full px-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 bg-white/50 backdrop-blur-sm @error('description') border-red-300 @enderror resize-none"
+                                  placeholder="أدخل وصفاً تفصيلياً للمشروع...">{{ old('description', $project->description) }}</textarea>
+                        @error('description')
+                            <p class="text-sm text-red-600 flex items-center gap-1">
+                                <i class="ri-error-warning-line"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <button type="button"
+                                onclick="window.history.back()"
+                                class="px-6 py-3 rounded-2xl border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all duration-300 flex items-center gap-2">
+                            <i class="ri-arrow-go-back-line"></i>
+                            إلغاء
+                        </button>
+
+                        <a href="{{ route('projects.show', $project) }}"
+                           class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
+                            <i class="ri-eye-line"></i>
+                            معاينة
+                        </a>
+                    </div>
+
+                    <button type="submit"
+                            class="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3 text-lg">
+                        <i class="ri-save-line text-xl"></i>
+                        حفظ التغييرات
+                        <div class="w-2 h-2 bg-white/30 rounded-full animate-pulse"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
 
                 <form action="{{ route('projects.update', $project) }}" method="POST" enctype="multipart/form-data"
                     class="p-6 space-y-6">
                     @csrf
                     @method('PUT')
 
-                    <!-- Project Name and Client -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                                اسم المشروع <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="name" id="name"
-                                value="{{ old('name', $project->name) }}"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-300 @enderror"
-                                required>
-                            @error('name')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="client_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                اسم العميل <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="client_name" id="client_name"
-                                value="{{ old('client_name', $project->client_name) }}"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('client_name') border-red-300 @enderror"
-                                required>
-                            @error('client_name')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
+                    <!-- Project Name -->
+                    <div class="mb-6">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            اسم المشروع <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="name" id="name"
+                            value="{{ old('name', $project->name) }}"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-300 @enderror"
+                            required>
+                        @error('name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Additional Project Information -->
@@ -390,14 +741,21 @@
                     <!-- Project Manager and Location -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label for="project_manager" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="project_manager_id" class="block text-sm font-medium text-gray-700 mb-2">
                                 مدير المشروع <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="project_manager" id="project_manager"
-                                value="{{ old('project_manager', $project->project_manager) }}"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('project_manager') border-red-300 @enderror"
+                            <select name="project_manager_id" id="project_manager_id"
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('project_manager_id') border-red-300 @enderror"
                                 required>
-                            @error('project_manager')
+                                <option value="">-- اختر مدير المشروع --</option>
+                                @foreach($employees as $employee)
+                                    <option value="{{ $employee->id }}"
+                                        {{ (old('project_manager_id', $project->project_manager_id) == $employee->id) ? 'selected' : '' }}>
+                                        {{ $employee->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('project_manager_id')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -421,9 +779,15 @@
                         <div>
                             <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
                                 تاريخ البداية <span class="text-red-500">*</span>
+                                @if($project->start_date)
+                                    <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded ml-2">
+                                        <i class="ri-database-2-line text-xs"></i>
+                                        محمل من قاعدة البيانات
+                                    </span>
+                                @endif
                             </label>
                             <input type="date" name="start_date" id="start_date"
-                                value="{{ old('start_date', $project->start_date) }}"
+                                value="{{ old('start_date', $project->start_date ? $project->start_date->format('Y-m-d') : '') }}"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('start_date') border-red-300 @enderror"
                                 required>
                             @error('start_date')
@@ -434,9 +798,15 @@
                         <div>
                             <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
                                 تاريخ الانتهاء المتوقع
+                                @if($project->end_date)
+                                    <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded ml-2">
+                                        <i class="ri-database-2-line text-xs"></i>
+                                        محمل من قاعدة البيانات
+                                    </span>
+                                @endif
                             </label>
                             <input type="date" name="end_date" id="end_date"
-                                value="{{ old('end_date', $project->end_date) }}"
+                                value="{{ old('end_date', $project->end_date ? $project->end_date->format('Y-m-d') : '') }}"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('end_date') border-red-300 @enderror">
                             @error('end_date')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -467,10 +837,12 @@
                                     {{ old('status', $project->status) === 'planning' ? 'selected' : '' }}>التخطيط</option>
                                 <option value="active"
                                     {{ old('status', $project->status) === 'active' ? 'selected' : '' }}>نشط</option>
-                                <option value="completed"
-                                    {{ old('status', $project->status) === 'completed' ? 'selected' : '' }}>مكتمل</option>
                                 <option value="on_hold"
                                     {{ old('status', $project->status) === 'on_hold' ? 'selected' : '' }}>متوقف</option>
+                                <option value="completed"
+                                    {{ old('status', $project->status) === 'completed' ? 'selected' : '' }}>مكتمل</option>
+                                <option value="cancelled"
+                                    {{ old('status', $project->status) === 'cancelled' ? 'selected' : '' }}>ملغي</option>
                             </select>
                             @error('status')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -825,311 +1197,193 @@
                             <a href="{{ route('projects.index') }}"
                                 class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
                                 إلغاء
-                            </a>
-                            <a href="{{ route('projects.show', $project) }}"
-                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
-                                <i class="ri-eye-line"></i>
-                                عرض التفاصيل
-                            </a>
-                        </div>
-                        <button type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
-                            <i class="ri-save-line"></i>
-                            حفظ التغييرات
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
 
+    <!-- Enhanced JavaScript -->
     <script>
-        let newItemIndex = 1;
-
         document.addEventListener('DOMContentLoaded', function() {
-            // --- Main Setup ---
-            initializePage();
-            attachEventListeners();
+            initializeModernForm();
         });
 
-        function initializePage() {
-            // Add one empty row for new items on page load for immediate use.
-            addNewItemRow();
-            // Recalculate all totals on page load to format existing items correctly.
-            calculateAllTotals();
+        function initializeModernForm() {
+            // Modern form enhancements
+            addFormAnimations();
+            setupProgressSync();
+            setupDateValidation();
+            setupFormSubmission();
         }
 
-        function attachEventListeners() {
-            // --- General Form Listeners ---
-            document.getElementById('progress').addEventListener('input', function() {
-                document.getElementById('progress-value').textContent = this.value + '%';
-            });
+        function addFormAnimations() {
+            // Add focus animations to inputs
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('transform', 'scale-[1.02]');
+                });
 
-            document.getElementById('start_date').addEventListener('change', function() {
-                const endDateInput = document.getElementById('end_date');
-                endDateInput.min = this.value;
-                if (endDateInput.value && endDateInput.value < this.value) {
-                    endDateInput.value = '';
-                }
-            });
-
-            document.getElementById('progress').addEventListener('change', function() {
-                const statusSelect = document.getElementById('status');
-                if (this.value == 100 && statusSelect.value !== 'completed') {
-                    if (confirm('تم الوصول إلى 100% من الإنجاز. هل تريد تغيير حالة المشروع إلى "مكتمل"؟')) {
-                        statusSelect.value = 'completed';
-                    }
-                }
-            });
-
-            document.getElementById('new_images').addEventListener('change', function() {
-                previewNewImages(this);
-            });
-
-            // --- Project Items Listeners ---
-            document.getElementById('add-new-item-btn').addEventListener('click', addNewItemRow);
-            document.getElementById('edit_tax_rate').addEventListener('input', calculateAllTotals);
-
-            // Add listeners to initially loaded existing items
-            document.querySelectorAll('.existing-item-row').forEach(row => {
-                row.querySelectorAll('.existing-quantity-input, .existing-unit-price-input').forEach(input => {
-                    input.addEventListener('input', () => calculateRowTotal(row));
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('transform', 'scale-[1.02]');
                 });
             });
+
+            // Add loading state to submit button
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const form = document.getElementById('projectEditForm');
+
+            form.addEventListener('submit', function() {
+                submitBtn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>جارٍ الحفظ...</span>
+                    </div>
+                `;
+                submitBtn.disabled = true;
+            });
         }
 
-        // --- Image Management ---
-        function deleteImage(imageId) {
-            if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
+        function setupProgressSync() {
+            const progressInput = document.getElementById('progress');
+            const statusSelect = document.getElementById('status');
 
-            fetch(`/projects/images/${imageId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById(`image-${imageId}`).remove();
-                        showMessage('تم حذف الصورة بنجاح', 'success');
-                    } else {
-                        showMessage(data.message || 'حدث خطأ في حذف الصورة', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showMessage('حدث خطأ في حذف الصورة', 'error');
-                });
+            progressInput.addEventListener('input', function() {
+                const value = parseInt(this.value);
+
+                // Auto-suggest status based on progress
+                if (value === 0) {
+                    statusSelect.value = 'planning';
+                } else if (value > 0 && value < 100) {
+                    statusSelect.value = 'active';
+                } else if (value === 100) {
+                    statusSelect.value = 'completed';
+                }
+
+                // Update visual feedback
+                updateProgressVisuals(value);
+            });
         }
 
-        function previewNewImages(input) {
-            const previewContainer = document.getElementById('new-images-preview');
-            previewContainer.innerHTML = '';
-            if (!input.files.length) {
-                previewContainer.classList.add('hidden');
-                return;
+        function updateProgressVisuals(value) {
+            // Update progress bar in the overview
+            const progressBar = document.querySelector('.bg-gradient-to-r.from-blue-500.to-blue-600');
+            if (progressBar) {
+                progressBar.style.width = value + '%';
             }
 
-            previewContainer.classList.remove('hidden');
-            Array.from(input.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const div = document.createElement('div');
-                    div.className = 'relative group';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border-2 border-green-300">
-                        <div class="absolute top-1 right-1"><span class="bg-green-500 text-white text-xs px-2 py-1 rounded">جديد</span></div>
-                        <p class="text-xs text-gray-600 mt-1 text-center truncate">${file.name}</p>
-                    `;
-                    previewContainer.appendChild(div);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function showMessage(message, type) {
-            const div = document.createElement('div');
-            div.className =
-                `fixed top-4 right-4 p-4 rounded-lg z-50 ${type === 'success' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`;
-            div.textContent = message;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 3000);
-        }
-
-        // --- Project Items Calculations ---
-        function calculateRowTotal(row) {
-            const quantity = parseFloat(row.querySelector('[name*="[quantity]"]').value) || 0;
-            const unitPrice = parseFloat(row.querySelector('[name*="[unit_price]"]').value) || 0;
-            const taxRate = parseFloat(document.getElementById('edit_tax_rate').value) || 0;
-
-            const totalPrice = quantity * unitPrice;
-            const totalWithTax = totalPrice * (1 + taxRate / 100);
-
-            row.querySelector('[name*="[total_price]"]').value = totalPrice.toFixed(2);
-            row.querySelector('[name*="[total_with_tax]"]').value = totalWithTax.toFixed(2);
-
-            calculateAllTotals();
-        }
-
-        function calculateAllTotals() {
-            let subtotal = 0;
-            const taxRate = parseFloat(document.getElementById('edit_tax_rate').value) || 0;
-
-            document.querySelectorAll('.existing-item-row, .new-item-row').forEach(row => {
-                const totalPriceInput = row.querySelector('[name*="[total_price]"]');
-                if (totalPriceInput && totalPriceInput.value) {
-                    subtotal += parseFloat(totalPriceInput.value.replace(/,/g, '')) || 0;
-                }
-            });
-
-            const taxAmount = subtotal * (taxRate / 100);
-            const finalTotal = subtotal + taxAmount;
-
-            document.getElementById('edit-subtotal-display').textContent = subtotal.toFixed(2) + ' ر.س';
-            document.getElementById('edit-tax-amount-display').textContent = taxAmount.toFixed(2) + ' ر.س';
-            document.getElementById('edit-final-total-display').textContent = finalTotal.toFixed(2) + ' ر.س';
-            document.getElementById('edit-tax-rate-display').textContent = taxRate;
-
-            document.getElementById('edit-subtotal-input').value = subtotal.toFixed(2);
-            document.getElementById('edit-tax-amount-input').value = taxAmount.toFixed(2);
-            document.getElementById('edit-final-total-input').value = finalTotal.toFixed(2);
-            document.getElementById('edit-tax-rate-input').value = taxRate;
-
-            document.getElementById('edit-amount-in-words').textContent = numberToArabicWords(finalTotal);
-        }
-
-        function addNewItemRow() {
-            const tbody = document.getElementById('new-items-table-body');
-            const newRow = document.createElement('tr');
-            newRow.className = 'new-item-row border-b border-gray-200';
-            const newRowHtml = `
-                <td class="px-4 py-3">
-                    <input type="text" name="new_items[${newItemIndex}][name]" placeholder="اسم البند الجديد"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </td>
-                <td class="px-4 py-3">
-                    <input type="number" name="new_items[${newItemIndex}][quantity]" placeholder="0" min="0" step="0.1"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-quantity-input">
-                </td>
-                <td class="px-4 py-3">
-                    <select name="new_items[${newItemIndex}][unit]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">اختر الوحدة</option>
-                        <option value="متر">متر</option>
-                        <option value="متر مربع">متر مربع</option>
-                        <option value="متر مكعب">متر مكعب</option>
-                        <option value="كيلوجرام">كيلوجرام</option>
-                        <option value="طن">طن</option>
-                        <option value="قطعة">قطعة</option>
-                        <option value="مجموعة">مجموعة</option>
-                        <option value="لتر">لتر</option>
-                        <option value="ساعة">ساعة</option>
-                        <option value="يوم">يوم</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
-                </td>
-                <td class="px-4 py-3">
-                    <input type="number" name="new_items[${newItemIndex}][unit_price]" placeholder="0.00" min="0" step="0.01"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center new-unit-price-input">
-                </td>
-                <td class="px-4 py-3">
-                    <input type="text" name="new_items[${newItemIndex}][total_price]" readonly placeholder="0.00"
-                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-center">
-                </td>
-                <td class="px-4 py-3">
-                    <input type="text" name="new_items[${newItemIndex}][total_with_tax]" readonly placeholder="0.00"
-                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-center">
-                </td>
-                <td class="px-4 py-3 text-center">
-                    <button type="button" class="text-red-600 hover:text-red-800 transition-colors p-1 remove-new-item-btn">
-                        <i class="ri-delete-bin-line"></i>
-                    </button>
-                </td>
-            `;
-            newRow.innerHTML = newRowHtml;
-            tbody.appendChild(newRow);
-
-            // Add event listeners for the new row
-            newRow.querySelectorAll('.new-quantity-input, .new-unit-price-input').forEach(input => {
-                input.addEventListener('input', () => calculateRowTotal(newRow));
-            });
-            newRow.querySelector('.remove-new-item-btn').addEventListener('click', () => {
-                newRow.remove();
-                calculateAllTotals();
-            });
-
-            newItemIndex++;
-        }
-
-        function deleteExistingItem(itemId, button) {
-            if (confirm('هل أنت متأكد من حذف هذا البند؟')) {
-                const row = button.closest('tr');
-                row.remove();
-                const form = document.querySelector('form');
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'deleted_items[]';
-                hiddenInput.value = itemId;
-                form.appendChild(hiddenInput);
-                calculateAllTotals();
+            // Update progress text
+            const progressText = document.querySelector('.text-3xl.font-bold.text-gray-800');
+            if (progressText && progressText.textContent.includes('%')) {
+                progressText.textContent = value + '%';
             }
         }
 
-        // --- Utility Functions ---
-        function numberToArabicWords(num) {
-            if (num === 0) return 'صفر ريال سعودي';
-            num = Math.round(num);
+        function setupDateValidation() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
 
-            const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
-            const tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
-            const teens = ['عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر',
-                'ثمانية عشر', 'تسعة عشر'
-            ];
-            const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة',
-                'تسعمائة'
-            ];
+            startDate.addEventListener('change', function() {
+                endDate.min = this.value;
+                if (endDate.value && endDate.value < this.value) {
+                    endDate.value = '';
+                    showNotification('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'warning');
+                }
+            });
 
-            function convertGroup(n) {
-                let result = '';
-                const h = Math.floor(n / 100);
-                const t = Math.floor((n % 100) / 10);
-                const o = n % 10;
-                if (h > 0) result += hundreds[h];
-                if (t === 1) {
-                    if (result) result += ' و';
-                    result += teens[o];
+            endDate.addEventListener('change', function() {
+                if (startDate.value && this.value < startDate.value) {
+                    this.value = '';
+                    showNotification('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
+                }
+            });
+        }
+
+        function setupFormSubmission() {
+            const form = document.getElementById('projectEditForm');
+
+            form.addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    showNotification('يرجى التحقق من جميع الحقول المطلوبة', 'error');
+                    return false;
+                }
+
+                showNotification('جارٍ حفظ التغييرات...', 'info');
+            });
+        }
+
+        function validateForm() {
+            const requiredFields = document.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('border-red-500', 'shake');
+                    setTimeout(() => field.classList.remove('shake'), 500);
+                    isValid = false;
                 } else {
-                    if (o > 0) {
-                        if (result) result += ' و';
-                        result += ones[o];
-                    }
-                    if (t > 1) {
-                        if (result) result += ' و';
-                        result += tens[t];
-                    }
+                    field.classList.remove('border-red-500');
                 }
-                return result;
-            }
+            });
 
-            let result = '';
-            const millions = Math.floor(num / 1000000);
-            const thousands = Math.floor((num % 1000000) / 1000);
-            const remainder = num % 1000;
-
-            if (millions > 0) {
-                result += convertGroup(millions) + (millions === 1 ? ' مليون' : millions === 2 ? 'مليونان' : ' ملايين');
-            }
-            if (thousands > 0) {
-                if (result) result += ' و';
-                result += convertGroup(thousands) + (thousands === 1 ? ' ألف' : thousands === 2 ? ' ألفان' : ' آلاف');
-            }
-            if (remainder > 0) {
-                if (result) result += ' و';
-                result += convertGroup(remainder);
-            }
-
-            return result + ' ريال سعودي';
+            return isValid;
         }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-2xl shadow-lg transform translate-x-full transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'warning' ? 'bg-yellow-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="ri-${type === 'success' ? 'check' : type === 'error' ? 'error-warning' : type === 'warning' ? 'alert' : 'information'}-line text-xl"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+            .shake {
+                animation: shake 0.5s ease-in-out;
+            }
+
+            /* Custom scrollbar */
+            .overflow-y-auto::-webkit-scrollbar {
+                width: 6px;
+            }
+            .overflow-y-auto::-webkit-scrollbar-track {
+                background: rgba(0,0,0,0.1);
+                border-radius: 3px;
+            }
+            .overflow-y-auto::-webkit-scrollbar-thumb {
+                background: rgba(59,130,246,0.5);
+                border-radius: 3px;
+            }
+            .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                background: rgba(59,130,246,0.7);
+            }
+        `;
+        document.head.appendChild(style);
     </script>
+</div>
 @endsection
