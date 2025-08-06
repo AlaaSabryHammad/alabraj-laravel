@@ -18,7 +18,7 @@
     </div>
 
     <!-- Settings Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Equipment Types Card -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
              onclick="showSettingsSection('equipment-types')">
@@ -63,6 +63,21 @@
                 <p class="text-sm text-gray-500">إدارة المواد ووحدات القياس</p>
             </div>
         </div>
+
+        <!-- Suppliers Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+             onclick="showSettingsSection('suppliers')">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-cyan-100 to-cyan-200 rounded-xl flex items-center justify-center">
+                        <i class="ri-truck-line text-cyan-600 text-xl"></i>
+                    </div>
+                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ \App\Models\Supplier::count() }}</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">موردي قطع الغيار</h3>
+                <p class="text-sm text-gray-500">إدارة الموردين والشركات</p>
+            </div>
+        </div>
     </div>
 
     <!-- Settings Content Area -->
@@ -74,7 +89,7 @@
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">مرحباً بك في الإعدادات</h3>
             <p class="text-gray-500 mb-6">اختر أحد الأقسام أعلاه لبدء الإدارة</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-xl mx-auto text-sm">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-sm">
                 <div class="text-center">
                     <div class="text-2xl font-bold text-orange-600">{{ \App\Models\EquipmentType::count() }}</div>
                     <div class="text-gray-500">نوع معدة</div>
@@ -86,6 +101,10 @@
                 <div class="text-center">
                     <div class="text-2xl font-bold text-purple-600">{{ \App\Models\Material::count() }}</div>
                     <div class="text-gray-500">مادة</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-cyan-600">{{ \App\Models\Supplier::count() }}</div>
+                    <div class="text-gray-500">مورد</div>
                 </div>
             </div>
         </div>
@@ -431,6 +450,12 @@ function showSettingsSection(section) {
             description: 'إدارة المواد ووحدات القياس',
             addText: 'إضافة مادة',
             loadUrl: '{{ route("settings.materials.content") }}'
+        },
+        'suppliers': {
+            title: 'موردي قطع الغيار',
+            description: 'إدارة الموردين والشركات المزودة للقطع والمواد',
+            addText: 'إضافة مورد',
+            loadUrl: '{{ route("suppliers.content") }}'
         }
     };
 
@@ -453,6 +478,9 @@ function showSettingsSection(section) {
             } else if (section === 'materials') {
                 console.log('Calling openMaterialModal...');
                 openMaterialModal();
+            } else if (section === 'suppliers') {
+                console.log('Redirecting to suppliers create page...');
+                window.location.href = '{{ route("suppliers.create") }}';
             }
         } catch (error) {
             console.error('Error in add button click handler:', error);
@@ -526,12 +554,30 @@ function loadSectionContent(url) {
 function openEquipmentTypeModal() {
     console.log('Opening equipment type modal...');
     try {
-        document.getElementById('equipment-modal-title').textContent = 'إضافة نوع معدة جديد';
-        document.getElementById('equipment-save-btn').textContent = 'إضافة';
-        document.getElementById('equipment-type-form').action = '{{ route("settings.equipment-types.store") }}';
-        document.getElementById('equipment-form-method').value = '';
+        const modalTitle = document.getElementById('equipment-modal-title');
+        const saveBtn = document.getElementById('equipment-save-btn');
+        const form = document.getElementById('equipment-type-form');
+        const methodField = document.getElementById('equipment-form-method');
+        const modal = document.getElementById('equipment-type-modal');
+
+        if (!modalTitle || !saveBtn || !form || !methodField || !modal) {
+            console.error('Missing elements for equipment type modal:', {
+                modalTitle: !!modalTitle,
+                saveBtn: !!saveBtn,
+                form: !!form,
+                methodField: !!methodField,
+                modal: !!modal
+            });
+            alert('حدث خطأ في فتح النافذة: عناصر النافذة غير موجودة');
+            return;
+        }
+
+        modalTitle.textContent = 'إضافة نوع معدة جديد';
+        saveBtn.textContent = 'إضافة';
+        form.action = '{{ route("settings.equipment-types.store") }}';
+        methodField.value = '';
         clearEquipmentTypeForm();
-        document.getElementById('equipment-type-modal').classList.remove('hidden');
+        modal.classList.remove('hidden');
         console.log('Equipment type modal opened successfully');
     } catch (error) {
         console.error('Error opening equipment type modal:', error);
@@ -546,10 +592,19 @@ function closeEquipmentTypeModal() {
 }
 
 function clearEquipmentTypeForm() {
-    document.getElementById('equipment-type-id').value = '';
-    document.getElementById('equipment_name').value = '';
-    document.getElementById('equipment_description').value = '';
-    document.getElementById('equipment_is_active').checked = true;
+    try {
+        const equipmentTypeId = document.getElementById('equipment-type-id');
+        const equipmentName = document.getElementById('equipment_name');
+        const equipmentDescription = document.getElementById('equipment_description');
+        const equipmentIsActive = document.getElementById('equipment_is_active');
+
+        if (equipmentTypeId) equipmentTypeId.value = '';
+        if (equipmentName) equipmentName.value = '';
+        if (equipmentDescription) equipmentDescription.value = '';
+        if (equipmentIsActive) equipmentIsActive.checked = true;
+    } catch (error) {
+        console.error('Error clearing equipment type form:', error);
+    }
 }
 
 function clearEquipmentTypeErrors() {
@@ -565,12 +620,37 @@ function clearEquipmentTypeErrors() {
 
 // Location Type Modal Functions
 function openLocationTypeModal() {
-    document.getElementById('location-modal-title').textContent = 'إضافة نوع موقع جديد';
-    document.getElementById('location-save-btn').textContent = 'إضافة';
-    document.getElementById('location-type-form').action = '{{ route("settings.location-types.store") }}';
-    document.getElementById('location-form-method').value = '';
-    clearLocationTypeForm();
-    document.getElementById('location-type-modal').classList.remove('hidden');
+    console.log('Opening location type modal...');
+    try {
+        const modalTitle = document.getElementById('location-modal-title');
+        const saveBtn = document.getElementById('location-save-btn');
+        const form = document.getElementById('location-type-form');
+        const methodField = document.getElementById('location-form-method');
+        const modal = document.getElementById('location-type-modal');
+
+        if (!modalTitle || !saveBtn || !form || !methodField || !modal) {
+            console.error('Missing elements for location type modal:', {
+                modalTitle: !!modalTitle,
+                saveBtn: !!saveBtn,
+                form: !!form,
+                methodField: !!methodField,
+                modal: !!modal
+            });
+            alert('حدث خطأ في فتح النافذة: عناصر النافذة غير موجودة');
+            return;
+        }
+
+        modalTitle.textContent = 'إضافة نوع موقع جديد';
+        saveBtn.textContent = 'إضافة';
+        form.action = '{{ route("settings.location-types.store") }}';
+        methodField.value = '';
+        clearLocationTypeForm();
+        modal.classList.remove('hidden');
+        console.log('Location type modal opened successfully');
+    } catch (error) {
+        console.error('Error opening location type modal:', error);
+        alert('حدث خطأ في فتح النافذة: ' + error.message);
+    }
 }
 
 function closeLocationTypeModal() {
@@ -580,10 +660,19 @@ function closeLocationTypeModal() {
 }
 
 function clearLocationTypeForm() {
-    document.getElementById('location-type-id').value = '';
-    document.getElementById('location_name').value = '';
-    document.getElementById('location_description').value = '';
-    document.getElementById('location_is_active').checked = true;
+    try {
+        const locationTypeId = document.getElementById('location-type-id');
+        const locationName = document.getElementById('location_name');
+        const locationDescription = document.getElementById('location_description');
+        const locationIsActive = document.getElementById('location_is_active');
+
+        if (locationTypeId) locationTypeId.value = '';
+        if (locationName) locationName.value = '';
+        if (locationDescription) locationDescription.value = '';
+        if (locationIsActive) locationIsActive.checked = true;
+    } catch (error) {
+        console.error('Error clearing location type form:', error);
+    }
 }
 
 function clearLocationTypeErrors() {
@@ -1182,11 +1271,30 @@ document.addEventListener('click', function(e) {
                 url = url.replace('/settings/materials?', '/settings/materials/content?');
             } else if (url.includes('/settings/materials')) {
                 url = url.replace('/settings/materials', '/settings/materials/content');
+            } else if (url.includes('/suppliers?')) {
+                url = url.replace('/suppliers?', '/suppliers/content?');
+            } else if (url.includes('/suppliers')) {
+                url = url.replace('/suppliers', '/suppliers/content');
             }
 
             console.log('Global pagination handler:', url);
             loadSectionContent(url);
         }
+    }
+
+    // Handle suppliers filter form submission
+    const suppliersFilterForm = e.target.closest('#suppliers-filter-form');
+    if (suppliersFilterForm && e.type === 'submit') {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const formData = new FormData(suppliersFilterForm);
+        const params = new URLSearchParams(formData);
+        const url = '{{ route("suppliers.content") }}?' + params.toString();
+        
+        console.log('Suppliers filter form submission:', url);
+        loadSectionContent(url);
+        return;
     }
 
     // Close delete modal when clicking outside
@@ -1202,6 +1310,21 @@ document.addEventListener('click', function(e) {
     // Close delete equipment type modal when clicking outside
     if (e.target.id === 'delete-equipment-type-modal') {
         closeDeleteEquipmentTypeModal();
+    }
+});
+
+// Add event delegation for suppliers forms
+document.addEventListener('submit', function(e) {
+    // Handle suppliers filter form
+    if (e.target.id === 'suppliers-filter-form') {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const params = new URLSearchParams(formData);
+        const url = '{{ route("suppliers.content") }}?' + params.toString();
+        
+        console.log('Suppliers filter form submission:', url);
+        loadSectionContent(url);
     }
 });
 

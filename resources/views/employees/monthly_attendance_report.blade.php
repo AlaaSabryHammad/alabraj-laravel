@@ -73,12 +73,15 @@
         $totalAbsentDays = $employees->sum('absent_days');
         $totalLateDays = $employees->sum('late_days');
         $totalLeaveDays = $employees->sum('leave_days');
+        $totalOvertimeHours = $employees->sum('overtime_hours');
 
-        $overallAttendanceRate = $totalEmployees > 0 ? round(($totalPresentDays / ($totalEmployees * 22)) * 100, 1) : 0;
+        // حساب معدل الحضور بناء على أيام العمل الفعلية (بدون الجمعة)
+        $totalWorkingDays = $totalEmployees * ($workingDaysInMonth ?? 22);
+        $overallAttendanceRate = $totalWorkingDays > 0 ? round((($totalPresentDays + $totalLateDays) / $totalWorkingDays) * 100, 1) : 0;
     @endphp
 
     <!-- إحصائيات سريعة -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-7 gap-6">
         <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-6 border border-green-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -97,7 +100,7 @@
                 <div>
                     <p class="text-red-600 text-sm font-medium mb-1">إجمالي أيام الغياب</p>
                     <h3 class="text-3xl font-bold text-gray-900">{{ number_format($totalAbsentDays) }}</h3>
-                    <p class="text-xs text-red-600 mt-1">معدل الغياب: {{ $totalEmployees > 0 ? round(($totalAbsentDays / ($totalEmployees * 22)) * 100, 1) : 0 }}%</p>
+                    <p class="text-xs text-red-600 mt-1">معدل الغياب: {{ $totalWorkingDays > 0 ? round(($totalAbsentDays / $totalWorkingDays) * 100, 1) : 0 }}%</p>
                 </div>
                 <div class="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-xl">
                     <i class="ri-close-circle-fill text-white text-xl"></i>
@@ -110,7 +113,7 @@
                 <div>
                     <p class="text-yellow-600 text-sm font-medium mb-1">إجمالي أيام التأخير</p>
                     <h3 class="text-3xl font-bold text-gray-900">{{ number_format($totalLateDays) }}</h3>
-                    <p class="text-xs text-yellow-600 mt-1">معدل التأخير: {{ $totalEmployees > 0 ? round(($totalLateDays / ($totalEmployees * 22)) * 100, 1) : 0 }}%</p>
+                    <p class="text-xs text-yellow-600 mt-1">معدل التأخير: {{ $totalWorkingDays > 0 ? round(($totalLateDays / $totalWorkingDays) * 100, 1) : 0 }}%</p>
                 </div>
                 <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3 rounded-xl">
                     <i class="ri-time-fill text-white text-xl"></i>
@@ -123,10 +126,23 @@
                 <div>
                     <p class="text-blue-600 text-sm font-medium mb-1">إجمالي أيام الإجازة</p>
                     <h3 class="text-3xl font-bold text-gray-900">{{ number_format($totalLeaveDays) }}</h3>
-                    <p class="text-xs text-blue-600 mt-1">معدل الإجازات: {{ $totalEmployees > 0 ? round(($totalLeaveDays / ($totalEmployees * 22)) * 100, 1) : 0 }}%</p>
+                    <p class="text-xs text-blue-600 mt-1">معدل الإجازات: {{ $totalWorkingDays > 0 ? round(($totalLeaveDays / $totalWorkingDays) * 100, 1) : 0 }}%</p>
                 </div>
                 <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl">
                     <i class="ri-calendar-event-fill text-white text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-teal-50 to-teal-100 rounded-2xl p-6 border border-teal-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-teal-600 text-sm font-medium mb-1">أيام الجمعة</p>
+                    <h3 class="text-3xl font-bold text-gray-900">{{ number_format($fridaysCount ?? 0) }}</h3>
+                    <p class="text-xs text-teal-600 mt-1">إجازة نهاية الأسبوع</p>
+                </div>
+                <div class="bg-gradient-to-r from-teal-500 to-teal-600 p-3 rounded-xl">
+                    <i class="ri-calendar-line text-white text-xl"></i>
                 </div>
             </div>
         </div>
@@ -140,6 +156,19 @@
                 </div>
                 <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl">
                     <i class="ri-team-fill text-white text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-orange-600 text-sm font-medium mb-1">إجمالي الساعات الإضافية</p>
+                    <h3 class="text-3xl font-bold text-gray-900">{{ number_format($totalOvertimeHours, 1) }}</h3>
+                    <p class="text-xs text-orange-600 mt-1">ساعة إضافية</p>
+                </div>
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-3 rounded-xl">
+                    <i class="ri-time-add-fill text-white text-xl"></i>
                 </div>
             </div>
         </div>
@@ -191,6 +220,14 @@
                             أيام الإجازة
                         </th>
                         <th class="px-6 py-4 text-center font-semibold">
+                            <i class="ri-calendar-line text-teal-400 mr-1"></i>
+                            أيام الجمعة
+                        </th>
+                        <th class="px-6 py-4 text-center font-semibold">
+                            <i class="ri-time-add-line text-orange-400 mr-1"></i>
+                            ساعات إضافية
+                        </th>
+                        <th class="px-6 py-4 text-center font-semibold">
                             <i class="ri-percent-line text-purple-400 mr-1"></i>
                             معدل الحضور
                         </th>
@@ -199,7 +236,10 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($employees as $index => $employee)
                     @php
-                        $attendanceRate = $employee->present_days > 0 ? round(($employee->present_days / ($employee->present_days + $employee->absent_days + $employee->late_days + $employee->leave_days)) * 100, 1) : 0;
+                        // حساب معدل الحضور بناء على أيام العمل الفعلية (باستثناء أيام الجمعة)
+                        $workingDays = $employee->working_days_in_month ?? $workingDaysInMonth;
+                        $actualAttendedDays = $employee->present_days + $employee->late_days;
+                        $attendanceRate = $workingDays > 0 ? round(($actualAttendedDays / $workingDays) * 100, 1) : 0;
                         $rowClass = $index % 2 == 0 ? 'bg-white' : 'bg-gray-50';
                     @endphp
                     <tr class="{{ $rowClass }} hover:bg-blue-50 transition-colors">
@@ -241,6 +281,16 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
+                                {{ $fridaysCount }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                                {{ $employee->overtime_hours ?? 0 }} ساعة
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
                             <div class="flex items-center justify-center">
                                 <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
                                     <div class="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full"
@@ -257,7 +307,7 @@
 
         <!-- Footer with summary -->
         <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-t border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-4 text-center">
                 <div class="bg-white rounded-lg p-4 shadow-sm">
                     <div class="text-2xl font-bold text-green-600">{{ number_format($totalPresentDays) }}</div>
                     <div class="text-sm text-gray-600">إجمالي أيام الحضور</div>
@@ -274,6 +324,42 @@
                     <div class="text-2xl font-bold text-blue-600">{{ number_format($totalLeaveDays) }}</div>
                     <div class="text-sm text-gray-600">إجمالي أيام الإجازة</div>
                 </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <div class="text-2xl font-bold text-teal-600">{{ number_format($fridaysCount ?? 0) }}</div>
+                    <div class="text-sm text-gray-600">أيام الجمعة</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <div class="text-2xl font-bold text-orange-600">{{ number_format($totalOvertimeHours, 1) }}</div>
+                    <div class="text-sm text-gray-600">إجمالي الساعات الإضافية</div>
+                </div>
+            </div>
+            
+            <!-- معلومات إضافية عن الشهر -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <h4 class="font-semibold text-blue-800 mb-2">معلومات الشهر</h4>
+                    <div class="space-y-1 text-sm text-blue-700">
+                        <p>إجمالي أيام الشهر: <span class="font-medium">{{ $totalDaysInMonth ?? 'غير محدد' }}</span></p>
+                        <p>أيام العمل: <span class="font-medium">{{ $workingDaysInMonth ?? 'غير محدد' }}</span></p>
+                        <p>أيام الجمعة: <span class="font-medium">{{ $fridaysCount ?? 'غير محدد' }}</span></p>
+                    </div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <h4 class="font-semibold text-green-800 mb-2">معدل الأداء العام</h4>
+                    <div class="space-y-1 text-sm text-green-700">
+                        <p>معدل الحضور: <span class="font-medium">{{ $overallAttendanceRate }}%</span></p>
+                        <p>متوسط الحضور لكل موظف: <span class="font-medium">{{ $totalEmployees > 0 ? round($totalPresentDays / $totalEmployees, 1) : 0 }} يوم</span></p>
+                        <p>متوسط الساعات الإضافية: <span class="font-medium">{{ $totalEmployees > 0 ? round($totalOvertimeHours / $totalEmployees, 1) : 0 }} ساعة</span></p>
+                    </div>
+                </div>
+                <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                    <h4 class="font-semibold text-orange-800 mb-2">إحصائيات أخرى</h4>
+                    <div class="space-y-1 text-sm text-orange-700">
+                        <p>إجمالي أيام العمل المطلوبة: <span class="font-medium">{{ number_format($totalWorkingDays) }}</span></p>
+                        <p>نسبة أيام الإجازات: <span class="font-medium">{{ $totalWorkingDays > 0 ? round(($totalLeaveDays / $totalWorkingDays) * 100, 1) : 0 }}%</span></p>
+                        <p>نسبة أيام الغياب: <span class="font-medium">{{ $totalWorkingDays > 0 ? round(($totalAbsentDays / $totalWorkingDays) * 100, 1) : 0 }}%</span></p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -285,7 +371,7 @@
             تحليل أداء الحضور
         </h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- أفضل 5 موظفين في الحضور -->
             <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6">
                 <h4 class="font-semibold text-green-800 mb-4 flex items-center gap-2">
@@ -306,6 +392,32 @@
                         </div>
                         <span class="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-medium">
                             {{ $employee->present_days }} يوم
+                        </span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- أفضل 5 موظفين في الساعات الإضافية -->
+            <div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-6">
+                <h4 class="font-semibold text-orange-800 mb-4 flex items-center gap-2">
+                    <i class="ri-time-add-line"></i>
+                    أكثر 5 موظفين ساعات إضافية
+                </h4>
+                <div class="space-y-3">
+                    @foreach($employees->sortByDesc('overtime_hours')->take(5) as $index => $employee)
+                    <div class="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                {{ $index + 1 }}
+                            </span>
+                            <div>
+                                <div class="font-medium text-gray-900">{{ $employee->name }}</div>
+                                <div class="text-xs text-gray-500">{{ $employee->department ?? 'غير محدد' }}</div>
+                            </div>
+                        </div>
+                        <span class="bg-orange-500 text-white px-2 py-1 rounded-full text-sm font-medium">
+                            {{ number_format($employee->overtime_hours ?? 0, 1) }} ساعة
                         </span>
                     </div>
                     @endforeach

@@ -13,6 +13,10 @@ class PayrollEmployee extends Model
         'payroll_id',
         'employee_id',
         'base_salary',
+        'working_days',
+        'absent_days',
+        'overtime_hours',
+        'total_working_hours',
         'total_deductions',
         'total_bonuses',
         'net_salary',
@@ -22,6 +26,10 @@ class PayrollEmployee extends Model
 
     protected $casts = [
         'base_salary' => 'decimal:2',
+        'working_days' => 'integer',
+        'absent_days' => 'integer',
+        'overtime_hours' => 'decimal:2',
+        'total_working_hours' => 'decimal:2',
         'total_deductions' => 'decimal:2',
         'total_bonuses' => 'decimal:2',
         'net_salary' => 'decimal:2',

@@ -13,6 +13,7 @@ class CorrespondenceReply extends Model
         'correspondence_id',
         'user_id',
         'reply_content',
+        'reply_type',
         'status',
         'file_path',
         'file_name',
@@ -58,6 +59,15 @@ class CorrespondenceReply extends Model
             'draft' => 'مسودة',
             'sent' => 'تم الإرسال',
             default => 'غير محدد'
+        };
+    }
+
+    public function getReplyTypeDisplayAttribute()
+    {
+        return match($this->reply_type ?? 'internal') {
+            'internal' => 'رد داخلي',
+            'on_behalf' => 'رد نيابة عن الجهة',
+            default => 'رد داخلي'
         };
     }
 }

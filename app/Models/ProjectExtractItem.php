@@ -11,10 +11,14 @@ class ProjectExtractItem extends Model
 
     protected $fillable = [
         'project_extract_id',
+        'item_description',
         'project_item_index',
         'quantity',
+        'unit',
         'unit_price',
+        'total_price',
         'total_value',
+        'notes',
     ];
 
     protected $casts = [

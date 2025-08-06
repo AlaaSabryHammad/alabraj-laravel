@@ -16,14 +16,21 @@ return new class extends Migration
             $table->string('vehicle_type');
             $table->string('vehicle_number');
             $table->string('driver_name');
+            $table->string('source_location');
             $table->string('destination');
-            $table->dateTime('departure_time');
+            $table->dateTime('departure_time')->nullable();
             $table->dateTime('arrival_time')->nullable();
             $table->string('status')->default('scheduled');
             $table->text('cargo_description')->nullable();
-            $table->decimal('distance', 8, 2)->nullable();
+            $table->decimal('quantity', 10, 2)->nullable();
             $table->decimal('fuel_cost', 8, 2)->nullable();
+            $table->unsignedBigInteger('material_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
+            
+            // Foreign Keys will be added later
+            // $table->foreign('material_id')->references('id')->on('materials')->onDelete('set null');
+            // $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

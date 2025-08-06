@@ -2,10 +2,6 @@
 
 @section('title', 'تفاصيل الموظف: ' . $employee->name)
 
-@php
-    use Illuminate\Support\Facades\Storage;
-@endphp
-
 @section('content')
 <div class="p-6" dir="rtl">
     <!-- Flash Messages -->
@@ -56,9 +52,19 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
+            <button onclick="openCreditModal()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                <i class="ri-add-circle-line"></i>
+                إضافة رصيد دائن
+            </button>
+            <button onclick="openDebitModal()"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                <i class="ri-subtract-line"></i>
+                إضافة رصيد مدين
+            </button>
             @if($employee->role !== 'مسئول رئيسي')
                 <button onclick="openManagerModal()"
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                        class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                     <i class="ri-user-settings-line"></i>
                     @if($employee->directManager)
                         تغيير المدير المباشر
@@ -67,8 +73,14 @@
                     @endif
                 </button>
             @endif
+            <button type="button" 
+                    onclick="openPasswordModal()"
+                    class="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                <i class="ri-lock-password-line"></i>
+                تغيير كلمة السر
+            </button>
             <button onclick="openReportModal()"
-                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                 <i class="ri-file-lock-line"></i>
                 تقرير سري
             </button>
@@ -208,8 +220,8 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- National ID Status -->
-                @if($employee->national_id_expiry_date)
-                @php $nationalIdStatus = $employee->getDocumentStatus('national_id_expiry_date'); @endphp
+                @if($employee->national_id_expiry)
+                @php $nationalIdStatus = $employee->getDocumentStatus('national_id_expiry'); @endphp
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">الهوية الوطنية</span>
@@ -218,7 +230,7 @@
                         </span>
                     </div>
                     <p class="text-xs text-gray-600">
-                        ينتهي: {{ $employee->national_id_expiry_date ? $employee->national_id_expiry_date->format('Y/m/d') : 'غير محدد' }}
+                        ينتهي: {{ $employee->national_id_expiry ? $employee->national_id_expiry->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 @endif
@@ -256,8 +268,8 @@
                 @endif
 
                 <!-- Driving License Status -->
-                @if($employee->driving_license_expiry_date)
-                @php $drivingLicenseStatus = $employee->getDocumentStatus('driving_license_expiry_date'); @endphp
+                @if($employee->driving_license_expiry)
+                @php $drivingLicenseStatus = $employee->getDocumentStatus('driving_license_expiry'); @endphp
                 <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">رخصة القيادة</span>
@@ -266,7 +278,7 @@
                         </span>
                     </div>
                     <p class="text-xs text-gray-600">
-                        ينتهي: {{ $employee->driving_license_expiry_date ? $employee->driving_license_expiry_date->format('Y/m/d') : 'غير محدد' }}
+                        ينتهي: {{ $employee->driving_license_expiry ? $employee->driving_license_expiry->format('Y/m/d') : 'غير محدد' }}
                     </p>
                 </div>
                 @endif
@@ -588,7 +600,7 @@
                                         <p class="text-xs text-purple-600">{{ $doc['uploaded_at'] }}</p>
                                     @endif
                                     @if(isset($doc['file_path']))
-                                        <a href="{{ Storage::url($doc['file_path']) }}"
+                                        <a href="{{ asset('storage/' . $doc['file_path']) }}"
                                            target="_blank"
                                            class="text-xs text-purple-700 hover:text-purple-900 flex items-center gap-1 mt-1">
                                             <i class="ri-download-line"></i>
@@ -924,6 +936,111 @@
                 </p>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- قسم الأرصدة المالية -->
+<div class="grid grid-cols-1 gap-6 no-print mt-6">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-blue-50 border-b border-blue-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-blue-800 flex items-center gap-2">
+                    <i class="ri-money-dollar-circle-line"></i>
+                    الأرصدة المالية
+                </h3>
+                <div class="flex items-center gap-3">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                        {{ $balances->count() }} معاملة
+                    </span>
+                    @php
+                        $netBalanceClass = $netBalance > 0 ? 'bg-green-100 text-green-800' : ($netBalance < 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800');
+                    @endphp
+                    <span class="text-sm font-medium px-3 py-1 rounded-full {{ $netBalanceClass }}">
+                        صافي الرصيد: {{ number_format($netBalance, 2) }} ريال
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        @if($balances->count() > 0)
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النوع</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الملاحظات</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المسجل بواسطة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ التسجيل</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($balances as $balance)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ $balance->transaction_date->format('Y/m/d') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($balance->type === 'credit')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <i class="ri-add-circle-line ml-1"></i>
+                                                دائن (للموظف)
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <i class="ri-subtract-line ml-1"></i>
+                                                مدين (على الموظف)
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ $balance->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
+                                        {{ $balance->type === 'credit' ? '+' : '-' }}{{ number_format($balance->amount, 2) }} ريال
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                        {{ $balance->notes ?: 'لا توجد ملاحظات' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $balance->creator->name ?? 'غير محدد' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $balance->created_at->format('Y/m/d H:i') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Net Balance Summary -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">
+                            <div class="flex items-center gap-4">
+                                <span>إجمالي الدائن: <span class="font-medium text-green-600">{{ number_format($balances->where('type', 'credit')->sum('amount'), 2) }} ريال</span></span>
+                                <span>إجمالي المدين: <span class="font-medium text-red-600">{{ number_format($balances->where('type', 'debit')->sum('amount'), 2) }} ريال</span></span>
+                            </div>
+                        </div>
+                        <div class="text-lg font-bold {{ $netBalance > 0 ? 'text-green-600' : ($netBalance < 0 ? 'text-red-600' : 'text-gray-600') }}">
+                            صافي الرصيد: 
+                            @if($netBalance > 0)
+                                +{{ number_format($netBalance, 2) }} ريال (للموظف)
+                            @elseif($netBalance < 0)
+                                {{ number_format($netBalance, 2) }} ريال (على الموظف)
+                            @else
+                                0.00 ريال (متوازن)
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="p-6 text-center text-gray-500">
+                <i class="ri-money-dollar-circle-line text-4xl mb-2 text-gray-400"></i>
+                <p>لا توجد معاملات مالية مسجلة لهذا الموظف</p>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -1476,5 +1593,266 @@ function printSecretReports() {
     window.open('{{ route("employees.reports.print", $employee) }}', '_blank');
 }
 </script>
+
+<!-- Password Change Modal -->
+<div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">تغيير كلمة السر</h3>
+                <button type="button" onclick="closePasswordModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="passwordForm" action="{{ route('employees.change-password', $employee) }}" method="POST">
+                @csrf
+                @method('PATCH')
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="new_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            كلمة السر الجديدة <span class="text-red-500">*</span>
+                        </label>
+                        <input type="password" 
+                               id="new_password" 
+                               name="new_password" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               required minlength="8">
+                    </div>
+                    
+                    <div>
+                        <label for="new_password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
+                            تأكيد كلمة السر <span class="text-red-500">*</span>
+                        </label>
+                        <input type="password" 
+                               id="new_password_confirmation" 
+                               name="new_password_confirmation" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               required minlength="8">
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-end gap-3 mt-6">
+                    <button type="button" 
+                            onclick="closePasswordModal()" 
+                            class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                        <i class="ri-save-line ml-2"></i>
+                        تغيير كلمة السر
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openPasswordModal() {
+    document.getElementById('passwordModal').classList.remove('hidden');
+    document.getElementById('passwordModal').classList.add('flex');
+    document.getElementById('new_password').focus();
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').classList.add('hidden');
+    document.getElementById('passwordModal').classList.remove('flex');
+    document.getElementById('passwordForm').reset();
+}
+
+// Close modal when clicking outside
+document.getElementById('passwordModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePasswordModal();
+    }
+});
+
+// Handle password form submission
+document.getElementById('passwordForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('new_password').value;
+    const confirmation = document.getElementById('new_password_confirmation').value;
+    
+    if (password !== confirmation) {
+        e.preventDefault();
+        alert('كلمة السر وتأكيدها غير متطابقتين');
+        return;
+    }
+    
+    if (password.length < 8) {
+        e.preventDefault();
+        alert('كلمة السر يجب أن تكون 8 أحرف على الأقل');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="ri-loader-line animate-spin ml-2"></i> جاري التغيير...';
+});
+
+// Credit Modal Functions
+function openCreditModal() {
+    document.getElementById('creditModal').classList.remove('hidden');
+}
+
+function closeCreditModal() {
+    document.getElementById('creditModal').classList.add('hidden');
+    document.getElementById('creditForm').reset();
+}
+
+// Debit Modal Functions
+function openDebitModal() {
+    document.getElementById('debitModal').classList.remove('hidden');
+}
+
+function closeDebitModal() {
+    document.getElementById('debitModal').classList.add('hidden');
+    document.getElementById('debitForm').reset();
+}
+
+// Form submission handlers
+document.getElementById('creditForm').addEventListener('submit', function() {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="ri-loader-line animate-spin ml-2"></i> جاري الإضافة...';
+});
+
+document.getElementById('debitForm').addEventListener('submit', function() {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="ri-loader-line animate-spin ml-2"></i> جاري الإضافة...';
+});
+</script>
+
+<!-- Credit Modal -->
+<div id="creditModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="ri-add-circle-line text-green-600"></i>
+                        إضافة رصيد دائن
+                    </h3>
+                    <button onclick="closeCreditModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+
+                <form id="creditForm" method="POST" action="{{ route('employees.balance.credit', $employee) }}">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                            <input type="number" 
+                                   name="amount" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                   placeholder="أدخل المبلغ">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">تاريخ المعاملة</label>
+                            <input type="date" 
+                                   name="transaction_date" 
+                                   value="{{ now()->format('Y-m-d') }}"
+                                   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">الملاحظات</label>
+                            <textarea name="notes" 
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                      placeholder="أدخل الملاحظات (اختياري)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" 
+                                onclick="closeCreditModal()"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">
+                            إلغاء
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700">
+                            إضافة الرصيد الدائن
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Debit Modal -->
+<div id="debitModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="ri-subtract-line text-red-600"></i>
+                        إضافة رصيد مدين
+                    </h3>
+                    <button onclick="closeDebitModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+
+                <form id="debitForm" method="POST" action="{{ route('employees.balance.debit', $employee) }}">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ريال)</label>
+                            <input type="number" 
+                                   name="amount" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                   placeholder="أدخل المبلغ">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">تاريخ المعاملة</label>
+                            <input type="date" 
+                                   name="transaction_date" 
+                                   value="{{ now()->format('Y-m-d') }}"
+                                   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">الملاحظات</label>
+                            <textarea name="notes" 
+                                      rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                      placeholder="أدخل الملاحظات (اختياري)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" 
+                                onclick="closeDebitModal()"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">
+                            إلغاء
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700">
+                            إضافة الرصيد المدين
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection

@@ -19,10 +19,12 @@ class Employee extends Model
         'salary',
         'status',
         'role',
-        'sponsorship',
+        'sponsorship_status',
         'category',
         'national_id',
-        'national_id_expiry_date',
+        'national_id_expiry',
+        'driving_license_issue_date',
+        'driving_license_expiry_date',
         'address',
         'photo',
         'national_id_photo',
@@ -35,36 +37,47 @@ class Employee extends Model
         'work_permit_expiry_date',
         'work_permit_photo',
         'driving_license_issue_date',
-        'driving_license_expiry_date',
+        'driving_license_expiry',
         'driving_license_photo',
         'location_id',
-        'location_assignment_date',
+
         'user_id',
         'bank_name',
+        'bank_account_number',
         'iban',
         'birth_date',
         'nationality',
+        'marital_status',
+        'children_count',
         'religion',
-        'medical_insurance_status',
-        'location_type',
+
+
         'additional_documents',
         'rating',
         'direct_manager_id',
-        'working_hours'
+        'working_hours',
+        'contract_start',
+        'contract_end',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relationship',
     ];
 
     protected $casts = [
         'hire_date' => 'date',
         'salary' => 'decimal:2',
         'birth_date' => 'date',
-        'national_id_expiry_date' => 'datetime',
-        'passport_issue_date' => 'datetime',
-        'passport_expiry_date' => 'datetime',
-        'work_permit_issue_date' => 'datetime',
-        'work_permit_expiry_date' => 'datetime',
-        'driving_license_issue_date' => 'datetime',
-        'driving_license_expiry_date' => 'datetime',
-        'location_assignment_date' => 'datetime',
+        'national_id_expiry' => 'date',
+        'passport_issue_date' => 'date',
+        'passport_expiry_date' => 'date',
+        'work_permit_issue_date' => 'date',
+        'work_permit_expiry_date' => 'date',
+        'driving_license_issue_date' => 'date',
+        'driving_license_issue_date' => 'date',
+        'driving_license_expiry' => 'date',
+
+        'contract_start' => 'date',
+        'contract_end' => 'date',
         'additional_documents' => 'array'
     ];
 
@@ -172,5 +185,19 @@ class Employee extends Model
     public function payrollEmployees()
     {
         return $this->hasMany(PayrollEmployee::class);
+    }
+
+    // علاقة مع أرصدة الموظف
+    public function balances()
+    {
+        return $this->hasMany(EmployeeBalance::class);
+    }
+
+    // حساب صافي الرصيد
+    public function getNetBalance()
+    {
+        $credits = $this->balances()->where('type', 'credit')->sum('amount');
+        $debits = $this->balances()->where('type', 'debit')->sum('amount');
+        return $credits - $debits;
     }
 }

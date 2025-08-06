@@ -47,9 +47,9 @@
                         <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
                             {{ $employees->total() }} موظف
                         </span>
-                        @if(request()->hasAny(['department', 'role', 'status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to']))
+                        @if(request()->hasAny(['department', 'role', 'status', 'sponsorship_status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to']))
                             @php
-                                $activeFiltersCount = collect(['department', 'role', 'status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to'])
+                                $activeFiltersCount = collect(['department', 'role', 'status', 'sponsorship_status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to'])
                                     ->filter(fn($filter) => request()->filled($filter))->count();
                             @endphp
                             <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
@@ -59,9 +59,24 @@
                     </div>
                 </div>
 
-                <!-- Search Box -->
+                <!-- Search Box and Sort -->
                 <div class="flex-shrink-0">
                     <form method="GET" action="{{ route('employees.index') }}" class="flex items-center space-x-2 space-x-reverse">
+                        <!-- Sort dropdown -->
+                        <div class="relative">
+                            <select name="sort" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" onchange="this.form.submit()">
+                                <option value="">ترتيب حسب</option>
+                                <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>الاسم (أ-ي)</option>
+                                <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>الاسم (ي-أ)</option>
+                                <option value="hire_date_desc" {{ request('sort') == 'hire_date_desc' ? 'selected' : '' }}>الأحدث توظيفاً</option>
+                                <option value="hire_date_asc" {{ request('sort') == 'hire_date_asc' ? 'selected' : '' }}>الأقدم توظيفاً</option>
+                                <option value="national_id_expiry_asc" {{ request('sort') == 'national_id_expiry_asc' ? 'selected' : '' }}>الأقرب انتهاء هوية</option>
+                                <option value="national_id_expiry_desc" {{ request('sort') == 'national_id_expiry_desc' ? 'selected' : '' }}>الأبعد انتهاء هوية</option>
+                                <option value="department_asc" {{ request('sort') == 'department_asc' ? 'selected' : '' }}>القسم (أ-ي)</option>
+                                <option value="role_asc" {{ request('sort') == 'role_asc' ? 'selected' : '' }}>الدور (أ-ي)</option>
+                            </select>
+                        </div>
+
                         <div class="relative">
                             <input type="text"
                                    name="search"
@@ -74,10 +89,10 @@
                             </div>
                         </div>
 
-                        @if(request('search'))
+                        @if(request('search') || request('sort'))
                             <a href="{{ route('employees.index') }}"
                                class="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0"
-                               title="مسح البحث">
+                               title="مسح البحث والترتيب">
                                 <i class="ri-close-line"></i>
                             </a>
                         @endif
@@ -102,9 +117,12 @@
             <!-- Filters Section -->
             <div class="border-t border-gray-100 pt-4 no-print">
                 <form method="GET" action="{{ route('employees.index') }}" id="filterForm" class="space-y-4">
-                    <!-- Preserve search value -->
+                    <!-- Preserve search and sort values -->
                     @if(request('search'))
                         <input type="hidden" name="search" value="{{ request('search') }}">
+                    @endif
+                    @if(request('sort'))
+                        <input type="hidden" name="sort" value="{{ request('sort') }}">
                     @endif
 
                     <!-- Filter Toggle Button -->
@@ -117,7 +135,7 @@
                             <i id="filterIcon" class="ri-arrow-down-s-line mr-1 transition-transform duration-200"></i>
                         </button>
 
-                        @if(request()->hasAny(['department', 'role', 'status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to']))
+                        @if(request()->hasAny(['department', 'role', 'status', 'sponsorship_status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to']))
                             <a href="{{ route('employees.index') }}"
                                class="text-sm text-red-600 hover:text-red-800 flex items-center">
                                 <i class="ri-close-circle-line ml-1"></i>
@@ -128,10 +146,10 @@
 
                     <!-- Filters Container -->
                     <div id="filtersContainer"
-                         class="space-y-4 {{ request()->hasAny(['department', 'role', 'status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to']) ? '' : 'hidden' }}">
+                         class="space-y-4 {{ request()->hasAny(['department', 'role', 'status', 'sponsorship_status', 'location_id', 'has_user', 'hire_date_from', 'hire_date_to']) ? '' : 'hidden' }}">
 
                         <!-- Main Filters Row -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                             <!-- Department Filter -->
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">القسم</label>
@@ -167,6 +185,19 @@
                                     <option value="غير نشط" {{ request('status') == 'غير نشط' ? 'selected' : '' }}>غير نشط</option>
                                     <option value="معلق" {{ request('status') == 'معلق' ? 'selected' : '' }}>معلق</option>
                                     <option value="مفصول" {{ request('status') == 'مفصول' ? 'selected' : '' }}>مفصول</option>
+                                </select>
+                            </div>
+
+                            <!-- Sponsorship Filter -->
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">الكفالة</label>
+                                <select name="sponsorship_status" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="submitFilters()">
+                                    <option value="">جميع الكفالات</option>
+                                    @foreach($sponsorshipStatuses as $sponsorship)
+                                        <option value="{{ $sponsorship }}" {{ request('sponsorship_status') == $sponsorship ? 'selected' : '' }}>
+                                            {{ $sponsorship }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -222,7 +253,7 @@
                 </form>
 
                 <!-- Active Filters Display -->
-                @if(request()->hasAny(['department', 'role', 'status', 'location_id', 'hire_date_from', 'hire_date_to']))
+                @if(request()->hasAny(['department', 'role', 'status', 'sponsorship_status', 'location_id', 'hire_date_from', 'hire_date_to']))
                     <div class="mt-4 flex flex-wrap gap-2">
                         <span class="text-xs text-gray-600 font-medium">الفلاتر النشطة:</span>
 
@@ -248,6 +279,15 @@
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                 الحالة: {{ request('status') }}
                                 <a href="{{ request()->fullUrlWithQuery(['status' => null]) }}" class="mr-1 text-yellow-600 hover:text-yellow-800">
+                                    <i class="ri-close-line"></i>
+                                </a>
+                            </span>
+                        @endif
+
+                        @if(request('sponsorship_status'))
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                الكفالة: {{ request('sponsorship_status') }}
+                                <a href="{{ request()->fullUrlWithQuery(['sponsorship_status' => null]) }}" class="mr-1 text-orange-600 hover:text-orange-800">
                                     <i class="ri-close-line"></i>
                                 </a>
                             </span>
@@ -315,8 +355,7 @@
                         <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">الدور</th>
                         <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px] hidden xl:table-cell">الموقع</th>
                         <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] hidden lg:table-cell">حساب النظام</th>
-                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] hidden md:table-cell">تاريخ التوظيف</th>
-                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] hidden xl:table-cell">الراتب</th>
+                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px] hidden md:table-cell">انتهاء الهوية</th>
                         <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">الحالة</th>
                         <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">الإجراءات</th>
                     </tr>
@@ -335,7 +374,18 @@
                                     <!-- Mobile info -->
                                     <div class="md:hidden text-xs text-gray-600 mt-1">
                                         <div>{{ $employee->position }}</div>
-                                        <div>{{ $employee->hire_date ? $employee->hire_date->format('Y/m/d') : 'غير محدد' }}</div>
+                                        <div>
+                                            @if($employee->national_id_expiry)
+                                                @php 
+                                                    $status = $employee->getDocumentStatus('national_id_expiry');
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $status['class'] }}">
+                                                    {{ $employee->national_id_expiry->format('Y/m/d') }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">هوية غير محددة</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -376,8 +426,21 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">{{ $employee->hire_date ? $employee->hire_date->format('Y/m/d') : 'غير محدد' }}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden xl:table-cell">{{ number_format($employee->salary) }} ر.س</td>
+                        <td class="px-3 py-3 whitespace-nowrap hidden md:table-cell">
+                            @if($employee->national_id_expiry)
+                                @php 
+                                    $status = $employee->getDocumentStatus('national_id_expiry');
+                                @endphp
+                                <div class="flex flex-col items-start">
+                                    <span class="text-sm text-gray-900">{{ $employee->national_id_expiry->format('Y/m/d') }}</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $status['class'] }} mt-1">
+                                        {{ $status['status'] }}
+                                    </span>
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400">غير محددة</span>
+                            @endif
+                        </td>
                         <td class="px-3 py-3 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $employee->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $employee->status === 'active' ? 'نشط' : 'غير نشط' }}

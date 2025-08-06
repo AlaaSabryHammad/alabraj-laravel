@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قاعدة بيانات الموظفين - شركة الأبراج</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        .salary {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .rating {
+            color: #ffc107;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">🏢 قاعدة بيانات الموظفين - شركة الأبراج</h1>
+                <p class="text-center text-muted mb-5">
+                    200 مستخدم مرتبط بـ 200 موظف مع بيانات شاملة
+                </p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">👥 إجمالي الموظفين</h5>
+                        <h2 class="text-primary">205</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">💰 متوسط الراتب</h5>
+                        <h2 class="text-success">7,048 ريال</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-info">🏢 الأقسام</h5>
+                        <h2 class="text-info">12 قسم</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">⭐ متوسط التقييم</h5>
+                        <h2 class="text-warning">3.6/5.0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Employees Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">📋 عينة من بيانات الموظفين</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>الصورة</th>
+                                        <th>الاسم</th>
+                                        <th>المسمى الوظيفي</th>
+                                        <th>القسم</th>
+                                        <th>الراتب</th>
+                                        <th>الجنسية</th>
+                                        <th>التقييم</th>
+                                        <th>تاريخ التوظيف</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employees-table">
+                                    <!-- سيتم ملؤها بـ JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">🎯 البيانات المتوفرة لكل موظف</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li>✅ <strong>البيانات الشخصية:</strong> الاسم، تاريخ الميلاد، الجنسية، الحالة الاجتماعية
+                            </li>
+                            <li>✅ <strong>معلومات التوظيف:</strong> المسمى، القسم، الراتب، تاريخ التوظيف</li>
+                            <li>✅ <strong>الوثائق:</strong> الهوية الوطنية، جواز السفر، رخصة القيادة</li>
+                            <li>✅ <strong>البيانات البنكية:</strong> اسم البنك، رقم الحساب، الآيبان</li>
+                            <li>✅ <strong>جهات الاتصال:</strong> في حالات الطوارئ</li>
+                            <li>✅ <strong>التقييمات والأداء:</strong> تقييمات دورية</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">🔗 الربط مع النظام</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li>✅ <strong>حسابات المستخدمين:</strong> كل موظف له حساب مستخدم</li>
+                            <li>✅ <strong>الصور الشخصية:</strong> صور SVG مولدة تلقائياً</li>
+                            <li>✅ <strong>الأدوار والصلاحيات:</strong> 9 أدوار مختلفة</li>
+                            <li>✅ <strong>نظام الإدارة:</strong> ربط المدراء بالمرؤوسين</li>
+                            <li>✅ <strong>كشوف الرواتب:</strong> ربط مع نظام الرواتب</li>
+                            <li>✅ <strong>التقارير:</strong> إمكانية إنشاء تقارير مفصلة</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // بيانات وهمية للعرض (في التطبيق الحقيقي ستأتي من API)
+        const sampleEmployees = [
+            {
+                name: 'مدير النظام',
+                position: 'مدير عام',
+                department: 'الإدارة العامة',
+                salary: '20,188',
+                nationality: 'سعودي',
+                rating: '3.86',
+                hire_date: '2022-05-13',
+                avatar: 'avatars/avatar_mdyr-alntham_1754388654.svg'
+            },
+            {
+                name: 'سارة عبدالرحمن الحربي',
+                position: 'مدير قسم',
+                department: 'المشاريع',
+                salary: '14,941',
+                nationality: 'سعودي',
+                rating: '4.95',
+                hire_date: '2022-04-20',
+                avatar: 'avatars/avatar_sar-aabdalrhmn-alhrby_1754388654.svg'
+            },
+            {
+                name: 'نوف فهد الدوسري',
+                position: 'مسؤول مالي',
+                department: 'المالية',
+                salary: '10,870',
+                nationality: 'سعودي',
+                rating: '3.96',
+                hire_date: '2023-02-08',
+                avatar: 'avatars/avatar_nof-fhd-aldosry_1754388654.svg'
+            },
+            {
+                name: 'خالد سعد الغامدي',
+                position: 'موظف',
+                department: 'الهندسة',
+                salary: '6,202',
+                nationality: 'سعودي',
+                rating: '3.94',
+                hire_date: '2025-04-12',
+                avatar: 'avatars/avatar_khald-saad-alghamdy_1754388654.svg'
+            },
+            {
+                name: 'أحمد محمد العتيبي',
+                position: 'مستخدم',
+                department: 'الجودة',
+                salary: '5,576',
+                nationality: 'لبناني',
+                rating: '4.35',
+                hire_date: '2022-10-12',
+                avatar: 'avatars/avatar_ahmd-mhmd-alaatyby_1754388654.svg'
+            }
+        ];
+
+        const tableBody = document.getElementById('employees-table');
+
+        sampleEmployees.forEach(employee => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <img src="${employee.avatar}" alt="${employee.name}" class="avatar" 
+                         onerror="this.style.display='none';">
+                </td>
+                <td><strong>${employee.name}</strong></td>
+                <td>${employee.position}</td>
+                <td><span class="badge bg-secondary">${employee.department}</span></td>
+                <td class="salary">${employee.salary} ريال</td>
+                <td>${employee.nationality}</td>
+                <td class="rating">⭐ ${employee.rating}/5.0</td>
+                <td>${employee.hire_date}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    </script>
+</body>
+
+</html>

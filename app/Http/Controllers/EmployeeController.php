@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Employee;
+use App\Models\EmployeeBalance;
 use App\Models\Attendance;
 use App\Models\Location;
 use App\Models\User;
+use App\Models\ManagerAssignment;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use App\Models\ManagerAssignment;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
@@ -60,6 +61,11 @@ class EmployeeController extends Controller
             }
         }
 
+        // Handle sponsorship filter
+        if ($request->filled('sponsorship_status')) {
+            $query->where('sponsorship_status', $request->get('sponsorship_status'));
+        }
+
         // Handle hire date range filter
         if ($request->filled('hire_date_from')) {
             $query->whereDate('hire_date', '>=', $request->get('hire_date_from'));
@@ -68,7 +74,42 @@ class EmployeeController extends Controller
             $query->whereDate('hire_date', '<=', $request->get('hire_date_to'));
         }
 
-        $employees = $query->latest()->paginate(10);
+        // Handle sorting
+        if ($request->filled('sort')) {
+            switch ($request->get('sort')) {
+                case 'name_asc':
+                    $query->orderBy('name', 'asc');
+                    break;
+                case 'name_desc':
+                    $query->orderBy('name', 'desc');
+                    break;
+                case 'hire_date_desc':
+                    $query->orderBy('hire_date', 'desc');
+                    break;
+                case 'hire_date_asc':
+                    $query->orderBy('hire_date', 'asc');
+                    break;
+                case 'national_id_expiry_asc':
+                    $query->orderByRaw('national_id_expiry IS NULL, national_id_expiry ASC');
+                    break;
+                case 'national_id_expiry_desc':
+                    $query->orderByRaw('national_id_expiry IS NULL, national_id_expiry DESC');
+                    break;
+                case 'department_asc':
+                    $query->orderBy('department', 'asc');
+                    break;
+                case 'role_asc':
+                    $query->orderBy('role', 'asc');
+                    break;
+                default:
+                    $query->latest();
+                    break;
+            }
+        } else {
+            $query->latest();
+        }
+
+        $employees = $query->paginate(10);
 
         // Preserve all parameters in pagination links
         $employees->appends($request->except('page'));
@@ -76,9 +117,10 @@ class EmployeeController extends Controller
         // Get filter options for dropdowns
         $departments = Employee::distinct()->pluck('department')->filter()->sort();
         $roles = Employee::distinct()->pluck('role')->filter()->sort();
+        $sponsorshipStatuses = Employee::distinct()->pluck('sponsorship_status')->filter()->sort();
         $locations = Location::where('status', 'active')->get();
 
-        return view('employees.index', compact('employees', 'departments', 'roles', 'locations'));
+        return view('employees.index', compact('employees', 'departments', 'roles', 'sponsorshipStatuses', 'locations'));
     }
 
     public function create()
@@ -111,10 +153,10 @@ class EmployeeController extends Controller
                     }
                 },
             ],
-            'national_id_expiry_date' => 'nullable|date|after:today',
+            'national_id_expiry' => 'nullable|date|after:today',
             'address' => 'nullable|string',
             'role' => 'required|in:عامل,مشرف موقع,مهندس,إداري,مسئول رئيسي',
-            'sponsorship' => 'required|in:شركة الأبراج للمقاولات المحدودة,فرع1 شركة الأبراج للمقاولات المحدودة,فرع2 شركة الأبراج للمقاولات المحدودة,مؤسسة فريق التعمير للمقاولات,فرع مؤسسة فريق التعمير للنقل,مؤسسة الزفاف الذهبي,مؤسسة عنوان الكادي,عمالة منزلية,عمالة كفالة خارجية تحت التجربة,أخرى',
+            'sponsorship_status' => 'required|in:شركة الأبراج للمقاولات المحدودة,فرع1 شركة الأبراج للمقاولات المحدودة,فرع2 شركة الأبراج للمقاولات المحدودة,مؤسسة فريق التعمير للمقاولات,فرع مؤسسة فريق التعمير للنقل,مؤسسة الزفاف الذهبي,مؤسسة عنوان الكادي,عمالة منزلية,عمالة كفالة خارجية تحت التجربة,أخرى',
             'category' => 'required|in:A+,A,B,C,D,E',
 
             // Photo uploads
@@ -135,12 +177,12 @@ class EmployeeController extends Controller
 
             // Driving license data
             'driving_license_issue_date' => 'nullable|date',
-            'driving_license_expiry_date' => 'nullable|date|after:driving_license_issue_date',
+            'driving_license_expiry' => 'nullable|date|after:driving_license_issue_date',
             'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
 
             // Location assignment
             'location_id' => 'nullable|exists:locations,id',
-            'location_assignment_date' => 'nullable|date',
+
 
             // Bank account information
             'bank_name' => 'nullable|string|max:255',
@@ -154,11 +196,11 @@ class EmployeeController extends Controller
             'birth_date' => 'nullable|date|before:today',
             'nationality' => 'nullable|string|max:100',
             'religion' => 'nullable|string|max:100',
-            'medical_insurance_status' => 'nullable|in:مشمول,غير مشمول',
-            'location_type' => 'nullable|in:داخل المملكة,خارج المملكة',
+
+
 
             // Rating
-            'rating' => 'nullable|integer|min:1|max:5',
+            'rating' => 'nullable|numeric|min:1|max:5',
 
             // Additional documents
             'additional_documents' => 'nullable|array',
@@ -202,7 +244,7 @@ class EmployeeController extends Controller
                     ];
                 }
             }
-            $validated['additional_documents'] = json_encode($additionalDocuments);
+            $validated['additional_documents'] = $additionalDocuments; // Remove json_encode since model has array cast
         } else {
             $validated['additional_documents'] = null;
         }
@@ -263,9 +305,15 @@ class EmployeeController extends Controller
             'directManager.location',
             'subordinates',
             'managerAssignments.manager.location',
-            'managerAssignments.assignedBy'
+            'managerAssignments.assignedBy',
+            'balances.creator'
         ]);
-        return view('employees.show', compact('employee'));
+        
+        // Get balances ordered by transaction date
+        $balances = $employee->balances()->with('creator')->orderBy('transaction_date', 'desc')->get();
+        $netBalance = $employee->getNetBalance();
+        
+        return view('employees.show', compact('employee', 'balances', 'netBalance'));
     }
 
     public function edit(Employee $employee)
@@ -276,7 +324,26 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee)
     {
-        $validated = $request->validate([
+        Log::info('Employee update started', [
+            'employee_id' => $employee->id,
+            'employee_name' => $employee->name,
+            'request_method' => $request->method(),
+            'request_url' => $request->url(),
+            'request_data_count' => count($request->all()),
+            'has_files' => $request->hasFile('photo') || $request->hasFile('national_id_photo'),
+            'current_employee_data' => [
+                'name' => $employee->name,
+                'email' => $employee->email,
+                'position' => $employee->position,
+                'department' => $employee->department,
+                'salary' => $employee->salary,
+                'status' => $employee->status,
+                'rating' => $employee->rating
+            ]
+        ]);
+
+        try {
+            $validated = $request->validate([
             'name' => 'required|string|max:255',
             'position' => 'required|string|max:255',
             'department' => 'required|string|max:255',
@@ -286,12 +353,12 @@ class EmployeeController extends Controller
             'salary' => 'required|numeric|min:0',
             'working_hours' => 'required|numeric|min:1|max:24',
             'national_id' => 'required|string|max:20|unique:employees,national_id,' . $employee->id,
-            'national_id_expiry_date' => 'nullable|date|after:today',
+            'national_id_expiry' => 'nullable|date|after:today',
             'address' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
-            'role' => 'required|in:عامل,مشرف موقع,مهندس,إداري,مسئول رئيسي',
-            'sponsorship' => 'required|in:شركة الأبراج للمقاولات المحدودة,فرع1 شركة الأبراج للمقاولات المحدودة,فرع2 شركة الأبراج للمقاولات المحدودة,مؤسسة فريق التعمير للمقاولات,فرع مؤسسة فريق التعمير للنقل,مؤسسة الزفاف الذهبي,مؤسسة عنوان الكادي,عمالة منزلية,عمالة كفالة خارجية تحت التجربة,أخرى',
-            'category' => 'required|in:A+,A,B,C,D,E',
+            'status' => 'required|in:active,inactive,suspended,terminated',
+            'role' => 'required|string|max:255',
+            'sponsorship_status' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:255',
 
             // Photo uploads
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -311,12 +378,12 @@ class EmployeeController extends Controller
 
             // Driving license data
             'driving_license_issue_date' => 'nullable|date',
-            'driving_license_expiry_date' => 'nullable|date|after:driving_license_issue_date',
+            'driving_license_expiry' => 'nullable|date|after:driving_license_issue_date',
             'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
 
             // Location assignment
             'location_id' => 'nullable|exists:locations,id',
-            'location_assignment_date' => 'nullable|date',
+
 
             // Bank account information
             'bank_name' => 'nullable|string|max:255',
@@ -330,17 +397,40 @@ class EmployeeController extends Controller
             'birth_date' => 'nullable|date|before:today',
             'nationality' => 'nullable|string|max:100',
             'religion' => 'nullable|string|max:100',
-            'medical_insurance_status' => 'nullable|in:مشمول,غير مشمول',
-            'location_type' => 'nullable|in:داخل المملكة,خارج المملكة',
+
+
 
             // Rating
-            'rating' => 'nullable|integer|min:1|max:5',
+            'rating' => 'nullable|numeric|min:1|max:5',
 
             // Additional documents
             'additional_documents' => 'nullable|array',
             'additional_documents.*.name' => 'required_with:additional_documents|string|max:255',
             'additional_documents.*.file' => 'required_with:additional_documents|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
         ]);
+        
+        Log::info('Validation passed successfully', [
+            'employee_id' => $employee->id,
+            'validated_data_keys' => array_keys($validated)
+        ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed', [
+                'employee_id' => $employee->id,
+                'validation_errors' => $e->errors(),
+                'request_data' => $request->except(['_token', '_method'])
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Unexpected error during validation', [
+                'employee_id' => $employee->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'حدث خطأ غير متوقع: ' . $e->getMessage());
+        }
 
         // Handle file uploads
         if ($request->hasFile('photo')) {
@@ -410,10 +500,34 @@ class EmployeeController extends Controller
                     ];
                 }
             }
-            $validated['additional_documents'] = json_encode($additionalDocuments);
+            $validated['additional_documents'] = $additionalDocuments; // Remove json_encode since model has array cast
         }
 
-        $employee->update($validated);
+        try {
+            $oldData = $employee->toArray();
+            
+            $employee->update($validated);
+            
+            $newData = $employee->fresh()->toArray();
+            
+            Log::info('Employee updated successfully', [
+                'employee_id' => $employee->id,
+                'changes_made' => array_diff_assoc($newData, $oldData),
+                'updated_fields_count' => count($validated)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update employee', [
+                'employee_id' => $employee->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'validated_data' => $validated
+            ]);
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'فشل في تحديث بيانات الموظف: ' . $e->getMessage());
+        }
 
         // Update user role if user account exists
         if ($employee->user) {
@@ -421,6 +535,11 @@ class EmployeeController extends Controller
             $employee->user->update(['role' => $userRole]);
             Log::info("تم تحديث صلاحية المستخدم للموظف: {$employee->name} - الصلاحية الجديدة: {$userRole}");
         }
+
+        Log::info('Employee update process completed successfully', [
+            'employee_id' => $employee->id,
+            'redirecting_to' => 'employees.index'
+        ]);
 
         return redirect()->route('employees.index')
             ->with('success', 'تم تحديث بيانات الموظف بنجاح');
@@ -499,6 +618,22 @@ class EmployeeController extends Controller
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
 
+        // Calculate total days in month
+        $totalDaysInMonth = $date->daysInMonth;
+        
+        // Calculate Fridays (weekends) in the month
+        $fridaysCount = 0;
+        $currentDate = $startOfMonth->copy();
+        while ($currentDate->lte($endOfMonth)) {
+            if ($currentDate->dayOfWeek === \Carbon\Carbon::FRIDAY) {
+                $fridaysCount++;
+            }
+            $currentDate->addDay();
+        }
+        
+        // Calculate working days (excluding Fridays)
+        $workingDaysInMonth = $totalDaysInMonth - $fridaysCount;
+
         $employees = Employee::where('status', 'active')
             ->with(['attendances' => function ($query) use ($startOfMonth, $endOfMonth) {
                 $query->whereBetween('date', [$startOfMonth, $endOfMonth]);
@@ -507,12 +642,218 @@ class EmployeeController extends Controller
 
         foreach ($employees as $employee) {
             $employee->present_days = $employee->attendances->where('status', 'present')->count();
-            $employee->absent_days = $startOfMonth->diffInDays($endOfMonth) + 1 - $employee->attendances->count();
             $employee->late_days = $employee->attendances->where('status', 'late')->count();
             $employee->leave_days = $employee->attendances->whereIn('status', ['leave', 'sick_leave'])->count();
+            
+            // Calculate absent days (working days - all recorded attendances)
+            $totalRecordedDays = $employee->attendances->count();
+            $employee->absent_days = max(0, $workingDaysInMonth - $totalRecordedDays);
+            
+            // Set Friday count for display
+            $employee->friday_days = $fridaysCount;
+            $employee->working_days_in_month = $workingDaysInMonth;
+            $employee->total_days_in_month = $totalDaysInMonth;
+            
+            // Calculate overtime hours (hours worked beyond 8 hours per day)
+            $employee->overtime_hours = $employee->attendances
+                ->where('working_hours', '>', 8)
+                ->sum(function ($attendance) {
+                    return max(0, $attendance->working_hours - 8);
+                });
+                
+            // Round to 2 decimal places
+            $employee->overtime_hours = round($employee->overtime_hours, 2);
         }
 
-        return view('employees.monthly_attendance_report', compact('employees', 'month', 'year'));
+        return view('employees.monthly_attendance_report', compact('employees', 'month', 'year', 'totalDaysInMonth', 'fridaysCount', 'workingDaysInMonth'));
+    }
+
+    /**
+     * Show daily attendance report for a specific date
+     */
+    public function dailyAttendanceReport(Request $request)
+    {
+        try {
+            $date = $request->input('date', now()->toDateString());
+            $selectedDate = \Carbon\Carbon::parse($date);
+
+            // Get all active employees with their attendance for the selected date
+            $employees = Employee::where('status', 'active')
+                ->with(['attendances' => function($query) use ($date) {
+                    $query->whereDate('date', $date);
+                }])
+                ->orderBy('name')
+                ->get();
+
+            // Calculate statistics for the day
+            $stats = [
+                'total_employees' => $employees->count(),
+                'present' => 0,
+                'absent' => 0,
+                'late' => 0,
+                'leave' => 0,
+                'total_overtime_hours' => 0
+            ];
+
+            foreach ($employees as $employee) {
+                $attendance = $employee->attendances->first();
+                
+                // Add attendance status to employee for easy access
+                $employee->attendance_status = $attendance ? $attendance->status : 'absent';
+                $employee->check_in = $attendance ? $attendance->check_in : null;
+                $employee->check_out = $attendance ? $attendance->check_out : null;
+                $employee->working_hours = $attendance ? $attendance->working_hours : 0;
+                $employee->late_minutes = $attendance ? $attendance->late_minutes : 0;
+                $employee->notes = $attendance ? $attendance->notes : '';
+                $employee->attendance_id = $attendance ? $attendance->id : null;
+
+                if ($attendance) {
+                    switch ($attendance->status) {
+                        case 'present':
+                            $stats['present']++;
+                            break;
+                        case 'absent':
+                            $stats['absent']++;
+                            break;
+                        case 'late':
+                            $stats['late']++;
+                            break;
+                        case 'leave':
+                        case 'sick_leave':
+                            $stats['leave']++;
+                            break;
+                    }
+                    
+                    if ($attendance->overtime_hours > 0) {
+                        $stats['total_overtime_hours'] += $attendance->overtime_hours;
+                    }
+                } else {
+                    $stats['absent']++;
+                }
+            }
+
+            return view('employees.daily_attendance_report', compact('employees', 'stats', 'selectedDate', 'date'));
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in dailyAttendanceReport: ' . $e->getMessage(), [
+                'date' => $request->input('date'),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('employees.attendance')->with('error', 'حدث خطأ أثناء تحميل التقرير اليومي: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show daily attendance edit form for a specific date
+     */
+    public function dailyAttendanceEdit(Request $request)
+    {
+        try {
+            $date = $request->input('date', now()->toDateString());
+            
+            // Validate date format
+            try {
+                $selectedDate = \Carbon\Carbon::parse($date);
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'تاريخ غير صحيح: ' . $date);
+            }
+
+            // Get all active employees with their attendance for the selected date
+            $employees = Employee::where('status', 'active')
+                ->with(['attendances' => function($query) use ($date) {
+                    $query->whereDate('date', $date);
+                }])
+                ->orderBy('name')
+                ->get();
+
+        foreach ($employees as $employee) {
+            $attendance = $employee->attendances->first();
+            
+            // Add attendance data to employee for easy access
+            $employee->attendance_status = $attendance ? $attendance->status : 'absent';
+            $employee->check_in = $attendance ? $attendance->check_in : '';
+            $employee->check_out = $attendance ? $attendance->check_out : '';
+            $employee->working_hours = $attendance ? $attendance->working_hours : 0;
+            $employee->late_minutes = $attendance ? $attendance->late_minutes : 0;
+            $employee->notes = $attendance ? $attendance->notes : '';
+            $employee->attendance_id = $attendance ? $attendance->id : null;
+        }
+
+        return view('employees.daily_attendance_edit', compact('employees', 'selectedDate', 'date'));
+        
+        } catch (\Exception $e) {
+            \Log::error('Error in dailyAttendanceEdit: ' . $e->getMessage(), [
+                'date' => $request->input('date'),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('employees.attendance')->with('error', 'حدث خطأ أثناء تحميل صفحة التعديل: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update daily attendance data
+     */
+    public function dailyAttendanceUpdate(Request $request)
+    {
+        $date = $request->input('date');
+        $attendanceData = $request->input('attendance', []);
+
+        try {
+            foreach ($attendanceData as $employeeId => $data) {
+                $employee = Employee::find($employeeId);
+                if (!$employee) continue;
+
+                // Find or create attendance record
+                $attendance = Attendance::where('employee_id', $employeeId)
+                    ->whereDate('date', $date)
+                    ->first();
+
+                if (!$attendance) {
+                    $attendance = new Attendance([
+                        'employee_id' => $employeeId,
+                        'date' => $date
+                    ]);
+                }
+
+                // Update attendance data
+                $attendance->status = $data['status'] ?? 'absent';
+                $attendance->check_in = $data['check_in'] ?: null;
+                $attendance->check_out = $data['check_out'] ?: null;
+                $attendance->working_hours = (float)($data['working_hours'] ?? 0);
+                $attendance->late_minutes = (int)($data['late_minutes'] ?? 0);
+                $attendance->notes = $data['notes'] ?? '';
+
+                // Calculate working hours if check_in and check_out are provided
+                if ($attendance->check_in && $attendance->check_out) {
+                    $checkIn = \Carbon\Carbon::parse($date . ' ' . $attendance->check_in);
+                    $checkOut = \Carbon\Carbon::parse($date . ' ' . $attendance->check_out);
+                    
+                    if ($checkOut->greaterThan($checkIn)) {
+                        $totalMinutes = $checkOut->diffInMinutes($checkIn);
+                        // Subtract 1 hour for lunch break if working more than 6 hours
+                        if ($totalMinutes > 360) { // More than 6 hours
+                            $totalMinutes -= 60;
+                        }
+                        $attendance->working_hours = max(0, $totalMinutes / 60);
+                    }
+                }
+
+                // Only save if not absent status or if we have actual data
+                if ($attendance->status !== 'absent' || $attendance->check_in || $attendance->check_out || $attendance->notes) {
+                    $attendance->save();
+                } elseif ($attendance->exists) {
+                    // Delete attendance record if status is absent and no other data
+                    $attendance->delete();
+                }
+            }
+
+            return redirect()->back()->with('success', 'تم تحديث بيانات الحضور بنجاح لتاريخ ' . $selectedDate->format('Y/m/d'));
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء تحديث بيانات الحضور: ' . $e->getMessage());
+        }
     }
 
     public function print(Employee $employee)
@@ -804,7 +1145,7 @@ class EmployeeController extends Controller
         if ($employee->role === 'عامل' && $manager->location_id) {
             $employee->update([
                 'location_id' => $manager->location_id,
-                'location_assignment_date' => now()
+
             ]);
         }
 
@@ -888,5 +1229,145 @@ class EmployeeController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Change employee password
+     */
+    public function changePassword(Request $request, Employee $employee)
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'new_password' => 'required|string|min:8|confirmed',
+            ], [
+                'new_password.required' => 'كلمة السر الجديدة مطلوبة',
+                'new_password.min' => 'كلمة السر يجب أن تكون 8 أحرف على الأقل',
+                'new_password.confirmed' => 'تأكيد كلمة السر غير متطابق',
+            ]);
+
+            // Check if employee has a user account
+            if (!$employee->user) {
+                return redirect()->back()->with('error', 'الموظف لا يملك حساب مستخدم');
+            }
+
+            // Update the password
+            $employee->user->update([
+                'password' => Hash::make($request->new_password),
+                'must_change_password' => false, // Reset the flag if it exists
+            ]);
+
+            Log::info('Password changed successfully', [
+                'employee_id' => $employee->id,
+                'employee_name' => $employee->name,
+                'user_id' => $employee->user->id,
+                'changed_by' => Auth::user()->name ?? 'System',
+            ]);
+
+            return redirect()->back()->with('success', 'تم تغيير كلمة السر بنجاح');
+
+        } catch (\Exception $e) {
+            Log::error('Error changing employee password', [
+                'employee_id' => $employee->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء تغيير كلمة السر: ' . $e->getMessage());
+        }
+    }
+
+    public function addCredit(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
+            'transaction_date' => 'required|date'
+        ]);
+
+        try {
+            EmployeeBalance::create([
+                'employee_id' => $employee->id,
+                'type' => 'credit',
+                'amount' => $request->amount,
+                'notes' => $request->notes,
+                'transaction_date' => $request->transaction_date,
+                'created_by' => Auth::id()
+            ]);
+
+            return redirect()->back()->with('success', 'تم إضافة الرصيد الدائن بنجاح');
+        } catch (\Exception $e) {
+            Log::error('Error adding credit balance', [
+                'employee_id' => $employee->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة الرصيد');
+        }
+    }
+
+    public function addDebit(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
+            'transaction_date' => 'required|date'
+        ]);
+
+        try {
+            EmployeeBalance::create([
+                'employee_id' => $employee->id,
+                'type' => 'debit',
+                'amount' => $request->amount,
+                'notes' => $request->notes,
+                'transaction_date' => $request->transaction_date,
+                'created_by' => Auth::id()
+            ]);
+
+            return redirect()->back()->with('success', 'تم إضافة الرصيد المدين بنجاح');
+        } catch (\Exception $e) {
+            Log::error('Error adding debit balance', [
+                'employee_id' => $employee->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة الرصيد');
+        }
+    }
+
+    public function recordBalanceTransaction(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'type' => 'required|in:credit,debit',
+            'amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        try {
+            EmployeeBalance::create([
+                'employee_id' => $request->employee_id,
+                'type' => $request->type,
+                'amount' => $request->amount,
+                'notes' => $request->notes,
+                'transaction_date' => now(),
+                'created_by' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تسجيل معاملة الرصيد بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error recording balance transaction', [
+                'employee_id' => $request->employee_id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء تسجيل معاملة الرصيد'
+            ]);
+        }
     }
 }

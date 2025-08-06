@@ -16,12 +16,14 @@ class Attendance extends Model
         'status',
         'notes',
         'late_minutes',
-        'working_hours'
+        'working_hours',
+        'overtime_hours'
     ];
 
     protected $casts = [
         'date' => 'date',
-        'working_hours' => 'decimal:2'
+        'working_hours' => 'decimal:2',
+        'overtime_hours' => 'decimal:2'
     ];
 
     /**

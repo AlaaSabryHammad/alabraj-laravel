@@ -80,29 +80,50 @@ class MaterialController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'unit' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'unit' => 'required|string|max:255',
+            ]);
 
-        // Set default values for required fields
-        $materialData = [
-            'name' => $validated['name'],
-            'unit_of_measure' => $validated['unit'],
-            'category' => 'عام', // Default category
-            'minimum_stock' => 0,
-            'current_stock' => 0,
-            'status' => 'active'
-        ];
+            // Create material unit first if it doesn't exist
+            $materialUnit = \App\Models\MaterialUnit::firstOrCreate(
+                ['name' => $validated['unit']],
+                [
+                    'name' => $validated['unit'],
+                    'symbol' => $validated['unit'],
+                    'type' => 'weight',
+                    'is_active' => true
+                ]
+            );
 
-        Material::create($materialData);
+            // Set default values for required fields
+            $materialData = [
+                'name' => $validated['name'],
+                'material_unit_id' => $materialUnit->id,
+                'category' => 'عام', // Default category
+                'minimum_stock' => 0,
+                'current_stock' => 0,
+                'status' => 'active'
+            ];
 
-        if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'تم إضافة المادة بنجاح']);
+            Material::create($materialData);
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'تم إضافة المادة بنجاح']);
+            }
+
+            return redirect()->route('settings.materials')
+                ->with('success', 'تم إضافة المادة بنجاح');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => true, 'message' => 'حدث خطأ: ' . $e->getMessage()], 500);
+            }
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'حدث خطأ: ' . $e->getMessage());
         }
-
-        return redirect()->route('settings.materials')
-            ->with('success', 'تم إضافة المادة بنجاح');
     }
 
     /**
@@ -126,22 +147,43 @@ class MaterialController extends Controller
      */
     public function update(Request $request, Material $material)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'unit' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'unit' => 'required|string|max:255',
+            ]);
 
-        $material->update([
-            'name' => $validated['name'],
-            'unit_of_measure' => $validated['unit']
-        ]);
+            // Create material unit first if it doesn't exist
+            $materialUnit = \App\Models\MaterialUnit::firstOrCreate(
+                ['name' => $validated['unit']],
+                [
+                    'name' => $validated['unit'],
+                    'symbol' => $validated['unit'],
+                    'type' => 'weight',
+                    'is_active' => true
+                ]
+            );
 
-        if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'تم تحديث المادة بنجاح']);
+            $material->update([
+                'name' => $validated['name'],
+                'material_unit_id' => $materialUnit->id
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'تم تحديث المادة بنجاح']);
+            }
+
+            return redirect()->route('settings.materials')
+                ->with('success', 'تم تحديث المادة بنجاح');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => true, 'message' => 'حدث خطأ: ' . $e->getMessage()], 500);
+            }
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'حدث خطأ: ' . $e->getMessage());
         }
-
-        return redirect()->route('settings.materials')
-            ->with('success', 'تم تحديث المادة بنجاح');
     }
 
     /**

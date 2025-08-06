@@ -13,7 +13,7 @@ class Material extends Model
         'name',
         'description',
         'category',
-        'unit_of_measure',
+        'material_unit_id',
         'unit_price',
         'minimum_stock',
         'maximum_stock',
@@ -36,22 +36,6 @@ class Material extends Model
         'last_purchase_price' => 'decimal:2',
         'last_purchase_date' => 'date'
     ];
-
-    /**
-     * Get the unit (returns unit_of_measure for backwards compatibility)
-     */
-    public function getUnitAttribute(): ?string
-    {
-        return $this->unit_of_measure;
-    }
-
-    /**
-     * Get the effective unit for display (ensures we always have a unit)
-     */
-    public function getEffectiveUnitAttribute(): ?string
-    {
-        return $this->unit_of_measure;
-    }
 
     /**
      * Get the status in Arabic
@@ -143,5 +127,37 @@ class Material extends Model
             'other' => 'أخرى',
             default => $this->category
         };
+    }
+
+    /**
+     * Relationship with MaterialUnit
+     */
+    public function materialUnit()
+    {
+        return $this->belongsTo(MaterialUnit::class);
+    }
+
+    /**
+     * Get the unit (returns unit from material_unit relationship)
+     */
+    public function getUnitAttribute(): ?string
+    {
+        return $this->materialUnit?->name;
+    }
+
+    /**
+     * Get the effective unit for display (ensures we always have a unit)
+     */
+    public function getEffectiveUnitAttribute(): ?string
+    {
+        return $this->materialUnit?->name ?? 'غير محدد';
+    }
+
+    /**
+     * Get unit_of_measure for backwards compatibility
+     */
+    public function getUnitOfMeasureAttribute(): ?string
+    {
+        return $this->materialUnit?->name;
     }
 }

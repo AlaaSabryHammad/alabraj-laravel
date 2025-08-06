@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Correspondence;
+use App\Models\CorrespondenceReply;
 use App\Models\Employee;
 use App\Models\Project;
 
@@ -168,6 +169,7 @@ class CorrespondenceController extends Controller
      */
     public function edit(Correspondence $correspondence)
     {
+        $correspondence->load(['replies.user']);
         $employees = Employee::orderBy('name')->get();
         $projects = Project::orderBy('name')->get();
 
@@ -283,5 +285,97 @@ class CorrespondenceController extends Controller
 
         $filePath = storage_path('app/public/' . $correspondence->file_path);
         return response()->download($filePath, $correspondence->file_name);
+    }
+
+    /**
+     * Download reply file
+     */
+    public function downloadReply($replyId)
+    {
+        $reply = \App\Models\CorrespondenceReply::findOrFail($replyId);
+        
+        if (!$reply->file_path || !Storage::disk('public')->exists($reply->file_path)) {
+            return back()->with('error', 'الملف غير موجود');
+        }
+
+        $filePath = storage_path('app/public/' . $reply->file_path);
+        return response()->download($filePath, $reply->file_name);
+    }
+
+    /**
+     * Store a reply for correspondence
+     */
+    public function storeReply(Request $request, Correspondence $correspondence)
+    {
+        $validated = $request->validate([
+            'reply_content' => 'required|string',
+            'reply_type' => 'required|in:internal,on_behalf',
+            'status' => 'required|in:draft,sent',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+        ], [
+            'reply_content.required' => 'محتوى الرد مطلوب',
+            'reply_type.required' => 'نوع الرد مطلوب',
+            'status.required' => 'حالة الرد مطلوبة',
+            'file.mimes' => 'نوع الملف غير مدعوم',
+            'file.max' => 'حجم الملف كبير جداً (الحد الأقصى: 10 ميجابايت)',
+        ]);
+
+        try {
+            // Handle file upload
+            $filePath = null;
+            $fileName = null;
+            $fileSize = null;
+            $fileType = null;
+
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $fileName = $file->getClientOriginalName();
+                $fileSize = $file->getSize();
+                $fileType = $file->getClientMimeType();
+
+                $fileStoreName = time() . '_' . $fileName;
+                $filePath = $file->storeAs('correspondence_replies', $fileStoreName, 'public');
+            }
+
+            // Create reply
+            CorrespondenceReply::create([
+                'correspondence_id' => $correspondence->id,
+                'user_id' => Auth::id(),
+                'reply_content' => $validated['reply_content'],
+                'reply_type' => $validated['reply_type'],
+                'status' => $validated['status'],
+                'file_path' => $filePath,
+                'file_name' => $fileName,
+                'file_size' => $fileSize,
+                'file_type' => $fileType,
+            ]);
+
+            // Update correspondence status and replied_at timestamp when reply is sent
+            if ($validated['status'] === 'sent') {
+                $correspondence->update([
+                    'status' => 'replied',
+                    'replied_at' => now()
+                ]);
+            } else {
+                // If it's a draft, update status to in_progress if it was pending
+                if ($correspondence->status === 'pending') {
+                    $correspondence->update([
+                        'status' => 'in_progress'
+                    ]);
+                }
+            }
+
+            $message = $validated['status'] === 'sent' 
+                ? 'تم إضافة الرد وتحديث حالة المراسلة إلى "تم الرد"'
+                : 'تم حفظ الرد كمسودة';
+
+            return redirect()->route('correspondences.show', $correspondence)
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'حدث خطأ أثناء حفظ الرد: ' . $e->getMessage());
+        }
     }
 }

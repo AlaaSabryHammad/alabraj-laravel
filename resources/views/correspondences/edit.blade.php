@@ -258,6 +258,86 @@
                 </div>
             </div>
         </form>
+
+        <!-- Current Replies Section -->
+        @if($correspondence->replies && $correspondence->replies->count() > 0)
+            <div class="bg-white rounded-xl shadow-sm border p-6 mt-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="ri-reply-line text-green-600"></i>
+                    الردود الحالية ({{ $correspondence->replies->count() }})
+                </h2>
+
+                <div class="space-y-4">
+                    @foreach($correspondence->replies as $reply)
+                        <div class="border-r-4 border-green-200 pr-4 pb-4 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="font-medium text-gray-900">{{ $reply->user->name }}</span>
+                                <span class="text-xs text-gray-500">{{ $reply->created_at->format('Y/m/d H:i') }}</span>
+                                
+                                <!-- Reply Type Badge -->
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                                    @if(($reply->reply_type ?? 'internal') === 'on_behalf')
+                                        bg-blue-100 text-blue-800
+                                    @else
+                                        bg-gray-100 text-gray-800
+                                    @endif">
+                                    <i class="ri-{{ ($reply->reply_type ?? 'internal') === 'on_behalf' ? 'user-shared-line' : 'user-line' }}"></i>
+                                    {{ $reply->reply_type_display ?? 'رد داخلي' }}
+                                </span>
+                                
+                                <!-- Status Badge -->
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                                    @if($reply->status === 'sent')
+                                        bg-green-100 text-green-800
+                                    @else
+                                        bg-yellow-100 text-yellow-800
+                                    @endif">
+                                    <i class="ri-{{ $reply->status === 'sent' ? 'check-double-line' : 'draft-line' }}"></i>
+                                    {{ $reply->status === 'sent' ? 'مرسل' : 'مسودة' }}
+                                </span>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg mb-2">
+                                <p class="text-gray-900 whitespace-pre-wrap">{{ $reply->reply_content }}</p>
+                            </div>
+                            @if($reply->file_path)
+                                <div class="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+                                    <div class="flex items-center gap-2 text-sm">
+                                        @php
+                                            $fileExtension = strtolower(pathinfo($reply->file_name, PATHINFO_EXTENSION));
+                                            $fileIcon = match($fileExtension) {
+                                                'pdf' => 'ri-file-pdf-line text-red-600',
+                                                'doc', 'docx' => 'ri-file-word-line text-blue-600',
+                                                'xls', 'xlsx' => 'ri-file-excel-line text-green-600',
+                                                'jpg', 'jpeg', 'png', 'gif' => 'ri-image-line text-purple-600',
+                                                'zip', 'rar' => 'ri-file-zip-line text-yellow-600',
+                                                default => 'ri-file-line text-gray-600'
+                                            };
+                                        @endphp
+                                        <i class="{{ $fileIcon }}"></i>
+                                        <span class="text-blue-800 font-medium">{{ $reply->file_name }}</span>
+                                        <span class="text-gray-600 text-xs">({{ $reply->file_size_display }})</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        @if(in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif', 'pdf']))
+                                            <button onclick="previewFile('{{ asset('storage/' . $reply->file_path) }}', '{{ $reply->file_name }}')"
+                                                    class="text-blue-600 hover:text-blue-800 p-1 rounded transition-colors"
+                                                    title="معاينة الملف">
+                                                <i class="ri-eye-line text-lg"></i>
+                                            </button>
+                                        @endif
+                                        <a href="{{ route('correspondences.replies.download', $reply->id) }}"
+                                           class="text-green-600 hover:text-green-800 p-1 rounded transition-colors"
+                                           title="تحميل الملف">
+                                            <i class="ri-download-line text-lg"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
 
     <script>
@@ -318,4 +398,5 @@
             }
         });
     </script>
+
 @endsection

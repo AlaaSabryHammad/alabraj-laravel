@@ -138,13 +138,13 @@
                     </div>
 
                     <div>
-                        <label for="national_id_expiry_date" class="block text-sm font-medium text-gray-700 mb-2">تاريخ انتهاء الهوية</label>
+                        <label for="national_id_expiry" class="block text-sm font-medium text-gray-700 mb-2">تاريخ انتهاء الهوية</label>
                         <input type="date"
-                               id="national_id_expiry_date"
-                               name="national_id_expiry_date"
-                               value="{{ old('national_id_expiry_date') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('national_id_expiry_date') border-red-500 @enderror">
-                        @error('national_id_expiry_date')
+                               id="national_id_expiry"
+                               name="national_id_expiry"
+                               value="{{ old('national_id_expiry') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('national_id_expiry') border-red-500 @enderror">
+                        @error('national_id_expiry')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -480,13 +480,13 @@
                     </div>
 
                     <div>
-                        <label for="driving_license_expiry_date" class="block text-sm font-medium text-gray-700 mb-2">تاريخ انتهاء رخصة القيادة</label>
+                        <label for="driving_license_expiry" class="block text-sm font-medium text-gray-700 mb-2">تاريخ انتهاء رخصة القيادة</label>
                         <input type="date"
-                               id="driving_license_expiry_date"
-                               name="driving_license_expiry_date"
-                               value="{{ old('driving_license_expiry_date') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('driving_license_expiry_date') border-red-500 @enderror">
-                        @error('driving_license_expiry_date')
+                               id="driving_license_expiry"
+                               name="driving_license_expiry"
+                               value="{{ old('driving_license_expiry') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('driving_license_expiry') border-red-500 @enderror">
+                        @error('driving_license_expiry')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -670,24 +670,24 @@
                     </div>
 
                     <div>
-                        <label for="sponsorship" class="block text-sm font-medium text-gray-700 mb-2">الكفالة *</label>
-                        <select id="sponsorship"
-                                name="sponsorship"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('sponsorship') border-red-500 @enderror"
+                        <label for="sponsorship_status" class="block text-sm font-medium text-gray-700 mb-2">الكفالة *</label>
+                        <select id="sponsorship_status"
+                                name="sponsorship_status"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('sponsorship_status') border-red-500 @enderror"
                                 required>
                             <option value="">اختر الكفالة</option>
-                            <option value="شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship') == 'شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>شركة الأبراج للمقاولات المحدودة</option>
-                            <option value="فرع1 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship') == 'فرع1 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع1 شركة الأبراج للمقاولات المحدودة</option>
-                            <option value="فرع2 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship') == 'فرع2 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع2 شركة الأبراج للمقاولات المحدودة</option>
-                            <option value="مؤسسة فريق التعمير للمقاولات" {{ old('sponsorship') == 'مؤسسة فريق التعمير للمقاولات' ? 'selected' : '' }}>مؤسسة فريق التعمير للمقاولات</option>
-                            <option value="فرع مؤسسة فريق التعمير للنقل" {{ old('sponsorship') == 'فرع مؤسسة فريق التعمير للنقل' ? 'selected' : '' }}>فرع مؤسسة فريق التعمير للنقل</option>
-                            <option value="مؤسسة الزفاف الذهبي" {{ old('sponsorship') == 'مؤسسة الزفاف الذهبي' ? 'selected' : '' }}>مؤسسة الزفاف الذهبي</option>
-                            <option value="مؤسسة عنوان الكادي" {{ old('sponsorship') == 'مؤسسة عنوان الكادي' ? 'selected' : '' }}>مؤسسة عنوان الكادي</option>
-                            <option value="عمالة منزلية" {{ old('sponsorship') == 'عمالة منزلية' ? 'selected' : '' }}>عمالة منزلية</option>
-                            <option value="عمالة كفالة خارجية تحت التجربة" {{ old('sponsorship') == 'عمالة كفالة خارجية تحت التجربة' ? 'selected' : '' }}>عمالة كفالة خارجية تحت التجربة</option>
-                            <option value="أخرى" {{ old('sponsorship') == 'أخرى' ? 'selected' : '' }}>أخرى</option>
+                            <option value="شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship_status') == 'شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>شركة الأبراج للمقاولات المحدودة</option>
+                            <option value="فرع1 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship_status') == 'فرع1 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع1 شركة الأبراج للمقاولات المحدودة</option>
+                            <option value="فرع2 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship_status') == 'فرع2 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع2 شركة الأبراج للمقاولات المحدودة</option>
+                            <option value="مؤسسة فريق التعمير للمقاولات" {{ old('sponsorship_status') == 'مؤسسة فريق التعمير للمقاولات' ? 'selected' : '' }}>مؤسسة فريق التعمير للمقاولات</option>
+                            <option value="فرع مؤسسة فريق التعمير للنقل" {{ old('sponsorship_status') == 'فرع مؤسسة فريق التعمير للنقل' ? 'selected' : '' }}>فرع مؤسسة فريق التعمير للنقل</option>
+                            <option value="مؤسسة الزفاف الذهبي" {{ old('sponsorship_status') == 'مؤسسة الزفاف الذهبي' ? 'selected' : '' }}>مؤسسة الزفاف الذهبي</option>
+                            <option value="مؤسسة عنوان الكادي" {{ old('sponsorship_status') == 'مؤسسة عنوان الكادي' ? 'selected' : '' }}>مؤسسة عنوان الكادي</option>
+                            <option value="عمالة منزلية" {{ old('sponsorship_status') == 'عمالة منزلية' ? 'selected' : '' }}>عمالة منزلية</option>
+                            <option value="عمالة كفالة خارجية تحت التجربة" {{ old('sponsorship_status') == 'عمالة كفالة خارجية تحت التجربة' ? 'selected' : '' }}>عمالة كفالة خارجية تحت التجربة</option>
+                            <option value="أخرى" {{ old('sponsorship_status') == 'أخرى' ? 'selected' : '' }}>أخرى</option>
                         </select>
-                        @error('sponsorship')
+                        @error('sponsorship_status')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -1107,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'role', name: 'الصلاحية' },
         { id: 'status', name: 'الحالة' },
         { id: 'category', name: 'الفئة' },
-        { id: 'sponsorship', name: 'الكفالة' }
+        { id: 'sponsorship_status', name: 'الكفالة' }
     ];
 
     // إنشاء حاوية التحذيرات
@@ -1179,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const warnings = [];
 
         // تحقق من تاريخ انتهاء الهوية
-        const nationalIdExpiry = document.getElementById('national_id_expiry_date');
+        const nationalIdExpiry = document.getElementById('national_id_expiry');
         if (nationalIdExpiry && nationalIdExpiry.value) {
             const expiryDate = new Date(nationalIdExpiry.value);
             const daysDiff = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
@@ -1468,7 +1468,7 @@ function showDataPreview() {
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-xs font-medium text-gray-600">رقم رخصة القيادة</label>
                                     <p class="text-sm font-medium text-gray-900">${data.driving_license_number}</p>
-                                    ${data.driving_license_expiry_date ? `<p class="text-xs text-gray-500">ينتهي: ${data.driving_license_expiry_date}</p>` : ''}
+                                    ${data.driving_license_expiry ? `<p class="text-xs text-gray-500">ينتهي: ${data.driving_license_expiry}</p>` : ''}
                                 </div>
                             ` : ''}
                         </div>

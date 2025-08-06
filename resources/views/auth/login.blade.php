@@ -23,7 +23,6 @@
                         'cairo': ['Cairo', 'sans-serif'],
                     },
                     animation: {
-                        'float': 'float 6s ease-in-out infinite',
                         'glow': 'glow 2s ease-in-out infinite alternate',
                     }
                 }
@@ -32,11 +31,6 @@
     </script>
 
     <style>
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
         @keyframes glow {
             from { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
             to { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
@@ -59,19 +53,13 @@
 </head>
 
 <body class="font-cairo gradient-bg min-h-screen flex items-center justify-center p-4">
-    <!-- Background Elements -->
-    <div class="absolute inset-0 overflow-hidden">
-        <div class="absolute -top-40 -right-40 w-80 h-80 bg-white opacity-5 rounded-full animate-float"></div>
-        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-white opacity-5 rounded-full animate-float" style="animation-delay: -3s;"></div>
-        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-white opacity-3 rounded-full animate-float" style="animation-delay: -1.5s;"></div>
-    </div>
 
     <!-- Login Container -->
     <div class="relative z-10 w-full max-w-md">
         <!-- Company Logo & Title -->
         <div class="text-center mb-8">
             <div class="inline-block p-4 glass-effect rounded-2xl mb-4 animate-glow">
-                <img src="{{ asset('assets/logo.svg') }}" alt="شركة الأبراج" class="w-16 h-16 mx-auto">
+                <img src="{{ asset('assets/logo.png') }}" alt="شركة الأبراج" class="w-16 h-16 mx-auto">
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">شركة الأبراج للمقاولات</h1>
             <p class="text-blue-100">نظام إدارة المشاريع والموارد</p>

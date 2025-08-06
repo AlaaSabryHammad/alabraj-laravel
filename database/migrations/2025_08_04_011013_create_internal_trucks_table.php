@@ -17,16 +17,21 @@ return new class extends Migration
             $table->string('model');
             $table->string('brand');
             $table->integer('year');
-            
             $table->string('engine_number')->nullable();
             $table->string('chassis_number')->nullable();
             $table->decimal('load_capacity', 8, 2); // بالطن
             $table->string('fuel_type')->default('ديزل');
-            $table->string('license_expiry')->nullable();
-            $table->string('insurance_expiry')->nullable();
+            $table->date('license_expiry')->nullable();
+            $table->date('insurance_expiry')->nullable();
+            $table->string('truck_type')->nullable();
+            $table->string('color')->nullable();
+            $table->decimal('fuel_tank_capacity', 8, 2)->nullable();
+            $table->integer('mileage')->nullable();
+            $table->date('last_maintenance_date')->nullable();
+            $table->decimal('maintenance_cost', 10, 2)->nullable();
             $table->text('notes')->nullable();
-            $table->enum('status', ['متاح', 'قيد الاستخدام', 'تحت الصيانة', 'غير متاح'])->default('متاح');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // المستخدم الذي أضاف الشاحنة
+            $table->enum('status', ['available', 'in_use', 'maintenance', 'unavailable'])->default('available');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -1,3 +1,17 @@
+@php
+    function formatDate($date) {
+        if (!$date) return '';
+        if (is_string($date)) {
+            try {
+                return \Carbon\Carbon::parse($date)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return $date;
+            }
+        }
+        return $date instanceof \DateTime ? $date->format('Y-m-d') : '';
+    }
+@endphp
+
 @extends('layouts.app')
 
 @section('title', 'تعديل الموظف: ' . $employee->name)
@@ -21,6 +35,42 @@
     <!-- Edit Form -->
     <div class="bg-white rounded-xl shadow-sm border">
         <div class="p-6">
+            
+            <!-- Display All Validation Errors -->
+            @if($errors->any())
+                <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <i class="ri-error-warning-line text-red-600 text-xl ml-2"></i>
+                        <h4 class="text-red-800 font-semibold">يوجد أخطاء في النموذج:</h4>
+                    </div>
+                    <ul class="list-disc list-inside text-red-700 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <!-- Display Success Message -->
+            @if(session('success'))
+                <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="ri-check-line text-green-600 text-xl ml-2"></i>
+                        <p class="text-green-800 font-semibold">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Display Error Message -->
+            @if(session('error'))
+                <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="ri-error-warning-line text-red-600 text-xl ml-2"></i>
+                        <p class="text-red-800 font-semibold">{{ session('error') }}</p>
+                    </div>
+                </div>
+            @endif
+
             <form action="{{ route('employees.update', $employee) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
                 @method('PUT')
@@ -66,15 +116,15 @@
 
                         <!-- National ID Expiry Date -->
                         <div>
-                            <label for="national_id_expiry_date" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="national_id_expiry" class="block text-sm font-medium text-gray-700 mb-2">
                                 تاريخ انتهاء الهوية
                             </label>
                             <input type="date"
-                                   id="national_id_expiry_date"
-                                   name="national_id_expiry_date"
-                                   value="{{ old('national_id_expiry_date', $employee->national_id_expiry_date?->format('Y-m-d')) }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('national_id_expiry_date') border-red-500 @enderror">
-                            @error('national_id_expiry_date')
+                                   id="national_id_expiry"
+                                   name="national_id_expiry"
+                                   value="{{ old('national_id_expiry', formatDate($employee->national_id_expiry)) }}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('national_id_expiry') border-red-500 @enderror">
+                            @error('national_id_expiry')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -170,21 +220,6 @@
                             @enderror
                         </div>
 
-                        <!-- Location Assignment Date -->
-                        <div>
-                            <label for="location_assignment_date" class="block text-sm font-medium text-gray-700 mb-2">
-                                تاريخ التعيين في الموقع
-                            </label>
-                            <input type="date"
-                                   id="location_assignment_date"
-                                   name="location_assignment_date"
-                                   value="{{ old('location_assignment_date', $employee->location_assignment_date?->format('Y-m-d')) }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('location_assignment_date') border-red-500 @enderror">
-                            @error('location_assignment_date')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         <!-- Hire Date -->
                         <div>
                             <label for="hire_date" class="block text-sm font-medium text-gray-700 mb-2">
@@ -193,7 +228,7 @@
                             <input type="date"
                                    id="hire_date"
                                    name="hire_date"
-                                   value="{{ old('hire_date', optional($employee->hire_date)->format('Y-m-d')) }}"
+                                   value="{{ old('hire_date', formatDate($employee->hire_date)) }}"
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('hire_date') border-red-500 @enderror">
                             @error('hire_date')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -351,7 +386,7 @@
                                             <input type="date"
                                                    id="passport_issue_date"
                                                    name="passport_issue_date"
-                                                   value="{{ old('passport_issue_date', $employee->passport_issue_date?->format('Y-m-d')) }}"
+                                                   value="{{ old('passport_issue_date', formatDate($employee->passport_issue_date)) }}"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         </div>
                                         <div>
@@ -361,7 +396,7 @@
                                             <input type="date"
                                                    id="passport_expiry_date"
                                                    name="passport_expiry_date"
-                                                   value="{{ old('passport_expiry_date', $employee->passport_expiry_date?->format('Y-m-d')) }}"
+                                                   value="{{ old('passport_expiry_date', formatDate($employee->passport_expiry_date)) }}"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         </div>
                                     </div>
@@ -418,7 +453,7 @@
                                             <input type="date"
                                                    id="work_permit_issue_date"
                                                    name="work_permit_issue_date"
-                                                   value="{{ old('work_permit_issue_date', $employee->work_permit_issue_date?->format('Y-m-d')) }}"
+                                                   value="{{ old('work_permit_issue_date', formatDate($employee->work_permit_issue_date)) }}"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         </div>
                                         <div>
@@ -428,7 +463,7 @@
                                             <input type="date"
                                                    id="work_permit_expiry_date"
                                                    name="work_permit_expiry_date"
-                                                   value="{{ old('work_permit_expiry_date', $employee->work_permit_expiry_date?->format('Y-m-d')) }}"
+                                                   value="{{ old('work_permit_expiry_date', formatDate($employee->work_permit_expiry_date)) }}"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         </div>
                                     </div>
@@ -473,17 +508,17 @@
                                 <input type="date"
                                        id="driving_license_issue_date"
                                        name="driving_license_issue_date"
-                                       value="{{ old('driving_license_issue_date', $employee->driving_license_issue_date?->format('Y-m-d')) }}"
+                                       value="{{ old('driving_license_issue_date', formatDate($employee->driving_license_issue_date)) }}"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
-                                <label for="driving_license_expiry_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="driving_license_expiry" class="block text-sm font-medium text-gray-700 mb-2">
                                     تاريخ الانتهاء
                                 </label>
                                 <input type="date"
-                                       id="driving_license_expiry_date"
-                                       name="driving_license_expiry_date"
-                                       value="{{ old('driving_license_expiry_date', $employee->driving_license_expiry_date?->format('Y-m-d')) }}"
+                                       id="driving_license_expiry"
+                                       name="driving_license_expiry"
+                                       value="{{ old('driving_license_expiry', formatDate($employee->driving_license_expiry)) }}"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                         </div>
@@ -540,26 +575,26 @@
                         </div>
 
                         <div>
-                            <label for="sponsorship" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="sponsorship_status" class="block text-sm font-medium text-gray-700 mb-2">
                                 الكفالة <span class="text-red-500">*</span>
                             </label>
-                            <select id="sponsorship"
-                                    name="sponsorship"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('sponsorship') border-red-500 @enderror"
+                            <select id="sponsorship_status"
+                                    name="sponsorship_status"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('sponsorship_status') border-red-500 @enderror"
                                     required>
                                 <option value="">اختر الكفالة</option>
-                                <option value="شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship', $employee->sponsorship ?? '') == 'شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>شركة الأبراج للمقاولات المحدودة</option>
-                                <option value="فرع1 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship', $employee->sponsorship ?? '') == 'فرع1 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع1 شركة الأبراج للمقاولات المحدودة</option>
-                                <option value="فرع2 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship', $employee->sponsorship ?? '') == 'فرع2 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع2 شركة الأبراج للمقاولات المحدودة</option>
-                                <option value="مؤسسة فريق التعمير للمقاولات" {{ old('sponsorship', $employee->sponsorship ?? '') == 'مؤسسة فريق التعمير للمقاولات' ? 'selected' : '' }}>مؤسسة فريق التعمير للمقاولات</option>
-                                <option value="فرع مؤسسة فريق التعمير للنقل" {{ old('sponsorship', $employee->sponsorship ?? '') == 'فرع مؤسسة فريق التعمير للنقل' ? 'selected' : '' }}>فرع مؤسسة فريق التعمير للنقل</option>
-                                <option value="مؤسسة الزفاف الذهبي" {{ old('sponsorship', $employee->sponsorship ?? '') == 'مؤسسة الزفاف الذهبي' ? 'selected' : '' }}>مؤسسة الزفاف الذهبي</option>
-                                <option value="مؤسسة عنوان الكادي" {{ old('sponsorship', $employee->sponsorship ?? '') == 'مؤسسة عنوان الكادي' ? 'selected' : '' }}>مؤسسة عنوان الكادي</option>
-                                <option value="عمالة منزلية" {{ old('sponsorship', $employee->sponsorship ?? '') == 'عمالة منزلية' ? 'selected' : '' }}>عمالة منزلية</option>
-                                <option value="عمالة كفالة خارجية تحت التجربة" {{ old('sponsorship', $employee->sponsorship ?? '') == 'عمالة كفالة خارجية تحت التجربة' ? 'selected' : '' }}>عمالة كفالة خارجية تحت التجربة</option>
-                                <option value="أخرى" {{ old('sponsorship', $employee->sponsorship ?? '') == 'أخرى' ? 'selected' : '' }}>أخرى</option>
+                                <option value="شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>شركة الأبراج للمقاولات المحدودة</option>
+                                <option value="فرع1 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'فرع1 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع1 شركة الأبراج للمقاولات المحدودة</option>
+                                <option value="فرع2 شركة الأبراج للمقاولات المحدودة" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'فرع2 شركة الأبراج للمقاولات المحدودة' ? 'selected' : '' }}>فرع2 شركة الأبراج للمقاولات المحدودة</option>
+                                <option value="مؤسسة فريق التعمير للمقاولات" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'مؤسسة فريق التعمير للمقاولات' ? 'selected' : '' }}>مؤسسة فريق التعمير للمقاولات</option>
+                                <option value="فرع مؤسسة فريق التعمير للنقل" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'فرع مؤسسة فريق التعمير للنقل' ? 'selected' : '' }}>فرع مؤسسة فريق التعمير للنقل</option>
+                                <option value="مؤسسة الزفاف الذهبي" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'مؤسسة الزفاف الذهبي' ? 'selected' : '' }}>مؤسسة الزفاف الذهبي</option>
+                                <option value="مؤسسة عنوان الكادي" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'مؤسسة عنوان الكادي' ? 'selected' : '' }}>مؤسسة عنوان الكادي</option>
+                                <option value="عمالة منزلية" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'عمالة منزلية' ? 'selected' : '' }}>عمالة منزلية</option>
+                                <option value="عمالة كفالة خارجية تحت التجربة" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'عمالة كفالة خارجية تحت التجربة' ? 'selected' : '' }}>عمالة كفالة خارجية تحت التجربة</option>
+                                <option value="أخرى" {{ old('sponsorship_status', $employee->sponsorship_status ?? '') == 'أخرى' ? 'selected' : '' }}>أخرى</option>
                             </select>
-                            @error('sponsorship')
+                            @error('sponsorship_status')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -671,7 +706,7 @@
                             <input type="date"
                                    id="birth_date"
                                    name="birth_date"
-                                   value="{{ old('birth_date', optional($employee->birth_date)->format('Y-m-d')) }}"
+                                   value="{{ old('birth_date', formatDate($employee->birth_date)) }}"
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('birth_date') border-red-500 @enderror">
                             @error('birth_date')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -725,23 +760,6 @@
                                 <option value="أخرى" {{ old('religion', $employee->religion) == 'أخرى' ? 'selected' : '' }}>أخرى</option>
                             </select>
                             @error('religion')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Medical Insurance Status -->
-                        <div>
-                            <label for="medical_insurance_status" class="block text-sm font-medium text-gray-700 mb-2">
-                                حالة التأمين الطبي
-                            </label>
-                            <select id="medical_insurance_status"
-                                    name="medical_insurance_status"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('medical_insurance_status') border-red-500 @enderror">
-                                <option value="">اختر الحالة</option>
-                                <option value="مشمول" {{ old('medical_insurance_status', $employee->medical_insurance_status) == 'مشمول' ? 'selected' : '' }}>مشمول</option>
-                                <option value="غير مشمول" {{ old('medical_insurance_status', $employee->medical_insurance_status) == 'غير مشمول' ? 'selected' : '' }}>غير مشمول</option>
-                            </select>
-                            @error('medical_insurance_status')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -1023,5 +1041,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Form submission tracking
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function(e) {
+        console.log('Form submission started');
+        console.log('Form action:', form.action);
+        console.log('Form method:', form.method);
+        
+        // Add visual feedback
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-line animate-spin ml-2"></i> جاري الحفظ...';
+        }
+        
+        // Log form data
+        const formData = new FormData(form);
+        console.log('Form data being submitted:');
+        for (let [key, value] of formData.entries()) {
+            if (key !== '_token' && key !== '_method') {
+                console.log(key + ': ' + value);
+            }
+        }
+    });
+});
 </script>
+
 @endsection

@@ -71,7 +71,7 @@
         <!-- Company Logo & Title -->
         <div class="text-center mb-8">
             <div class="inline-block p-4 glass-effect rounded-2xl mb-4 animate-glow">
-                <img src="{{ asset('assets/logo.svg') }}" alt="شركة الأبراج" class="w-16 h-16 mx-auto">
+                <img src="{{ asset('assets/logo.png') }}" alt="شركة الأبراج" class="w-16 h-16 mx-auto">
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">شركة الأبراج للمقاولات</h1>
             <p class="text-blue-100">إنشاء حساب جديد في النظام</p>

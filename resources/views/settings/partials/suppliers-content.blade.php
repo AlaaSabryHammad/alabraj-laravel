@@ -51,7 +51,7 @@
 
 <!-- Filters -->
 <div class="bg-gray-50 rounded-xl p-4 mb-6">
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <form id="suppliers-filter-form" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
             <input type="text" name="search" value="{{ request('search') }}"
                    placeholder="البحث في الموردين..."

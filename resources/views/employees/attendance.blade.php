@@ -17,6 +17,11 @@
                         <i class="ri-arrow-right-line ml-2"></i>
                         العودة للموظفين
                     </a>
+                    <button onclick="openDateModal()"
+                        class="bg-purple-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-600 transition-all duration-200 flex items-center">
+                        <i class="ri-calendar-2-line ml-2"></i>
+                        تقرير يوم محدد
+                    </button>
                     <a href="{{ route('employees.attendance.report') }}"
                         class="bg-blue-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-600 transition-all duration-200 flex items-center">
                         <i class="ri-file-chart-line ml-2"></i>
@@ -615,6 +620,174 @@
             });
 
             updateCurrentDate();
+        </script>
+
+        <!-- Date Selection Modal -->
+        <div id="dateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i class="ri-calendar-2-line text-purple-600"></i>
+                        اختيار تاريخ للتقرير اليومي
+                    </h3>
+                    <button onclick="closeDateModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+                
+                <form id="dateForm" class="space-y-4">
+                    <div>
+                        <label for="selected_date" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-calendar-line text-purple-600 ml-1"></i>
+                            التاريخ المطلوب
+                        </label>
+                        <input type="date" 
+                               id="selected_date" 
+                               name="selected_date"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                               max="{{ date('Y-m-d') }}"
+                               value="{{ date('Y-m-d') }}">
+                        <p class="text-xs text-gray-500 mt-1">يمكنك اختيار أي تاريخ من الماضي حتى اليوم</p>
+                    </div>
+                    
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" 
+                                onclick="viewDailyReport()" 
+                                id="viewReportBtn"
+                                class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-purple-800 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="ri-eye-line"></i>
+                            <span class="btn-text">عرض التقرير</span>
+                        </button>
+                        <button type="button" 
+                                onclick="editDailyReport()" 
+                                id="editReportBtn"
+                                class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="ri-edit-2-line"></i>
+                            <span class="btn-text">تعديل البيانات</span>
+                        </button>
+                    </div>
+                    
+                    <button type="button" 
+                            onclick="closeDateModal()" 
+                            class="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-xl font-medium hover:bg-gray-300 transition-colors">
+                        إلغاء
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // Date Modal Functions
+            function openDateModal() {
+                console.log('openDateModal called');
+                const modal = document.getElementById('dateModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    console.log('Modal opened successfully');
+                } else {
+                    console.error('Modal not found!');
+                }
+            }
+
+            function closeDateModal() {
+                document.getElementById('dateModal').classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                
+                // Reset button states
+                const viewBtn = document.getElementById('viewReportBtn');
+                const editBtn = document.getElementById('editReportBtn');
+                
+                if (viewBtn) {
+                    viewBtn.disabled = false;
+                    const viewBtnText = viewBtn.querySelector('.btn-text');
+                    if (viewBtnText) viewBtnText.textContent = 'عرض التقرير';
+                    viewBtn.classList.remove('opacity-75');
+                }
+                
+                if (editBtn) {
+                    editBtn.disabled = false;
+                    const editBtnText = editBtn.querySelector('.btn-text');
+                    if (editBtnText) editBtnText.textContent = 'تعديل البيانات';
+                    editBtn.classList.remove('opacity-75');
+                }
+            }
+
+            function viewDailyReport() {
+                console.log('viewDailyReport called');
+                const selectedDate = document.getElementById('selected_date').value;
+                console.log('Selected date:', selectedDate);
+                
+                if (!selectedDate) {
+                    alert('يرجى اختيار تاريخ أولاً');
+                    return;
+                }
+                
+                const url = `{{ route('employees.daily-attendance-report') }}?date=${selectedDate}`;
+                console.log('Navigating to:', url);
+                
+                // Show loading state
+                const btn = document.getElementById('viewReportBtn');
+                if (btn) {
+                    const btnText = btn.querySelector('.btn-text');
+                    btn.disabled = true;
+                    if (btnText) btnText.textContent = 'جاري التحميل...';
+                    btn.classList.add('opacity-75');
+                }
+                
+                // Close modal first
+                closeDateModal();
+                
+                // Redirect
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 300);
+            }
+
+            function editDailyReport() {
+                console.log('editDailyReport called');
+                const selectedDate = document.getElementById('selected_date').value;
+                console.log('Selected date:', selectedDate);
+                
+                if (!selectedDate) {
+                    alert('يرجى اختيار تاريخ أولاً');
+                    return;
+                }
+                
+                const url = `{{ route('employees.daily-attendance-edit') }}?date=${selectedDate}`;
+                console.log('Navigating to:', url);
+                
+                // Show loading state
+                const btn = document.getElementById('editReportBtn');
+                if (btn) {
+                    const btnText = btn.querySelector('.btn-text');
+                    btn.disabled = true;
+                    if (btnText) btnText.textContent = 'جاري التحميل...';
+                    btn.classList.add('opacity-75');
+                }
+                
+                // Close modal first
+                closeDateModal();
+                
+                // Redirect
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 300);
+            }
+
+            // Close modal when clicking outside
+            document.getElementById('dateModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDateModal();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDateModal();
+                }
+            });
         </script>
     @endpush
 @endsection

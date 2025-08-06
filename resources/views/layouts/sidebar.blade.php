@@ -2,8 +2,8 @@
     <!-- Header -->
     <div class="p-6 border-b border-gray-100 flex-shrink-0">
         <div class="flex items-center space-x-3 space-x-reverse">
-            <div class="w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                <i class="ri-building-4-line text-white text-xl"></i>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center">
+                <img src="{{ asset('assets/logo.png') }}" alt="شركة الأبراج" class="w-12 h-12 object-contain">
             </div>
             <div>
                 <h1 class="text-lg font-bold text-gray-900">شركة الأبراج</h1>
@@ -98,7 +98,14 @@
                 'title' => 'المعاملات الخاصة',
                 'icon' => 'ri-task-line',
                 'route' => 'my-tasks.index',
-                'color' => 'from-purple-600 to-purple-700'
+                'color' => 'from-teal-600 to-teal-700'
+            ],
+            [
+                'id' => 'warehouses',
+                'title' => 'إدارة المستودعات',
+                'icon' => 'ri-store-3-line',
+                'route' => 'warehouses.index',
+                'color' => 'from-orange-600 to-orange-700'
             ],
             [
                 'id' => 'suppliers',

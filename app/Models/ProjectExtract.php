@@ -12,12 +12,15 @@ class ProjectExtract extends Model
     protected $fillable = [
         'project_id',
         'extract_number',
+        'extract_type',
         'description',
         'extract_date',
         'status',
         'total_amount',
         'file_path',
         'items_data',
+        'notes',
+        'metadata',
         'created_by',
     ];
 
@@ -30,6 +33,11 @@ class ProjectExtract extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(ProjectExtractItem::class);
     }
 
     public function extractItems()

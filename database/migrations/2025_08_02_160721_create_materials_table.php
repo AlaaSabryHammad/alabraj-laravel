@@ -16,8 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('category');
-            $table->string('unit')->nullable();
-            $table->string('unit_of_measure');
+            $table->unsignedBigInteger('material_unit_id')->nullable(); // Updated to use foreign key
             $table->decimal('unit_price', 10, 2)->nullable();
             $table->integer('minimum_stock')->default(0);
             $table->integer('maximum_stock')->nullable();
@@ -28,11 +27,10 @@ return new class extends Migration
             $table->string('model')->nullable();
             $table->json('specifications')->nullable();
             $table->enum('status', ['active', 'inactive', 'out_of_stock', 'discontinued'])->default('active');
-            $table->string('storage_location')->nullable();
-            $table->date('last_purchase_date')->nullable();
-            $table->decimal('last_purchase_price', 10, 2)->nullable();
-            $table->text('notes')->nullable();
             $table->timestamps();
+            
+            // Foreign Keys will be added later
+            // $table->foreign('material_unit_id')->references('id')->on('material_units')->onDelete('set null');
         });
     }
 

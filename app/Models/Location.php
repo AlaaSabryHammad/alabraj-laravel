@@ -59,4 +59,16 @@ class Location extends Model
     {
         return $this->hasMany(Employee::class, 'location_id');
     }
+
+    // Warehouse inventory relationship
+    public function inventories()
+    {
+        return $this->hasMany(WarehouseInventory::class, 'location_id');
+    }
+
+    // Spare part transactions relationship
+    public function sparePartTransactions()
+    {
+        return $this->hasMany(SparePartTransaction::class, 'location_id');
+    }
 }

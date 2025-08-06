@@ -7,6 +7,7 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentHistoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\TransportController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ProjectController;
@@ -64,19 +65,30 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::get('/{employee}/simple-test', [EmployeeController::class, 'simpleTest'])->name('employees.simple-test');
         Route::get('/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
         Route::put('/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::patch('/{employee}/change-password', [EmployeeController::class, 'changePassword'])->name('employees.change-password');
         Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
         Route::post('/{employee}/create-user-account', [EmployeeController::class, 'createUserAccount'])->name('employees.create-user-account');
         Route::get('/attendance/tracker', [EmployeeController::class, 'attendance'])->name('employees.attendance');
         Route::get('/attendance/report', [EmployeeController::class, 'monthlyAttendanceReport'])->name('employees.attendance.report');
+        Route::get('/daily-attendance-report', [EmployeeController::class, 'dailyAttendanceReport'])->name('employees.daily-attendance-report');
+        Route::get('/daily-attendance-edit', [EmployeeController::class, 'dailyAttendanceEdit'])->name('employees.daily-attendance-edit');
+        Route::post('/daily-attendance-update', [EmployeeController::class, 'dailyAttendanceUpdate'])->name('employees.daily-attendance-update');
         Route::post('/{employee}/check-in', [EmployeeController::class, 'checkIn'])->name('employees.check-in');
         Route::post('/{employee}/check-out', [EmployeeController::class, 'checkOut'])->name('employees.check-out');
         Route::post('/{employee}/attendance/edit', [EmployeeController::class, 'editAttendance'])->name('employees.attendance.edit');
+
+        // Employee Balance Routes
+        Route::post('/{employee}/balance/credit', [EmployeeController::class, 'addCredit'])->name('employees.balance.credit');
+        Route::post('/{employee}/balance/debit', [EmployeeController::class, 'addDebit'])->name('employees.balance.debit');
 
         // Employee Reports Routes
         Route::post('/{employee}/reports', [EmployeeReportController::class, 'store'])->name('employees.reports.store');
         Route::get('/{employee}/reports', [EmployeeReportController::class, 'index'])->name('employees.reports.index');
         Route::get('/{employee}/reports/print', [EmployeeReportController::class, 'print'])->name('employees.reports.print');
     });
+
+    // Employee Balance Transaction Route (for payroll system)
+    Route::post('/employee-balances/record-transaction', [EmployeeController::class, 'recordBalanceTransaction'])->name('employee-balances.record-transaction');
 
     // Equipment Management Routes
     Route::prefix('equipment')->group(function () {
@@ -139,6 +151,17 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::get('/search-employees', [LocationController::class, 'searchEmployees'])->name('locations.search-employees');
     });
 
+    // Warehouse Management Routes
+    Route::prefix('warehouses')->group(function () {
+        Route::get('/', [WarehouseController::class, 'index'])->name('warehouses.index');
+        Route::get('/{warehouse}', [WarehouseController::class, 'show'])->name('warehouses.show');
+        Route::get('/{warehouse}/create-spare-part', [WarehouseController::class, 'createSparePart'])->name('warehouses.create-spare-part');
+        Route::post('/{warehouse}/store-spare-part', [WarehouseController::class, 'storeSparePart'])->name('warehouses.store-spare-part');
+        Route::post('/{warehouse}/receive-spares', [WarehouseController::class, 'storeReceive'])->name('warehouses.receive-spares');
+        Route::post('/{warehouse}/export-spares', [WarehouseController::class, 'storeExport'])->name('warehouses.export-spares');
+        Route::get('/{warehouse}/reports', [WarehouseController::class, 'reports'])->name('warehouses.reports');
+    });
+
     // Document Management Routes
     Route::prefix('documents')->group(function () {
         Route::get('/', [DocumentController::class, 'index'])->name('documents.index');
@@ -179,6 +202,7 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::get('/', [PayrollController::class, 'index'])->name('payroll.index');
         Route::get('/create', [PayrollController::class, 'create'])->name('payroll.create');
         Route::post('/', [PayrollController::class, 'store'])->name('payroll.store');
+        Route::post('/get-monthly-attendance', [PayrollController::class, 'getMonthlyAttendance'])->name('payroll.get-monthly-attendance');
         Route::get('/{payroll}', [PayrollController::class, 'show'])->name('payroll.show');
         Route::get('/{payroll}/edit', [PayrollController::class, 'edit'])->name('payroll.edit');
         Route::put('/{payroll}', [PayrollController::class, 'update'])->name('payroll.update');
@@ -274,6 +298,8 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::put('/{correspondence}', [CorrespondenceController::class, 'update'])->name('correspondences.update');
         Route::delete('/{correspondence}', [CorrespondenceController::class, 'destroy'])->name('correspondences.destroy');
         Route::get('/{correspondence}/download', [CorrespondenceController::class, 'download'])->name('correspondences.download');
+        Route::get('/replies/{reply}/download', [CorrespondenceController::class, 'downloadReply'])->name('correspondences.replies.download');
+        Route::post('/{correspondence}/reply', [CorrespondenceController::class, 'storeReply'])->name('correspondences.reply');
     });
 
     // My Tasks Routes
