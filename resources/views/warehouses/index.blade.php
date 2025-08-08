@@ -10,6 +10,13 @@
                 <h1 class="text-2xl font-bold text-gray-900">إدارة المستودعات</h1>
                 <p class="text-gray-600">عرض وإدارة جميع المستودعات وقطع الغيار</p>
             </div>
+            <div class="flex gap-3">
+                <button onclick="openAddSparePartTypeModal()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="ri-add-line"></i>
+                    إضافة نوع قطعة غيار
+                </button>
+            </div>
         </div>
 
         <!-- Stats Cards -->
@@ -65,7 +72,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-lg font-semibold text-gray-900">{{ $warehouse->name }}</h3>
-                                        <p class="text-sm text-gray-600">{{ $warehouse->type }}</p>
+                                        <p class="text-sm text-gray-600">{{ $warehouse->locationType->name ?? 'مستودع' }}</p>
                                     </div>
                                 </div>
                                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
@@ -80,22 +87,40 @@
 
                             <!-- Info -->
                             <div class="space-y-2 mb-4">
-                                @if($warehouse->address)
+                                @if($warehouse->city)
                                     <div class="flex items-center gap-2 text-sm text-gray-600">
                                         <i class="ri-map-pin-line"></i>
-                                        <span>{{ $warehouse->address }}</span>
+                                        <span>{{ $warehouse->city }}{{ $warehouse->region ? ' - ' . $warehouse->region : '' }}</span>
+                                    </div>
+                                @endif
+                                @if($warehouse->address)
+                                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                                        <i class="ri-road-map-line"></i>
+                                        <span>{{ Str::limit($warehouse->address, 40) }}</span>
                                     </div>
                                 @endif
                                 @if($warehouse->manager_name)
                                     <div class="flex items-center gap-2 text-sm text-gray-600">
                                         <i class="ri-user-line"></i>
-                                        <span>{{ $warehouse->manager_name }}</span>
+                                        <span>المسؤول: {{ $warehouse->manager_name }}</span>
+                                    </div>
+                                @endif
+                                @if($warehouse->contact_phone)
+                                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                                        <i class="ri-phone-line"></i>
+                                        <span>{{ $warehouse->contact_phone }}</span>
                                     </div>
                                 @endif
                                 <div class="flex items-center gap-2 text-sm text-gray-600">
                                     <i class="ri-box-3-line"></i>
-                                    <span>{{ $warehouse->inventories_count }} صنف</span>
+                                    <span>{{ $warehouse->inventories_count }} صنف مخزون</span>
                                 </div>
+                                @if($warehouse->area_size)
+                                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                                        <i class="ri-ruler-line"></i>
+                                        <span>المساحة: {{ number_format($warehouse->area_size) }} م²</span>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Actions -->
@@ -126,4 +151,72 @@
             </div>
         @endif
     </div>
+
+    <!-- Modal إضافة نوع قطعة غيار -->
+    <div id="addSparePartTypeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">إضافة نوع قطعة غيار جديد</h3>
+                <button onclick="closeAddSparePartTypeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('spare-part-types.store') }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم نوع القطعة</label>
+                        <input type="text" name="name" required
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="مثال: مكابح، محرك، إطارات...">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
+                        <textarea name="description" rows="3"
+                                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="وصف مختصر لنوع القطعة..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الفئة</label>
+                        <select name="category" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">اختر الفئة</option>
+                            <option value="engine">محرك</option>
+                            <option value="transmission">ناقل الحركة</option>
+                            <option value="brakes">المكابح</option>
+                            <option value="electrical">كهربائي</option>
+                            <option value="hydraulic">هيدروليك</option>
+                            <option value="cooling">تبريد</option>
+                            <option value="filters">فلاتر</option>
+                            <option value="tires">إطارات</option>
+                            <option value="body">هيكل</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                        حفظ النوع
+                    </button>
+                    <button type="button" onclick="closeAddSparePartTypeModal()" 
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openAddSparePartTypeModal() {
+            document.getElementById('addSparePartTypeModal').classList.remove('hidden');
+        }
+
+        function closeAddSparePartTypeModal() {
+            document.getElementById('addSparePartTypeModal').classList.add('hidden');
+        }
+    </script>
 @endsection

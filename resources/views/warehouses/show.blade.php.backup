@@ -1,0 +1,1900 @@
+@extends('layouts.app')
+
+@section('title', 'مستودع ' . $warehouse->name)
+
+@section('content')
+    <div class="p-6" dir="rtl">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <a href="{{ route('warehouses.index') }}" class="text-gray-600 hover:text-gray-900">
+                    <i class="ri-arrow-right-line text-xl"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                        <i class="ri-store-3-line text-orange-600"></i>
+                        {{ $warehouse->name }}
+                    </h1>
+                    <p class="text-gray-600">إدارة قطع الغيار والمخزون</p>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="openReceiveTypeModal()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="ri-add-line"></i>
+                    استلام قطع غيار
+                </button>
+                <button type="button" onclick="openExportModal()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="ri-subtract-line"></i>
+                    تصدير قطع غيار
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">قطع غيار جديدة</p>
+                        <p class="text-2xl font-bold text-green-600">{{ $newInventory->count() }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-tools-line text-2xl text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">قطع غيار تالفة</p>
+                        <p class="text-2xl font-bold text-red-600">{{ $damagedInventory->count() }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-tools-fill text-2xl text-red-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">إجمالي الكمية المتوفرة</p>
+                        <p class="text-2xl font-bold text-blue-600">{{ $newInventory->sum('available_stock') ?: $newInventory->sum('current_stock') }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-stack-line text-2xl text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">إجمالي القيمة</p>
+                        <p class="text-2xl font-bold text-orange-600">{{ number_format($newInventory->sum('total_value'), 2) }} ريال</p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-money-dollar-circle-line text-2xl text-orange-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">أصناف منخفضة</p>
+                        @php $lowStock = $newInventory->filter(function($item) { 
+                            $available = $item->available_stock ?? $item->current_stock;
+                            return $available > 0 && $available < 10; 
+                        })->count(); @endphp
+                        <p class="text-2xl font-bold text-yellow-600">{{ $lowStock }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-error-warning-line text-2xl text-yellow-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Spare Parts Table -->
+        <div class="bg-white rounded-xl shadow-sm border mb-6">
+            <div class="p-6 border-b">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="ri-tools-line text-green-600"></i>
+                        قطع الغيار الجديدة
+                    </h2>
+                    <div class="flex gap-3">
+                        <input type="text" placeholder="البحث عن قطعة غيار..." id="searchNewParts"
+                               class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <select class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="filterNewParts">
+                            <option value="">جميع الأصناف</option>
+                            <option value="available">متوفر</option>
+                            <option value="low">كمية منخفضة</option>
+                            <option value="out">نفد المخزون</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            @if($newInventory->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-green-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">قطعة الغيار</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكود</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية المتوفرة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية الكلية</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر الوحدة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القيمة الإجمالية</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($newInventory as $item)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ $item->sparePart->name }}</div>
+                                            @if($item->sparePart->description)
+                                                <div class="text-sm text-gray-500">{{ Str::limit($item->sparePart->description, 50) }}</div>
+                                            @endif
+                                            @if($item->sparePart->brand)
+                                                <div class="text-xs text-blue-600">{{ $item->sparePart->brand }}</div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-sm font-mono">{{ $item->sparePart->code }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm font-medium text-green-700">{{ $item->available_stock ?? $item->current_stock }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm font-medium text-gray-900">{{ $item->current_stock }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm text-gray-900">{{ number_format($item->average_cost ?? $item->sparePart->unit_price, 2) }} ريال</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm font-medium text-gray-900">{{ number_format($item->total_value, 2) }} ريال</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @php $availableStock = $item->available_stock ?? $item->current_stock; @endphp
+                                        @if($availableStock > 10)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                متوفر
+                                            </span>
+                                        @elseif($availableStock > 0)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                منخفض
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                نفد
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex gap-2">
+                                            <button type="button" onclick="showSparePartDetails({{ $item->sparePart->id }})"
+                                                    class="text-purple-600 hover:text-purple-900 p-1 rounded" 
+                                                    title="عرض التفاصيل">
+                                                <i class="ri-information-line text-lg"></i>
+                                            </button>
+                                            <button type="button" onclick="openExportModal({{ $item->sparePart->id }})"
+                                                    class="text-blue-600 hover:text-blue-900 p-1 rounded" 
+                                                    title="تصدير">
+                                                <i class="ri-subtract-line text-lg"></i>
+                                            </button>
+                                            <button type="button" onclick="openReceiveModalWithData('new', {{ $item->sparePart->id }}, '{{ addslashes($item->sparePart->name) }}')"
+                                                    class="text-green-600 hover:text-green-900 p-1 rounded" 
+                                                    title="استلام كمية إضافية">
+                                                <i class="ri-add-line text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-tools-line text-4xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد قطع غيار جديدة</h3>
+                    <p class="text-gray-600 mb-4">لم يتم استلام أي قطع غيار جديدة في هذا المستودع بعد</p>
+                    <button type="button" onclick="openReceiveTypeModal()"
+                            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="ri-add-line"></i>
+                        استلام قطع غيار
+                    </button>
+                </div>
+            @endif
+        </div>
+
+        <!-- Damaged Spare Parts Table -->
+        <div class="bg-white rounded-xl shadow-sm border">
+            <div class="p-6 border-b">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="ri-tools-fill text-red-600"></i>
+                        قطع الغيار التالفة
+                    </h2>
+                    <div class="flex gap-3">
+                        <input type="text" placeholder="البحث في القطع التالفة..." id="searchDamagedParts"
+                               class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <select class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="filterDamagedParts">
+                            <option value="">جميع الأنواع</option>
+                            <option value="damaged">تالفة</option>
+                            <option value="worn_out">مستهلكة</option>
+                            <option value="defective">معطلة</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            @if($damagedInventory->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-red-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">قطعة الغيار</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكود</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع التلف</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ الاستلام</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($damagedInventory as $item)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ $item->sparePart->name }}</div>
+                                            @if($item->sparePart->description)
+                                                <div class="text-sm text-gray-500">{{ Str::limit($item->sparePart->description, 50) }}</div>
+                                            @endif
+                                            @if($item->sparePart->brand)
+                                                <div class="text-xs text-blue-600">{{ $item->sparePart->brand }}</div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-sm font-mono">{{ $item->sparePart->code }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm font-medium text-gray-900">{{ $item->current_stock }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @php
+                                            $condition = 'غير محدد';
+                                            if($item->sparePart->serialNumbers->first()) {
+                                                $notes = $item->sparePart->serialNumbers->first()->condition_notes;
+                                                if(str_contains($notes, 'damaged')) $condition = 'تالفة';
+                                                elseif(str_contains($notes, 'worn_out')) $condition = 'مستهلكة';
+                                                elseif(str_contains($notes, 'defective')) $condition = 'معطلة';
+                                            }
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            {{ $condition }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm text-gray-900">
+                                            {{ $item->last_transaction_date ? $item->last_transaction_date->format('Y-m-d') : 'غير محدد' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            مُخزنة
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex gap-2">
+                                            <button type="button" onclick="showSparePartDetails({{ $item->sparePart->id }})"
+                                                    class="text-purple-600 hover:text-purple-900 p-1 rounded" 
+                                                    title="عرض التفاصيل">
+                                                <i class="ri-information-line text-lg"></i>
+                                            </button>
+                                            <button type="button" onclick="openDisposeModal({{ $item->sparePart->id }})"
+                                                    class="text-red-600 hover:text-red-900 p-1 rounded" 
+                                                    title="التخلص من القطعة">
+                                                <i class="ri-delete-bin-line text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-tools-fill text-4xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد قطع غيار تالفة</h3>
+                    <p class="text-gray-600">لم يتم استلام أي قطع غيار تالفة في هذا المستودع</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Auto Receive Modal with Pre-filled Data -->
+    <div id="autoReceiveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">استلام كمية إضافية</h3>
+                        <button type="button" onclick="closeAutoReceiveModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="autoReceiveForm" action="{{ route('warehouses.receive-new-spares', $warehouse) }}" method="POST">
+                    @csrf
+                    <div class="p-6 space-y-6">
+                        <!-- Invoice Information -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-900 mb-4">بيانات الفاتورة</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">رقم الفاتورة</label>
+                                    <input type="text" name="invoice_number" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">المورد</label>
+                                    <select name="supplier_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="">اختر المورد</option>
+                                        @foreach($suppliers as $supplier)
+                                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الفاتورة</label>
+                                    <input type="date" name="invoice_date" value="{{ date('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pre-filled Spare Part -->
+                        <div id="autoReceiveItems">
+                            <div class="auto-receive-item border rounded-lg p-4 bg-green-50">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">نوع قطعة الغيار</label>
+                                        <select name="items[0][spare_part_type_id]" id="autoSparePartType" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100" readonly>
+                                            @foreach($sparePartTypes as $type)
+                                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-blue-600">محدد تلقائياً من القطعة المختارة</small>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة</label>
+                                        <input type="text" name="items[0][name]" id="autoSparePartName" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100" readonly required>
+                                        <small class="text-blue-600">محدد تلقائياً من القطعة المختارة</small>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                                        <input type="number" name="items[0][quantity]" min="1" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">سعر الوحدة</label>
+                                        <input type="number" step="0.01" name="items[0][unit_price]" id="autoUnitPrice" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <small class="text-gray-500">اتركه فارغ لاستخدام السعر الحالي</small>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
+                                        <textarea name="items[0][description]" id="autoDescription" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100" readonly></textarea>
+                                        <small class="text-blue-600">محدد تلقائياً من القطعة المختارة</small>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                                        <textarea name="items[0][notes]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="ملاحظات إضافية..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 border-t bg-gray-50 flex gap-3">
+                        <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="ri-check-line mr-1"></i>
+                            استلام الكمية الإضافية
+                        </button>
+                        <button type="button" onclick="closeAutoReceiveModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receive Type Selection Modal -->
+    <div id="receiveTypeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-md w-full">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">نوع الاستلام</h3>
+                        <button type="button" onclick="closeReceiveTypeModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <p class="text-gray-600 text-center mb-6">حدد نوع الاستلام لقطع الغيار</p>
+                    
+                    <button type="button" onclick="openNewPartsModal()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg transition-colors flex items-center gap-3">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="ri-file-text-line text-2xl text-blue-600"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold">قطع غيار جديدة</div>
+                            <div class="text-sm text-blue-100">من فاتورة شراء أو مورد</div>
+                        </div>
+                    </button>
+
+                    <button type="button" onclick="openReturnedPartsModal()" 
+                            class="w-full bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg transition-colors flex items-center gap-3">
+                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i class="ri-user-line text-2xl text-orange-600"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold">قطع غيار تالفة</div>
+                            <div class="text-sm text-orange-100">استلام قطع غيار تالفة</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Parts Import Modal -->
+    <div id="newPartsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">استلام قطع غيار جديدة</h3>
+                        <button type="button" onclick="closeNewPartsModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="newPartsForm" action="{{ route('warehouses.receive-new-spares', $warehouse) }}" method="POST">
+                    @csrf
+                    <div class="p-6 space-y-6">
+                        <!-- Invoice Information -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-900 mb-4">بيانات الفاتورة</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">رقم الفاتورة</label>
+                                    <input type="text" name="invoice_number" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">المورد</label>
+                                    <select name="supplier_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="">اختر المورد</option>
+                                        @foreach($suppliers as $supplier)
+                                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الفاتورة</label>
+                                    <input type="date" name="invoice_date" value="{{ date('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Spare Parts -->
+                        <div id="newPartsItems">
+                            <div class="new-parts-item border rounded-lg p-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">نوع قطعة الغيار</label>
+                                        <select name="items[0][spare_part_type_id]" onchange="updatePartTypeDetails(0, this.value)" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                            <option value="">اختر النوع</option>
+                                            @foreach($sparePartTypes as $type)
+                                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة</label>
+                                        <input type="text" name="items[0][name]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                                        <input type="number" name="items[0][quantity]" min="1" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">سعر الوحدة</label>
+                                        <input type="number" step="0.01" name="items[0][unit_price]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
+                                        <textarea name="items[0][description]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                                        <textarea name="items[0][notes]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addNewPartItem()" class="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors">
+                            <i class="ri-add-line mr-1"></i>
+                            إضافة قطعة غيار أخرى
+                        </button>
+                    </div>
+                    <div class="p-6 border-t bg-gray-50 flex gap-3">
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="ri-check-line mr-1"></i>
+                            استلام قطع الغيار وإنتاج الرموز
+                        </button>
+                        <button type="button" onclick="closeNewPartsModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Returned Parts Modal -->
+    <div id="returnedPartsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">استلام قطع غيار تالفة</h3>
+                        <button type="button" onclick="closeReturnedPartsModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="returnedPartsForm" action="{{ route('warehouses.receive-returned-spares', $warehouse) }}" method="POST">
+                    @csrf
+                    <div class="p-6 space-y-6">
+                        <!-- Employee Information -->
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-orange-900 mb-4">بيانات الاستلام</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">الموظف المستلم</label>
+                                    <select name="returned_by_employee_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                                        <option value="">اختر الموظف</option>
+                                        @foreach($employees as $employee)
+                                            <option value="{{ $employee->id }}">{{ $employee->name }} - {{ $employee->position }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الاستلام</label>
+                                    <input type="date" name="return_date" value="{{ date('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Returned Parts -->
+                        <div id="returnedPartsItems">
+                            <div class="returned-parts-item border rounded-lg p-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">نوع قطعة الغيار</label>
+                                        <select name="items[0][spare_part_type_id]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                                            <option value="">اختر نوع قطعة الغيار</option>
+                                            @foreach($sparePartTypes as $sparePartType)
+                                                <option value="{{ $sparePartType->id }}">{{ $sparePartType->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                                        <input type="number" name="items[0][quantity]" min="1" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">حالة القطعة</label>
+                                        <select name="items[0][condition]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                                            <option value="damaged">تالفة</option>
+                                            <option value="worn_out">متآكلة</option>
+                                            <option value="defective">معيبة</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة</label>
+                                        <input type="text" name="items[0][part_name]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required placeholder="أدخل اسم القطعة">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                                        <textarea name="items[0][notes]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addReturnedPartItem()" class="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors">
+                            <i class="ri-add-line mr-1"></i>
+                            إضافة قطعة تالفة أخرى
+                        </button>
+                    </div>
+                    <div class="p-6 border-t bg-gray-50 flex gap-3">
+                        <button type="submit" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="ri-check-line mr-1"></i>
+                            استلام القطع التالفة
+                        </button>
+                        <button type="button" onclick="closeReturnedPartsModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">تصدير قطع غيار</h3>
+                        <button type="button" onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="exportForm" action="{{ route('warehouses.export-spares', $warehouse) }}" method="POST">
+                    @csrf
+                    <div class="p-6 space-y-6">
+                        <!-- Export Information -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-900 mb-4">بيانات التصدير</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">الموظف المستلم</label>
+                                    <select name="recipient_employee_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="">اختر الموظف</option>
+                                        @foreach($employees as $employee)
+                                            <option value="{{ $employee->id }}">{{ $employee->name }} - {{ $employee->position }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ التصدير</label>
+                                    <input type="date" name="export_date" value="{{ date('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="exportItems">
+                            <div class="export-item border rounded-lg p-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">قطعة الغيار</label>
+                                        <select name="items[0][spare_part_id]" onchange="updateAvailableStock(0, this)" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                            <option value="">اختر قطعة غيار</option>
+                                            @foreach($inventory as $item)
+                                                @if($item->current_stock > 0)
+                                                    <option value="{{ $item->sparePart->id }}" data-available="{{ $item->current_stock }}" data-serial-numbers="{{ $item->sparePart->serialNumbers->pluck('serial_number')->join(',') }}">
+                                                        {{ $item->sparePart->name }} ({{ $item->sparePart->code }}) - متوفر: {{ $item->current_stock }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                                        <input type="number" name="items[0][quantity]" min="1" onchange="validateQuantity(0)" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <small class="text-gray-500" id="available-stock-0">الكمية المتاحة: --</small>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الغرض</label>
+                                        <select name="items[0][purpose]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                            <option value="equipment_repair">إصلاح معدة</option>
+                                            <option value="equipment_maintenance">صيانة معدة</option>
+                                            <option value="equipment_upgrade">ترقية معدة</option>
+                                            <option value="replacement">استبدال</option>
+                                            <option value="project_installation">تركيب في مشروع</option>
+                                            <option value="other">غرض آخر</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2 lg:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">المعدة المستهدفة (اختياري)</label>
+                                        <select name="items[0][equipment_id]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">اختر معدة</option>
+                                            @foreach($equipments as $equipment)
+                                                <option value="{{ $equipment->id }}">{{ $equipment->name }} ({{ $equipment->serial_number }})</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2 lg:col-span-3">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">اختيار الأرقام التسلسلية</label>
+                                        <div id="serial-numbers-0" class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2 hidden">
+                                            <!-- Serial numbers will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                    <div class="md:col-span-2 lg:col-span-3">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                                        <textarea name="items[0][notes]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addExportItem()" class="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors">
+                            <i class="ri-add-line mr-1"></i>
+                            إضافة قطعة غيار أخرى
+                        </button>
+                    </div>
+                    <div class="p-6 border-t bg-gray-50 flex gap-3">
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="ri-check-line mr-1"></i>
+                            تصدير قطع الغيار
+                        </button>
+                        <button type="button" onclick="closeExportModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+@push('scripts')
+<script>
+let newPartItemCount = 1;
+let returnedPartItemCount = 1;
+let exportItemCount = 1;
+
+// Receive Type Modal Functions
+function openReceiveTypeModal() {
+    document.getElementById('receiveTypeModal').classList.remove('hidden');
+}
+
+function closeReceiveTypeModal() {
+    document.getElementById('receiveTypeModal').classList.add('hidden');
+}
+
+// New Parts Modal Functions
+function openNewPartsModal() {
+    closeReceiveTypeModal();
+    document.getElementById('newPartsModal').classList.remove('hidden');
+}
+
+function closeNewPartsModal() {
+    document.getElementById('newPartsModal').classList.add('hidden');
+}
+
+// Returned Parts Modal Functions
+function openReturnedPartsModal() {
+    closeReceiveTypeModal();
+    document.getElementById('returnedPartsModal').classList.remove('hidden');
+}
+
+function closeReturnedPartsModal() {
+    document.getElementById('returnedPartsModal').classList.add('hidden');
+}
+
+// Export Modal Functions
+function openExportModal(sparePartId = null) {
+    document.getElementById('exportModal').classList.remove('hidden');
+    if (sparePartId) {
+        document.querySelector('select[name="items[0][spare_part_id]"]').value = sparePartId;
+        updateAvailableStock(0, document.querySelector('select[name="items[0][spare_part_id]"]'));
+    }
+}
+
+function closeExportModal() {
+    document.getElementById('exportModal').classList.add('hidden');
+}
+
+// Update part type details for new parts
+function updatePartTypeDetails(index, typeId) {
+    // This function can be used to pre-fill fields based on the selected spare part type
+    // For example, if a type has default values or specifications
+}
+
+// Add new part item for new parts
+function addNewPartItem() {
+    const newPartsItems = document.getElementById('newPartsItems');
+    const newItem = document.createElement('div');
+    newItem.className = 'new-parts-item border rounded-lg p-4';
+    newItem.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <h4 class="font-medium text-gray-900">قطعة غيار ${newPartItemCount + 1}</h4>
+            <button type="button" onclick="removeNewPartItem(this)" class="text-red-600 hover:text-red-800">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">نوع قطعة الغيار</label>
+                <select name="items[${newPartItemCount}][spare_part_type_id]" onchange="updatePartTypeDetails(${newPartItemCount}, this.value)" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                    <option value="">اختر النوع</option>
+                    @foreach($sparePartTypes as $type)
+                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة</label>
+                <input type="text" name="items[${newPartItemCount}][name]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                <input type="number" name="items[${newPartItemCount}][quantity]" min="1" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">سعر الوحدة</label>
+                <input type="number" step="0.01" name="items[${newPartItemCount}][unit_price]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
+                <textarea name="items[${newPartItemCount}][description]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                <textarea name="items[${newPartItemCount}][notes]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+        </div>
+    `;
+    newPartsItems.appendChild(newItem);
+    newPartItemCount++;
+}
+
+// Add returned part item
+function addReturnedPartItem() {
+    const returnedPartsItems = document.getElementById('returnedPartsItems');
+    const newItem = document.createElement('div');
+    newItem.className = 'returned-parts-item border rounded-lg p-4';
+    newItem.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <h4 class="font-medium text-gray-900">قطعة تالفة ${returnedPartItemCount + 1}</h4>
+            <button type="button" onclick="removeReturnedPartItem(this)" class="text-red-600 hover:text-red-800">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">نوع قطعة الغيار</label>
+                <select name="items[${returnedPartItemCount}][spare_part_type_id]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                    <option value="">اختر نوع قطعة الغيار</option>
+                    @foreach($sparePartTypes as $sparePartType)
+                        <option value="{{ $sparePartType->id }}">{{ $sparePartType->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                <input type="number" name="items[${returnedPartItemCount}][quantity]" min="1" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">حالة القطعة</label>
+                <select name="items[${returnedPartItemCount}][condition]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                    <option value="damaged">تالفة</option>
+                    <option value="worn_out">متآكلة</option>
+                    <option value="defective">معيبة</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة</label>
+                <input type="text" name="items[${returnedPartItemCount}][part_name]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required placeholder="أدخل اسم القطعة">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                <textarea name="items[${returnedPartItemCount}][notes]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></textarea>
+            </div>
+        </div>
+    `;
+    returnedPartsItems.appendChild(newItem);
+    returnedPartItemCount++;
+}
+
+// Add export item
+function addExportItem() {
+    const exportItems = document.getElementById('exportItems');
+    const newItem = document.createElement('div');
+    newItem.className = 'export-item border rounded-lg p-4';
+    newItem.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <h4 class="font-medium text-gray-900">قطعة غيار ${exportItemCount + 1}</h4>
+            <button type="button" onclick="removeExportItem(this)" class="text-red-600 hover:text-red-800">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">قطعة الغيار</label>
+                <select name="items[${exportItemCount}][spare_part_id]" onchange="updateAvailableStock(${exportItemCount}, this)" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                    <option value="">اختر قطعة غيار</option>
+                    @foreach($inventory as $item)
+                        @if($item->current_stock > 0)
+                            <option value="{{ $item->sparePart->id }}" data-available="{{ $item->current_stock }}" data-serial-numbers="{{ $item->sparePart->serialNumbers->pluck('serial_number')->join(',') }}">
+                                {{ $item->sparePart->name }} ({{ $item->sparePart->code }}) - متوفر: {{ $item->current_stock }}
+                            </option>
+                        @endif
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                <input type="number" name="items[${exportItemCount}][quantity]" min="1" onchange="validateQuantity(${exportItemCount})" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                <small class="text-gray-500" id="available-stock-${exportItemCount}">الكمية المتاحة: --</small>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الغرض</label>
+                <select name="items[${exportItemCount}][purpose]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                    <option value="equipment_repair">إصلاح معدة</option>
+                    <option value="equipment_maintenance">صيانة معدة</option>
+                    <option value="equipment_upgrade">ترقية معدة</option>
+                    <option value="replacement">استبدال</option>
+                    <option value="project_installation">تركيب في مشروع</option>
+                    <option value="other">غرض آخر</option>
+                </select>
+            </div>
+            <div class="md:col-span-2 lg:col-span-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">المعدة المستهدفة (اختياري)</label>
+                <select name="items[${exportItemCount}][equipment_id]" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">اختر معدة</option>
+                    @foreach($equipments as $equipment)
+                        <option value="{{ $equipment->id }}">{{ $equipment->name }} ({{ $equipment->serial_number }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="md:col-span-2 lg:col-span-3">
+                <label class="block text-sm font-medium text-gray-700 mb-2">اختيار الأرقام التسلسلية</label>
+                <div id="serial-numbers-${exportItemCount}" class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2 hidden">
+                    <!-- Serial numbers will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="md:col-span-2 lg:col-span-3">
+                <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                <textarea name="items[${exportItemCount}][notes]" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+        </div>
+    `;
+    exportItems.appendChild(newItem);
+    exportItemCount++;
+}
+
+// Update available stock for export items
+function updateAvailableStock(index, selectElement) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const availableStock = selectedOption.getAttribute('data-available') || 0;
+    const serialNumbers = selectedOption.getAttribute('data-serial-numbers') || '';
+    
+    const stockDisplay = document.getElementById(`available-stock-${index}`);
+    if (stockDisplay) {
+        stockDisplay.textContent = `الكمية المتاحة: ${availableStock}`;
+    }
+
+    // Update serial numbers selection
+    const serialContainer = document.getElementById(`serial-numbers-${index}`);
+    if (serialContainer && serialNumbers) {
+        const serialArray = serialNumbers.split(',').filter(s => s.trim());
+        if (serialArray.length > 0) {
+            serialContainer.innerHTML = '';
+            serialArray.forEach(serial => {
+                const checkbox = document.createElement('label');
+                checkbox.className = 'flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50';
+                checkbox.innerHTML = `
+                    <input type="checkbox" name="items[${index}][serial_numbers][]" value="${serial}" class="rounded">
+                    <span class="text-sm font-mono">${serial}</span>
+                `;
+                serialContainer.appendChild(checkbox);
+            });
+            serialContainer.classList.remove('hidden');
+        } else {
+            serialContainer.classList.add('hidden');
+        }
+    }
+}
+
+// Validate quantity for export items
+function validateQuantity(index) {
+    const quantityInput = document.querySelector(`input[name="items[${index}][quantity]"]`);
+    const sparePartSelect = document.querySelector(`select[name="items[${index}][spare_part_id]"]`);
+    
+    if (quantityInput && sparePartSelect) {
+        const selectedOption = sparePartSelect.options[sparePartSelect.selectedIndex];
+        const availableStock = parseInt(selectedOption.getAttribute('data-available')) || 0;
+        const requestedQuantity = parseInt(quantityInput.value) || 0;
+
+        if (requestedQuantity > availableStock) {
+            quantityInput.classList.add('border-red-500');
+            alert(`الكمية المطلوبة (${requestedQuantity}) أكبر من الكمية المتاحة (${availableStock})`);
+        } else {
+            quantityInput.classList.remove('border-red-500');
+        }
+    }
+}
+
+// Remove item functions
+function removeNewPartItem(button) {
+    button.closest('.new-parts-item').remove();
+}
+
+function removeReturnedPartItem(button) {
+    button.closest('.returned-parts-item').remove();
+}
+
+function removeExportItem(button) {
+    button.closest('.export-item').remove();
+}
+
+// Close modals when clicking outside
+document.getElementById('receiveTypeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReceiveTypeModal();
+    }
+});
+
+document.getElementById('autoReceiveModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAutoReceiveModal();
+    }
+});
+
+// Auto Receive Modal Functions  
+function openReceiveModalWithData(type, sparePartId, sparePartName) {
+    // First get spare part details to pre-fill form
+    @foreach($newInventory as $item)
+        if ({{ $item->sparePart->id }} == sparePartId) {
+            document.getElementById('autoSparePartType').value = {{ $item->sparePart->spare_part_type_id ?? 'null' }};
+            document.getElementById('autoSparePartName').value = sparePartName;
+            document.getElementById('autoDescription').value = '{{ addslashes($item->sparePart->description ?? '') }}';
+            
+            @if($item->averageUnitPrice)
+                document.getElementById('autoUnitPrice').placeholder = 'السعر الحالي: {{ $item->averageUnitPrice }}';
+            @endif
+        }
+    @endforeach
+    
+    // Show the modal
+    document.getElementById('autoReceiveModal').classList.remove('hidden');
+    
+    // Focus on quantity field for quick entry
+    setTimeout(() => {
+        const quantityInput = document.querySelector('#autoReceiveModal input[name="items[0][quantity]"]');
+        if (quantityInput) quantityInput.focus();
+    }, 100);
+}
+
+function closeAutoReceiveModal() {
+    document.getElementById('autoReceiveModal').classList.add('hidden');
+    // Reset form
+    document.getElementById('autoReceiveForm').reset();
+}
+
+document.getElementById('newPartsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeNewPartsModal();
+    }
+});
+
+document.getElementById('returnedPartsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReturnedPartsModal();
+    }
+});
+
+document.getElementById('exportModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeExportModal();
+    }
+});
+
+// Add form submission logging
+document.getElementById('newPartsForm').addEventListener('submit', function(e) {
+    console.log('New parts form submitted');
+    console.log('Form data:', new FormData(this));
+    
+    // Log form fields
+    const formData = new FormData(this);
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+});
+
+document.getElementById('returnedPartsForm').addEventListener('submit', function(e) {
+    console.log('Returned parts form submitted');
+    console.log('Form data:', new FormData(this));
+    
+    // Log form fields
+    const formData = new FormData(this);
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+});
+
+// Spare Part Details Functions
+function showSparePartDetails(sparePartId) {
+    document.getElementById('sparePartDetailsModal').classList.remove('hidden');
+    
+    fetch(`/warehouses/{{ $warehouse->id }}/spare-parts/${sparePartId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            displaySparePartDetails(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('sparePartDetailsContent').innerHTML = 
+                '<div class="text-center text-red-600">حدث خطأ في تحميل البيانات</div>';
+        });
+}
+
+function closeSparePartDetailsModal() {
+    document.getElementById('sparePartDetailsModal').classList.add('hidden');
+}
+
+function displaySparePartDetails(data) {
+    const content = `
+        <div class="space-y-6">
+            <!-- معلومات أساسية -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-semibold text-gray-900 mb-3">المعلومات الأساسية</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">اسم القطعة</label>
+                        <p class="text-gray-900">${data.sparePart.name}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">الكود</label>
+                        <p class="text-gray-900 font-mono">${data.sparePart.code}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">النوع</label>
+                        <p class="text-gray-900">${data.sparePart.spare_part_type ? data.sparePart.spare_part_type.name : 'غير محدد'}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">سعر الوحدة</label>
+                        <p class="text-gray-900">${parseFloat(data.sparePart.unit_price).toFixed(2)} ريال</p>
+                    </div>
+                    ${data.sparePart.description ? `
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-medium text-gray-500">الوصف</label>
+                        <p class="text-gray-900">${data.sparePart.description}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- معلومات المخزون -->
+            ${data.inventory ? `
+            <div class="bg-blue-50 rounded-lg p-4">
+                <h4 class="font-semibold text-gray-900 mb-3">معلومات المخزون</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">الكمية الحالية</label>
+                        <p class="text-2xl font-bold text-blue-600">${data.inventory.current_stock}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">المتوفر للاستخدام</label>
+                        <p class="text-2xl font-bold text-green-600">${data.inventory.available_stock || 0}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">القيمة الإجمالية</label>
+                        <p class="text-2xl font-bold text-orange-600">${parseFloat(data.inventory.total_value).toFixed(2)} ريال</p>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- الأرقام التسلسلية -->
+            ${data.serialNumbers && data.serialNumbers.length > 0 ? `
+            <div class="bg-green-50 rounded-lg p-4">
+                <h4 class="font-semibold text-gray-900 mb-3">الأرقام التسلسلية (${data.serialNumbers.length})</h4>
+                <div class="max-h-60 overflow-y-auto">
+                    <div class="grid gap-2">
+                        ${data.serialNumbers.slice(0, 10).map(serial => `
+                            <div class="bg-white rounded p-3 border">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-mono text-sm font-medium">${serial.serial_number}</p>
+                                        <p class="text-xs text-gray-500">الباركود: ${serial.barcode}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="printBarcode('${serial.barcode}', '${serial.serial_number}')"
+                                                class="text-purple-600 hover:text-purple-800 p-1 rounded hover:bg-purple-50 transition-colors"
+                                                title="طباعة الباركود">
+                                            <i class="ri-printer-line text-lg"></i>
+                                        </button>
+                                        <span class="px-2 py-1 rounded text-xs font-medium ${
+                                            serial.status === 'available' ? 'bg-green-100 text-green-800' :
+                                            serial.status === 'in_use' ? 'bg-blue-100 text-blue-800' :
+                                            serial.status === 'damaged' ? 'bg-red-100 text-red-800' :
+                                            'bg-gray-100 text-gray-800'
+                                        }">
+                                            ${
+                                                serial.status === 'available' ? 'متاح' :
+                                                serial.status === 'in_use' ? 'قيد الاستخدام' :
+                                                serial.status === 'damaged' ? 'تالف' :
+                                                serial.status
+                                            }
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${data.serialNumbers.length > 10 ? `
+                            <div class="text-center mt-3 pt-3 border-t">
+                                <button onclick="showAllSerialNumbers(${JSON.stringify(data.serialNumbers).replace(/"/g, '&quot;')})"
+                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center justify-center gap-1 mx-auto">
+                                    <i class="ri-eye-line"></i>
+                                    عرض جميع الأرقام التسلسلية (${data.serialNumbers.length})
+                                </button>
+                                <button onclick="printAllBarcodes(${JSON.stringify(data.serialNumbers).replace(/"/g, '&quot;')})"
+                                        class="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center justify-center gap-1 mx-auto mt-2">
+                                    <i class="ri-printer-line"></i>
+                                    طباعة جميع الباركودات
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- المعاملات الأخيرة -->
+            ${data.transactions && data.transactions.length > 0 ? `
+            <div class="bg-yellow-50 rounded-lg p-4">
+                <h4 class="font-semibold text-gray-900 mb-3">المعاملات الأخيرة</h4>
+                <div class="max-h-60 overflow-y-auto">
+                    <div class="space-y-2">
+                        ${data.transactions.map(transaction => `
+                            <div class="bg-white rounded p-3 border">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-medium text-sm">${transaction.transaction_type}</p>
+                                        <p class="text-xs text-gray-500">الكمية: ${transaction.quantity}</p>
+                                        <p class="text-xs text-gray-500">التاريخ: ${new Date(transaction.transaction_date).toLocaleDateString('ar-SA')}</p>
+                                    </div>
+                                    <div class="text-left">
+                                        <p class="font-medium text-sm">${parseFloat(transaction.total_amount).toFixed(2)} ريال</p>
+                                        <p class="text-xs text-gray-500">${transaction.user ? transaction.user.name : 'غير محدد'}</p>
+                                    </div>
+                                </div>
+                                ${transaction.notes ? `<p class="text-xs text-gray-600 mt-1">${transaction.notes}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('sparePartDetailsContent').innerHTML = content;
+}
+
+// Close modal when clicking outside
+document.getElementById('sparePartDetailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeSparePartDetailsModal();
+    }
+});
+
+// Search and Filter Functions for New Parts Table
+document.getElementById('searchNewParts').addEventListener('input', function() {
+    filterNewPartsTable();
+});
+
+document.getElementById('filterNewParts').addEventListener('change', function() {
+    filterNewPartsTable();
+});
+
+function filterNewPartsTable() {
+    const searchTerm = document.getElementById('searchNewParts').value.toLowerCase();
+    const filterValue = document.getElementById('filterNewParts').value;
+    const table = document.querySelector('.bg-white.rounded-xl.shadow-sm.border.mb-6 table tbody');
+    const rows = table ? table.querySelectorAll('tr') : [];
+    
+    rows.forEach(row => {
+        const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+        const code = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const availableStockText = row.querySelector('td:nth-child(3)').textContent;
+        const availableStock = parseInt(availableStockText) || 0;
+        
+        let showRow = true;
+        
+        // Apply search filter
+        if (searchTerm && !name.includes(searchTerm) && !code.includes(searchTerm)) {
+            showRow = false;
+        }
+        
+        // Apply status filter
+        if (filterValue) {
+            if (filterValue === 'available' && availableStock <= 10) showRow = false;
+            if (filterValue === 'low' && (availableStock === 0 || availableStock > 10)) showRow = false;
+            if (filterValue === 'out' && availableStock > 0) showRow = false;
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+    });
+}
+
+// Search and Filter Functions for Damaged Parts Table
+document.getElementById('searchDamagedParts').addEventListener('input', function() {
+    filterDamagedPartsTable();
+});
+
+document.getElementById('filterDamagedParts').addEventListener('change', function() {
+    filterDamagedPartsTable();
+});
+
+function filterDamagedPartsTable() {
+    const searchTerm = document.getElementById('searchDamagedParts').value.toLowerCase();
+    const filterValue = document.getElementById('filterDamagedParts').value;
+    const tables = document.querySelectorAll('.bg-white.rounded-xl.shadow-sm.border table tbody');
+    const damagedTable = tables.length > 1 ? tables[1] : null;
+    const rows = damagedTable ? damagedTable.querySelectorAll('tr') : [];
+    
+    rows.forEach(row => {
+        const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+        const code = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const damageType = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+        
+        let showRow = true;
+        
+        // Apply search filter
+        if (searchTerm && !name.includes(searchTerm) && !code.includes(searchTerm)) {
+            showRow = false;
+        }
+        
+        // Apply damage type filter
+        if (filterValue) {
+            if (filterValue === 'damaged' && !damageType.includes('تالفة')) showRow = false;
+            if (filterValue === 'worn_out' && !damageType.includes('مستهلكة')) showRow = false;
+            if (filterValue === 'defective' && !damageType.includes('معطلة')) showRow = false;
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+    });
+}
+
+// Dispose Modal Functions
+function openDisposeModal(sparePartId) {
+    // Implementation for disposal modal
+    console.log('Open dispose modal for spare part:', sparePartId);
+    alert('سيتم تطوير وظيفة التخلص من القطع التالفة قريباً');
+}
+
+// دالة عرض جميع الأرقام التسلسلية
+function showAllSerialNumbers(serialNumbers) {
+    const modal = document.getElementById('allSerialsModal');
+    const container = document.getElementById('allSerialsContainer');
+    
+    if (!modal) {
+        // إنشاء المودال إذا لم يكن موجوداً
+        const modalHTML = \`
+            <div id="allSerialsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="closeAllSerialsModal()">
+                <div class="bg-white rounded-xl max-w-4xl w-full max-h-[80vh] overflow-hidden" onclick="event.stopPropagation()">
+                    <div class="p-6 border-b flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-gray-900">جميع الأرقام التسلسلية</h3>
+                        <button onclick="closeAllSerialsModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 overflow-y-auto max-h-[60vh]" id="allSerialsContainer">
+                        <!-- Content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        \`;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // ملء المحتوى
+    const container2 = document.getElementById('allSerialsContainer');
+    container2.innerHTML = \`
+        <div class="grid gap-3">
+            \${serialNumbers.map(serial => \`
+                <div class="bg-gray-50 rounded-lg p-4 border">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-mono text-sm font-medium text-gray-900">\${serial.serial_number}</p>
+                            <p class="text-xs text-gray-500 mt-1">الباركود: \${serial.barcode}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="printBarcode('\${serial.barcode}', '\${serial.serial_number}')"
+                                    class="text-purple-600 hover:text-purple-800 p-2 rounded hover:bg-purple-50 transition-colors"
+                                    title="طباعة الباركود">
+                                <i class="ri-printer-line text-lg"></i>
+                            </button>
+                            <span class="px-2 py-1 rounded text-xs font-medium \${
+                                serial.status === 'available' ? 'bg-green-100 text-green-800' :
+                                serial.status === 'in_use' ? 'bg-blue-100 text-blue-800' :
+                                serial.status === 'damaged' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                            }">
+                                \${
+                                    serial.status === 'available' ? 'متاح' :
+                                    serial.status === 'in_use' ? 'قيد الاستخدام' :
+                                    serial.status === 'damaged' ? 'تالف' :
+                                    serial.status
+                                }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            \`).join('')}
+        </div>
+        <div class="mt-6 pt-4 border-t text-center">
+            <button onclick="printAllBarcodes(\${JSON.stringify(serialNumbers).replace(/"/g, '&quot;')})"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 mx-auto">
+                <i class="ri-printer-line"></i>
+                طباعة جميع الباركودات (\${serialNumbers.length})
+            </button>
+        </div>
+    \`;
+    
+    document.getElementById('allSerialsModal').classList.remove('hidden');
+}
+
+// دالة إغلاق مودال جميع الأرقام التسلسلية
+function closeAllSerialsModal() {
+    const modal = document.getElementById('allSerialsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// إضافة مستمع لزر Escape لإغلاق المودال
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeAllSerialsModal();
+    }
+});
+
+// دالة طباعة جميع الباركودات
+function printAllBarcodes(serialNumbers) {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    printWindow.document.write(\`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>طباعة جميع الباركودات</title>
+            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+            <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+            <style>
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                    .no-print { display: none; }
+                    .barcode-item { 
+                        page-break-inside: avoid;
+                        border: 1px solid #000;
+                        margin-bottom: 5px;
+                        padding: 10px;
+                    }
+                }
+                body { font-family: 'Arial', sans-serif; }
+                .barcode-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 15px;
+                    margin: 20px 0;
+                }
+                .barcode-item {
+                    text-align: center;
+                    padding: 15px;
+                    border: 2px solid #333;
+                    border-radius: 8px;
+                    background: white;
+                }
+            </style>
+        </head>
+        <body class="bg-gray-100">
+            <div class="container mx-auto p-4">
+                <div class="no-print mb-4 text-center">
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+                            <i class="ri-qr-code-line text-blue-600"></i>
+                            طباعة جميع الباركودات
+                        </h1>
+                        <p class="text-gray-600 mb-4">عدد الباركودات: \${serialNumbers.length}</p>
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i class="ri-printer-line"></i>
+                                طباعة الكل
+                            </button>
+                            <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i class="ri-close-line"></i>
+                                إغلاق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="barcode-grid">
+                    \${serialNumbers.map((serial, index) => \`
+                        <div class="barcode-item">
+                            <div class="mb-3">
+                                <h3 class="text-sm font-bold text-gray-900 mb-1">مستودع الأبراج</h3>
+                                <p class="text-xs font-semibold text-blue-600">رقم: \${serial.serial_number}</p>
+                                <p class="text-xs text-gray-600">باركود: \${serial.barcode}</p>
+                            </div>
+                            <div class="mb-2">
+                                <svg id="barcode\${index}"></svg>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                <p>\${new Date().toLocaleDateString('ar-SA')}</p>
+                            </div>
+                        </div>
+                    \`).join('')}
+                </div>
+            </div>
+            
+            <script>
+                window.onload = function() {
+                    \${serialNumbers.map((serial, index) => \`
+                        JsBarcode("#barcode\${index}", "\${serial.barcode}", {
+                            format: "CODE128",
+                            width: 1.5,
+                            height: 60,
+                            displayValue: true,
+                            fontSize: 10,
+                            textMargin: 5,
+                            fontOptions: "bold",
+                            textAlign: "center",
+                            textPosition: "bottom",
+                            background: "#ffffff",
+                            lineColor: "#000000"
+                        });
+                    \`).join('')}
+                };
+            <\/script>
+        </body>
+        </html>
+    \`);
+    
+    printWindow.document.close();
+}
+
+</script>
+@endpush
+
+<!-- Spare Part Details Modal -->
+<div id="sparePartDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">تفاصيل قطعة الغيار</h3>
+                    <button type="button" onclick="closeSparePartDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6" id="sparePartDetailsContent">
+                <!-- Content will be loaded here -->
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+                    <span class="mr-2 text-gray-600">جاري تحميل التفاصيل...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// دالة طباعة الباركود
+function printBarcode(barcode, serialNumber) {
+    // فتح نافذة طباعة جديدة
+    const printWindow = window.open('', '_blank', 'width=600,height=400');
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>طباعة الباركود - ${serialNumber}</title>
+            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+            <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+            <style>
+                @media print {
+                    body { margin: 0; padding: 20px; }
+                    .no-print { display: none; }
+                    .print-container { 
+                        page-break-inside: avoid;
+                        border: 2px solid #000;
+                        padding: 15px;
+                        margin: 0;
+                    }
+                }
+                body { font-family: 'Arial', sans-serif; }
+                .barcode-container {
+                    text-align: center;
+                    padding: 20px;
+                    border: 2px solid #333;
+                    border-radius: 8px;
+                    background: white;
+                    max-width: 400px;
+                    margin: 20px auto;
+                }
+            </style>
+        </head>
+        <body class="bg-gray-100">
+            <div class="container mx-auto p-4">
+                <div class="no-print mb-4 text-center">
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+                            <i class="ri-qr-code-line text-blue-600"></i>
+                            طباعة الباركود
+                        </h1>
+                        <p class="text-gray-600 mb-4">جاهز للطباعة - اضغط على زر الطباعة أدناه</p>
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i class="ri-printer-line"></i>
+                                طباعة
+                            </button>
+                            <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i class="ri-close-line"></i>
+                                إغلاق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="print-container barcode-container">
+                    <div class="mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 mb-2">قطعة غيار - مستودع الأبراج</h2>
+                        <p class="text-lg font-semibold text-blue-600 mb-1">الرقم التسلسلي: ${serialNumber}</p>
+                        <p class="text-sm text-gray-600 mb-4">الباركود: ${barcode}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <svg id="barcode"></svg>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 border-t pt-2">
+                        <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</p>
+                        <p>الوقت: ${new Date().toLocaleTimeString('ar-SA')}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                // إنشاء الباركود بعد تحميل الصفحة
+                window.onload = function() {
+                    JsBarcode("#barcode", "${barcode}", {
+                        format: "CODE128",
+                        width: 2,
+                        height: 100,
+                        displayValue: true,
+                        fontSize: 14,
+                        textMargin: 8,
+                        fontOptions: "bold",
+                        textAlign: "center",
+                        textPosition: "bottom",
+                        background: "#ffffff",
+                        lineColor: "#000000"
+                    });
+                };
+            </script>
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+}
+
+// دالة عرض جميع الأرقام التسلسلية
+function showAllSerialNumbers(serialNumbers) {
+    const modal = document.getElementById('allSerialsModal');
+    const container = document.getElementById('allSerialsContainer');
+    
+    if (!modal) {
+        // إنشاء المودال إذا لم يكن موجوداً
+        const modalHTML = \`
+            <div id="allSerialsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="closeAllSerialsModal()">
+                <div class="bg-white rounded-xl max-w-4xl w-full max-h-[80vh] overflow-hidden" onclick="event.stopPropagation()">
+                    <div class="p-6 border-b flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-gray-900">جميع الأرقام التسلسلية</h3>
+                        <button onclick="closeAllSerialsModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 overflow-y-auto max-h-[60vh]" id="allSerialsContainer">
+                        <!-- Content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        \`;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // ملء المحتوى
+    const container2 = document.getElementById('allSerialsContainer');
+    container2.innerHTML = \`
+        <div class="grid gap-3">
+            \${serialNumbers.map(serial => \`
+                <div class="bg-gray-50 rounded-lg p-4 border">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-mono text-sm font-medium text-gray-900">\${serial.serial_number}</p>
+                            <p class="text-xs text-gray-500 mt-1">الباركود: \${serial.barcode}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="printBarcode('\${serial.barcode}', '\${serial.serial_number}')"
+                                    class="text-purple-600 hover:text-purple-800 p-2 rounded hover:bg-purple-50 transition-colors"
+                                    title="طباعة الباركود">
+                                <i class="ri-printer-line text-lg"></i>
+                            </button>
+                            <span class="px-2 py-1 rounded text-xs font-medium \${
+                                serial.status === 'available' ? 'bg-green-100 text-green-800' :
+                                serial.status === 'in_use' ? 'bg-blue-100 text-blue-800' :
+                                serial.status === 'damaged' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                            }">
+                                \${
+                                    serial.status === 'available' ? 'متاح' :
+                                    serial.status === 'in_use' ? 'قيد الاستخدام' :
+                                    serial.status === 'damaged' ? 'تالف' :
+                                    serial.status
+                                }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            \`).join('')}
+        </div>
+        <div class="mt-6 pt-4 border-t text-center">
+            <button onclick="printAllBarcodes(\${JSON.stringify(serialNumbers).replace(/"/g, '&quot;')})"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 mx-auto">
+                <i class="ri-printer-line"></i>
+                طباعة جميع الباركودات (\${serialNumbers.length})
+            </button>
+        </div>
+    \`;
+    
+    document.getElementById('allSerialsModal').classList.remove('hidden');
+}
+
+// دالة إغلاق مودال جميع الأرقام التسلسلية
+function closeAllSerialsModal() {
+    const modal = document.getElementById('allSerialsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// إضافة مستمع لزر Escape لإغلاق المودال
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeAllSerialsModal();
+    }
+});
+
+// دالة طباعة جميع الباركودات
+function printAllBarcodes(serialNumbers) {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    printWindow.document.write(\`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>طباعة جميع الباركودات</title>
+            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+            <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+            <style>
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                    .no-print { display: none; }
+                    .barcode-item { 
+                        page-break-inside: avoid;
+                        border: 1px solid #000;
+                        margin-bottom: 5px;
+                        padding: 10px;
+                    }
+                }
+                body { font-family: 'Arial', sans-serif; }
+                .barcode-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 15px;
+                    margin: 20px 0;
+                }
+                .barcode-item {
+                    text-align: center;
+                    padding: 15px;
+                    border: 2px solid #333;
+                    border-radius: 8px;
+                    background: white;
+                }
+            </style>
+        </head>
+        <body class="bg-gray-100">
+            <div class="container mx-auto p-4">
+                <div class="no-print mb-4 text-center">
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+                            <i class="ri-qr-code-line text-blue-600"></i>
+                            طباعة جميع الباركودات
+                        </h1>
+                        <p class="text-gray-600 mb-4">عدد الباركودات: \${serialNumbers.length}</p>
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i class="ri-printer-line"></i>
+                                طباعة الكل
+                            </button>
+                            <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i class="ri-close-line"></i>
+                                إغلاق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="barcode-grid">
+                    \${serialNumbers.map((serial, index) => \`
+                        <div class="barcode-item">
+                            <div class="mb-3">
+                                <h3 class="text-sm font-bold text-gray-900 mb-1">مستودع الأبراج</h3>
+                                <p class="text-xs font-semibold text-blue-600">رقم: \${serial.serial_number}</p>
+                                <p class="text-xs text-gray-600">باركود: \${serial.barcode}</p>
+                            </div>
+                            <div class="mb-2">
+                                <svg id="barcode\${index}"></svg>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                <p>\${new Date().toLocaleDateString('ar-SA')}</p>
+                            </div>
+                        </div>
+                    \`).join('')}
+                </div>
+            </div>
+            
+            <script>
+                window.onload = function() {
+                    \${serialNumbers.map((serial, index) => \`
+                        JsBarcode("#barcode\${index}", "\${serial.barcode}", {
+                            format: "CODE128",
+                            width: 1.5,
+                            height: 60,
+                            displayValue: true,
+                            fontSize: 10,
+                            textMargin: 5,
+                            fontOptions: "bold",
+                            textAlign: "center",
+                            textPosition: "bottom",
+                            background: "#ffffff",
+                            lineColor: "#000000"
+                        });
+                    \`).join('')}
+                };
+            <\/script>
+        </body>
+        </html>
+    \`);
+    
+    printWindow.document.close();
+}
+</script>
+
+@endsection

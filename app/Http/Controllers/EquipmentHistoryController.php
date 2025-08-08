@@ -205,4 +205,31 @@ class EquipmentHistoryController extends Controller
             }
         }
     }
+
+    /**
+     * Get equipment history for JSON response
+     */
+    public function getHistory(Equipment $equipment)
+    {
+        try {
+            $movementHistory = EquipmentMovementHistory::where('equipment_id', $equipment->id)
+                ->with(['fromLocation', 'toLocation', 'movedByUser'])
+                ->orderBy('moved_at', 'desc')
+                ->get()
+                ->map(function ($movement) {
+                    return [
+                        'from_location' => $movement->fromLocation ? $movement->fromLocation->name : null,
+                        'to_location' => $movement->toLocation ? $movement->toLocation->name : null,
+                        'moved_by' => $movement->movedByUser ? $movement->movedByUser->name : $movement->moved_by,
+                        'moved_at' => $movement->moved_at,
+                        'notes' => $movement->notes
+                    ];
+                });
+
+            return response()->json($movementHistory);
+        } catch (\Exception $e) {
+            Log::error('Error fetching equipment history: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch equipment history'], 500);
+        }
+    }
 }

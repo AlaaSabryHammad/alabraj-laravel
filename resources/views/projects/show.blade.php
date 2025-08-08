@@ -8,12 +8,46 @@
 
 @section('content')
     <div class="p-6" dir="rtl">
-        <!-- زر عمل مستخلص جديد -->
-        <div class="mb-6 flex justify-end">
+        <!-- أزرار الإجراءات المختلفة -->
+        <div class="mb-6 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            <!-- زر تسجيل قرض -->
+            <button onclick="openLoanModal()" 
+                class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
+                <i class="ri-money-dollar-box-line text-base sm:text-lg"></i>
+                <span class="hidden sm:inline">تسجيل قرض</span>
+                <span class="sm:hidden">قرض</span>
+            </button>
+
+            <!-- زر تمديد فترة المشروع -->
+            <button onclick="openExtendModal()" 
+                class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
+                <i class="ri-calendar-line text-base sm:text-lg"></i>
+                <span class="hidden sm:inline">تمديد فترة المشروع</span>
+                <span class="sm:hidden">تمديد</span>
+            </button>
+
+            <!-- زر تسجيل زيارة -->
+            <button onclick="openVisitModal()" 
+                class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
+                <i class="ri-map-pin-line text-base sm:text-lg"></i>
+                <span class="hidden sm:inline">تسجيل زيارة</span>
+                <span class="sm:hidden">زيارة</span>
+            </button>
+
+            <!-- زر تسجيل معدة مستأجرة -->
+            <button onclick="openRentalModal()" 
+                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
+                <i class="ri-truck-line text-base sm:text-lg"></i>
+                <span class="hidden sm:inline">تسجيل معدة مستأجرة</span>
+                <span class="sm:hidden">معدة</span>
+            </button>
+
+            <!-- زر عمل مستخلص جديد -->
             <a href="{{ route('projects.extract.create', $project) }}" target="_blank"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 shadow">
-                <i class="ri-file-list-3-line text-lg"></i>
-                عمل مستخلص جديد
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
+                <i class="ri-file-list-3-line text-base sm:text-lg"></i>
+                <span class="hidden sm:inline">عمل مستخلص جديد</span>
+                <span class="sm:hidden">مستخلص</span>
             </a>
         </div>
         <!-- Header -->
@@ -77,21 +111,60 @@
                 </div>
 
                 <!-- Progress Bar -->
-                <div class="mb-4">
+                <div class="mb-4 progress-bar-container">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">نسبة الإنجاز</span>
-                        <span class="text-sm font-medium text-gray-900">{{ number_format($project->progress) }}%</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-gray-900" id="progress-percentage">{{ number_format($project->progress) }}%</span>
+                            <button onclick="openProgressModal()" 
+                                    class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 transition-colors tooltip"
+                                    data-tooltip="تحديث نسبة الإنجاز">
+                                <i class="ri-edit-line text-sm"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-3">
-                        <div class="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                            style="width: {{ $project->progress }}%"></div>
+                    <div class="relative">
+                        <div class="w-full bg-gray-200 rounded-full h-3 cursor-pointer hover:bg-gray-300 transition-colors tooltip"
+                             onclick="openProgressModal()" 
+                             data-tooltip="انقر لتحديث نسبة الإنجاز ({{ $project->progress }}%)">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 hover:from-blue-600 hover:to-blue-700 relative overflow-hidden" 
+                                 id="progress-bar"
+                                 style="width: {{ $project->progress }}%">
+                                <!-- شعاع متحرك للتأثير البصري -->
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                            </div>
+                        </div>
+                        <!-- نسبة الإنجاز داخل الشريط إذا كانت النسبة كبيرة بما يكفي -->
+                        @if($project->progress > 15)
+                            <div class="absolute top-0 left-2 h-3 flex items-center">
+                                <span class="text-xs font-medium text-white drop-shadow-sm">{{ number_format($project->progress) }}%</span>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0%</span>
+                        <span class="text-center">
+                            {{ $project->progress < 25 ? 'بداية المشروع' : ($project->progress < 50 ? 'في مرحلة مبكرة' : ($project->progress < 75 ? 'في التطوير' : ($project->progress < 100 ? 'قرب الانتهاء' : 'مكتمل! 🎉'))) }}
+                        </span>
+                        <span>100%</span>
+                    </div>
+                    
+                    <!-- مؤشر بصري للحالة -->
+                    <div class="flex items-center gap-2 mt-2">
+                        <div class="w-2 h-2 rounded-full {{ $project->progress < 25 ? 'bg-red-500' : ($project->progress < 50 ? 'bg-orange-500' : ($project->progress < 75 ? 'bg-yellow-500' : ($project->progress < 100 ? 'bg-blue-500' : 'bg-green-500'))) }}"></div>
+                        <span class="text-xs text-gray-600">
+                            {{ $project->progress == 0 ? 'لم يبدأ بعد' : ($project->progress == 100 ? 'تم الانتهاء' : 'قيد التنفيذ') }}
+                        </span>
+                        @if($project->progress > 0 && $project->progress < 100)
+                            <span class="text-xs text-gray-500">• آخر تحديث: {{ $project->updated_at->diffForHumans() }}</span>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Project Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
             <!-- Budget Card -->
             <div class="bg-white rounded-xl shadow-sm border p-6">
                 <div class="flex items-center gap-4">
@@ -102,6 +175,25 @@
                         <p class="text-gray-600 text-sm">الميزانية الإجمالية</p>
                         <p class="text-2xl font-bold text-gray-900">{{ number_format($project->budget, 0) }}</p>
                         <p class="text-gray-500 text-xs">ريال سعودي</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Guarantee Card -->
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="flex items-center gap-4">
+                    <div class="bg-purple-100 p-3 rounded-xl">
+                        <i class="ri-bank-line text-purple-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">الضمان البنكي</p>
+                        @if($project->bank_guarantee_amount)
+                            <p class="text-xl font-bold text-gray-900">{{ $project->formatted_bank_guarantee_amount }}</p>
+                            <p class="text-gray-500 text-xs">{{ $project->bank_guarantee_type_name }}</p>
+                        @else
+                            <p class="text-lg font-bold text-gray-400">غير محدد</p>
+                            <p class="text-gray-500 text-xs">لا يوجد ضمان</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -1196,6 +1288,837 @@
         </div>
     </div>
 
+    <!-- قسم العمالة في المشروع -->
+    @php
+        $projectEmployees = $project->locations->flatMap(function ($location) {
+            return $location->employees;
+        })->unique('id');
+        
+        $employeesByDepartment = $projectEmployees->groupBy('department');
+        $employeesByStatus = $projectEmployees->groupBy('status');
+        $activeEmployees = $projectEmployees->where('status', 'active');
+        $inactiveEmployees = $projectEmployees->where('status', 'inactive');
+    @endphp
+
+    <div class="p-6" dir="rtl">
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-group-line text-green-600"></i>
+                </div>
+                العمالة في المشروع
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                    {{ $projectEmployees->count() }} موظف
+                </span>
+            </h2>
+
+            @if ($projectEmployees->count() > 0)
+                <!-- إحصائيات العمالة -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-green-600">الموظفين النشطين</p>
+                                <p class="text-2xl font-bold text-green-800">{{ $activeEmployees->count() }}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
+                                <i class="ri-user-check-line text-xl text-green-700"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-red-600">غير نشطين</p>
+                                <p class="text-2xl font-bold text-red-800">{{ $inactiveEmployees->count() }}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-200 rounded-lg flex items-center justify-center">
+                                <i class="ri-user-unfollow-line text-xl text-red-700"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-blue-600">عدد الأقسام</p>
+                                <p class="text-2xl font-bold text-blue-800">{{ $employeesByDepartment->count() }}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
+                                <i class="ri-building-line text-xl text-blue-700"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-purple-600">إجمالي العمالة</p>
+                                <p class="text-2xl font-bold text-purple-800">{{ $projectEmployees->count() }}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
+                                <i class="ri-group-2-line text-xl text-purple-700"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- فلترة العمالة -->
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">فلترة حسب:</label>
+                        <select id="employeeFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                            <option value="all">جميع الموظفين</option>
+                            <option value="active">النشطين فقط</option>
+                            <option value="inactive">غير النشطين</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">القسم:</label>
+                        <select id="departmentFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                            <option value="all">جميع الأقسام</option>
+                            @foreach($employeesByDepartment as $department => $employees)
+                                <option value="{{ $department }}">{{ $department ?? 'غير محدد' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button onclick="exportEmployeesData()" class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <i class="ri-download-line"></i>
+                        تصدير البيانات
+                    </button>
+                </div>
+
+                <!-- جدول العمالة المحدث -->
+                <div class="bg-gray-50 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full" id="employeesTable">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموظف</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">القسم</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">الوظيفة</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">الموقع</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($projectEmployees as $employee)
+                                    <tr class="hover:bg-gray-50 transition-colors employee-row" 
+                                        data-status="{{ $employee->status ?? 'active' }}"
+                                        data-department="{{ $employee->department ?? '' }}">
+                                        <td class="px-4 py-4">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    @if($employee->photo)
+                                                        <img class="h-10 w-10 rounded-full object-cover border-2 border-gray-200" 
+                                                             src="{{ Storage::url($employee->photo) }}" 
+                                                             alt="{{ $employee->name }}">
+                                                    @else
+                                                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
+                                                            <span class="text-white font-bold text-sm">
+                                                                {{ substr($employee->name, 0, 1) }}
+                                                            </span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="mr-3">
+                                                    <div class="text-sm font-bold text-gray-900">{{ $employee->name }}</div>
+                                                    <div class="text-xs text-gray-500 sm:hidden">
+                                                        {{ $employee->department ?? 'غير محدد' }}
+                                                    </div>
+                                                    @if($employee->phone)
+                                                        <div class="text-xs text-gray-400 md:hidden">
+                                                            <i class="ri-phone-line text-xs"></i>
+                                                            {{ $employee->phone }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            @if(($employee->status ?? 'active') === 'active')
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <i class="ri-checkbox-circle-line ml-1"></i>
+                                                    <span class="hidden sm:inline">نشط</span>
+                                                    <span class="sm:hidden">✓</span>
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    <i class="ri-close-circle-line ml-1"></i>
+                                                    <span class="hidden sm:inline">غير نشط</span>
+                                                    <span class="sm:hidden">✗</span>
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap hidden sm:table-cell">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-800">
+                                                <i class="ri-building-line ml-1"></i>
+                                                {{ $employee->department ?? 'غير محدد' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap hidden md:table-cell">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                <i class="ri-user-star-line text-gray-400 ml-1"></i>
+                                                {{ $employee->position ?? 'غير محدد' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap hidden lg:table-cell">
+                                            <div class="flex items-center text-sm text-gray-900">
+                                                <i class="ri-map-pin-line text-gray-400 ml-1"></i>
+                                                <span>{{ $employee->location->name ?? 'غير محدد' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div class="flex items-center gap-1 justify-center">
+                                                <button onclick="showEmployeeDetails({{ $employee->id }})" 
+                                                        class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition-colors"
+                                                        title="عرض التفاصيل">
+                                                    <i class="ri-eye-line text-sm"></i>
+                                                </button>
+                                                
+                                                @can('update', $employee)
+                                                    <a href="{{ route('employees.edit', $employee->id) }}" 
+                                                       class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors"
+                                                       title="تعديل">
+                                                        <i class="ri-edit-line text-sm"></i>
+                                                    </a>
+                                                @endcan
+
+                                                <a href="{{ route('employees.show', $employee->id) }}" 
+                                                   class="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 p-2 rounded-lg transition-colors"
+                                                   title="الملف الشخصي">
+                                                    <i class="ri-user-line text-sm"></i>
+                                                </a>
+
+                                                @if($employee->status === 'active')
+                                                    <button onclick="sendNotification({{ $employee->id }})" 
+                                                            class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-2 rounded-lg transition-colors"
+                                                            title="إرسال إشعار">
+                                                        <i class="ri-notification-line text-sm"></i>
+                                                    </button>
+                                                @endif
+
+                                                <div class="relative">
+                                                    <button onclick="toggleEmployeeMenu({{ $employee->id }})" 
+                                                            class="text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 p-2 rounded-lg transition-colors"
+                                                            title="المزيد">
+                                                        <i class="ri-more-2-line text-sm"></i>
+                                                    </button>
+                                                    <div id="employeeMenu{{ $employee->id }}" class="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border z-10 hidden">
+                                                        <div class="py-1">
+                                                            <a href="#" onclick="generateEmployeeReport({{ $employee->id }})" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                                <i class="ri-file-text-line"></i>
+                                                                تقرير الموظف
+                                                            </a>
+                                                            <a href="#" onclick="viewAttendance({{ $employee->id }})" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                                <i class="ri-calendar-check-line"></i>
+                                                                سجل الحضور
+                                                            </a>
+                                                            <a href="#" onclick="viewPayroll({{ $employee->id }})" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                                <i class="ri-wallet-line"></i>
+                                                                كشف الراتب
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- إضافة موظف جديد -->
+                @can('create', \App\Models\Employee::class)
+                    <div class="mt-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <a href="{{ route('employees.create') }}?project_id={{ $project->id }}" 
+                               class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="ri-user-add-line"></i>
+                                إضافة موظف جديد
+                            </a>
+                            <button onclick="bulkAssignToProject()" 
+                                    class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="ri-group-add-line"></i>
+                                تعيين موظفين للمشروع
+                            </button>
+                        </div>
+                        
+                        <div class="text-sm text-gray-500">
+                            عرض {{ $projectEmployees->count() }} من {{ $projectEmployees->count() }} موظف
+                        </div>
+                    </div>
+                @endcan
+
+            @else
+                <!-- رسالة عدم وجود موظفين -->
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="ri-group-line text-4xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد عمالة مسجلة</h3>
+                    <p class="text-gray-600 mb-6">لم يتم تسجيل أي عمالة في هذا المشروع حتى الآن</p>
+                    
+                    @can('create', \App\Models\Employee::class)
+                        <div class="flex items-center justify-center gap-4">
+                            <a href="{{ route('employees.create') }}?project_id={{ $project->id }}" 
+                               class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="ri-user-add-line"></i>
+                                إضافة أول موظف للمشروع
+                            </a>
+                            <button onclick="bulkAssignToProject()" 
+                                    class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="ri-group-add-line"></i>
+                                تعيين موظفين موجودين
+                            </button>
+                        </div>
+                    @endcan
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- معدات المشروع -->
+    @if ($project->equipment && $project->equipment->count() > 0)
+        <div class="p-6" dir="rtl">
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-tools-line text-indigo-600"></i>
+                    </div>
+                    معدات المشروع
+                    <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-sm font-medium">
+                        {{ $project->equipment->count() }} معدة
+                    </span>
+                </h2>
+                
+                <div class="bg-gray-50 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المعدة</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">النوع</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">الموقع</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">المسؤول</th>
+                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">التسجيل</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($project->equipment as $equipment)
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-4">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <div class="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                                        <i class="ri-tools-fill text-indigo-600"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="mr-3">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $equipment->name }}</div>
+                                                    <div class="text-xs text-gray-500 sm:hidden">
+                                                        {{ $equipment->type ?? 'غير محدد' }}
+                                                    </div>
+                                                    @if($equipment->serial_number)
+                                                        <div class="text-xs text-gray-500 md:hidden">{{ $equipment->serial_number }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                @if($equipment->status === 'active') bg-green-100 text-green-800
+                                                @elseif($equipment->status === 'maintenance') bg-yellow-100 text-yellow-800
+                                                @elseif($equipment->status === 'inactive') bg-red-100 text-red-800
+                                                @else bg-gray-100 text-gray-800 @endif">
+                                                @switch($equipment->status)
+                                                    @case('active')
+                                                        <span class="hidden sm:inline">نشط</span>
+                                                        <span class="sm:hidden">✓</span>
+                                                        @break
+                                                    @case('maintenance')
+                                                        <span class="hidden sm:inline">صيانة</span>
+                                                        <span class="sm:hidden">⚠</span>
+                                                        @break
+                                                    @case('inactive')
+                                                        <span class="hidden sm:inline">غير نشط</span>
+                                                        <span class="sm:hidden">✗</span>
+                                                        @break
+                                                    @default
+                                                        غير محدد
+                                                @endswitch
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap hidden sm:table-cell">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ $equipment->type ?? 'غير محدد' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap hidden md:table-cell">
+                                            <div class="text-sm text-gray-900">
+                                                {{ $equipment->locationDetail->name ?? 'غير محدد' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap hidden lg:table-cell">
+                                            <div class="text-sm text-gray-900">
+                                                {{ $equipment->driver->name ?? 'غير محدد' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap hidden xl:table-cell">
+                                            <div class="text-xs text-gray-900">
+                                                {{ $equipment->user ? $equipment->user->name : 'غير محدد' }}
+                                                @if($equipment->created_at)
+                                                    <div class="text-xs text-gray-500">
+                                                        {{ $equipment->created_at->format('d/m/Y') }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div class="flex items-center gap-1">
+                                                <a href="{{ route('equipment.show', $equipment->id) }}" 
+                                                   class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
+                                                   title="عرض تفاصيل المعدة">
+                                                    <i class="ri-eye-line"></i>
+                                                </a>
+                                                @can('update', $equipment)
+                                                    <a href="{{ route('equipment.edit', $equipment->id) }}" 
+                                                       class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors"
+                                                       title="تعديل المعدة">
+                                                        <i class="ri-edit-line"></i>
+                                                    </a>
+                                                @endcan
+                                                @if($equipment->movementHistory && $equipment->movementHistory->count() > 0)
+                                                    <button type="button" 
+                                                            onclick="showEquipmentHistory({{ $equipment->id }})"
+                                                            class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition-colors"
+                                                            title="تاريخ التحركات">
+                                                        <i class="ri-history-line"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- ملخص المعدات -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600">
+                            {{ $project->equipment->where('status', 'active')->count() }}
+                        </div>
+                        <div class="text-sm text-green-600 font-medium">معدات نشطة</div>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-600">
+                            {{ $project->equipment->where('status', 'maintenance')->count() }}
+                        </div>
+                        <div class="text-sm text-yellow-600 font-medium">تحت الصيانة</div>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-red-600">
+                            {{ $project->equipment->where('status', 'inactive')->count() }}
+                        </div>
+                        <div class="text-sm text-red-600 font-medium">غير نشطة</div>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600">
+                            {{ $project->equipment->count() }}
+                        </div>
+                        <div class="text-sm text-blue-600 font-medium">إجمالي المعدات</div>
+                    </div>
+                </div>
+
+                <!-- إضافة معدة جديدة -->
+                @can('create', \App\Models\Equipment::class)
+                    <div class="mt-6 text-center">
+                        <a href="{{ route('equipment.create') }}?project_id={{ $project->id }}" 
+                           class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="ri-add-line"></i>
+                            إضافة معدة جديدة للمشروع
+                        </a>
+                    </div>
+                @endcan
+            </div>
+        </div>
+    @else
+        <!-- رسالة عدم وجود معدات -->
+        <div class="p-6" dir="rtl">
+            <div class="bg-white rounded-xl shadow-sm border p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-tools-line text-indigo-600"></i>
+                    </div>
+                    معدات المشروع
+                </h2>
+                
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="ri-tools-line text-4xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد معدات مسجلة</h3>
+                    <p class="text-gray-600 mb-6">لم يتم تسجيل أي معدات في هذا المشروع حتى الآن</p>
+                    
+                    @can('create', \App\Models\Equipment::class)
+                        <a href="{{ route('equipment.create') }}?project_id={{ $project->id }}" 
+                           class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="ri-add-line"></i>
+                            إضافة أول معدة للمشروع
+                        </a>
+                    @endcan
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- قسم تمديدات المشروع -->
+    @if($project->extensions && $project->extensions->count() > 0)
+        <div class="p-6" dir="rtl">
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-calendar-2-line text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">تمديدات المشروع</h2>
+                        <p class="text-gray-600">إجمالي {{ $project->extensions->count() }} تمديد مسجل</p>
+                    </div>
+                </div>
+                
+                <div class="grid gap-4">
+                    @foreach ($project->extensions->sortByDesc('created_at') as $extension)
+                    <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    تمديد فترة
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-amber-600 mb-1">
+                                    من {{ \Carbon\Carbon::parse($extension->old_end_date)->format('Y-m-d') }}
+                                </div>
+                                <div class="text-lg font-bold text-green-600">
+                                    إلى {{ \Carbon\Carbon::parse($extension->new_end_date)->format('Y-m-d') }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500 block">المدة الإضافية</span>
+                                <span class="font-medium text-gray-800">
+                                    {{ \Carbon\Carbon::parse($extension->old_end_date)->diffInDays(\Carbon\Carbon::parse($extension->new_end_date)) }} يوم
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">تاريخ التمديد</span>
+                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($extension->created_at)->format('Y-m-d') }}</span>
+                            </div>
+                        </div>
+                        
+                        @if($extension->reason)
+                        <div class="mt-3 pt-3 border-t border-amber-200">
+                            <span class="text-gray-500 text-sm block">سبب التمديد</span>
+                            <p class="text-gray-700 text-sm mt-1">{{ $extension->reason }}</p>
+                        </div>
+                        @endif
+                        
+                        <div class="mt-3 pt-3 border-t border-amber-200 text-xs text-gray-500">
+                            تم التسجيل بواسطة {{ $extension->extendedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($extension->created_at)->format('Y-m-d H:i') }}
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- قسم زيارات المشروع -->
+    @if($project->visits && $project->visits->count() > 0)
+        <div class="p-6" dir="rtl">
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-map-pin-line text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">زيارات المشروع</h2>
+                        <p class="text-gray-600">إجمالي {{ $project->visits->count() }} زيارة مسجلة</p>
+                    </div>
+                </div>
+                
+                <div class="grid gap-4">
+                    @foreach ($project->visits->sortByDesc('visit_date') as $visit)
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2">
+                                @php
+                                    $visitTypeLabels = [
+                                        'inspection' => 'زيارة تفقدية',
+                                        'maintenance' => 'زيارة صيانة',
+                                        'meeting' => 'اجتماع',
+                                        'delivery' => 'استلام',
+                                        'other' => 'أخرى'
+                                    ];
+                                @endphp
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ $visitTypeLabels[$visit->visit_type] ?? $visit->visit_type }}
+                                </span>
+                            </div>
+                            <div class="text-lg font-bold text-green-600">
+                                {{ \Carbon\Carbon::parse($visit->visit_date)->format('Y-m-d') }}
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500 block">الزائر</span>
+                                <span class="font-medium text-gray-800">{{ $visit->visitor_name ?? ($visit->visitor->name ?? 'غير محدد') }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">المدة</span>
+                                <span class="font-medium text-gray-800">{{ $visit->duration_hours ?? 'غير محدد' }} ساعة</span>
+                            </div>
+                        </div>
+                        
+                        @if($visit->purpose)
+                        <div class="mt-3 pt-3 border-t border-green-200">
+                            <span class="text-gray-500 text-sm block">الغرض من الزيارة</span>
+                            <p class="text-gray-700 text-sm mt-1">{{ $visit->purpose }}</p>
+                        </div>
+                        @endif
+                        
+                        @if($visit->notes)
+                        <div class="mt-3 pt-3 border-t border-green-200">
+                            <span class="text-gray-500 text-sm block">ملاحظات</span>
+                            <p class="text-gray-700 text-sm mt-1">{{ $visit->notes }}</p>
+                        </div>
+                        @endif
+                        
+                        <div class="mt-3 pt-3 border-t border-green-200 text-xs text-gray-500">
+                            تم التسجيل بواسطة {{ $visit->recordedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($visit->created_at)->format('Y-m-d H:i') }}
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- قسم المعدات المستأجرة -->
+    @if($project->rentalEquipment && $project->rentalEquipment->count() > 0)
+        <div class="p-6" dir="rtl">
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-truck-line text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">المعدات المستأجرة</h2>
+                        <p class="text-gray-600">إجمالي {{ $project->rentalEquipment->count() }} معدة مستأجرة</p>
+                    </div>
+                </div>
+                
+                <div class="grid gap-4">
+                    @foreach ($project->rentalEquipment->sortByDesc('rental_start_date') as $equipment)
+                    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2">
+                                @php
+                                    $equipmentTypeLabels = [
+                                        'excavator' => 'حفار',
+                                        'crane' => 'رافعة',
+                                        'truck' => 'شاحنة',
+                                        'bulldozer' => 'بلدوزر',
+                                        'loader' => 'لودر',
+                                        'other' => 'أخرى'
+                                    ];
+                                @endphp
+                                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ $equipmentTypeLabels[$equipment->equipment_type] ?? $equipment->equipment_type }}
+                                </span>
+                                @if($equipment->rental_end_date && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($equipment->rental_end_date)))
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">منتهية</span>
+                                @else
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">نشطة</span>
+                                @endif
+                            </div>
+                            <div class="text-right">
+                                @if($equipment->daily_rate)
+                                    <div class="text-lg font-bold text-purple-600">
+                                        {{ number_format($equipment->daily_rate, 2) }} ر.س/يوم
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h4 class="font-medium text-gray-800 text-lg">{{ $equipment->equipment_name }}</h4>
+                            <p class="text-sm text-gray-600">شركة التأجير: {{ $equipment->rental_company }}</p>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500 block">تاريخ البداية</span>
+                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($equipment->rental_start_date)->format('Y-m-d') }}</span>
+                            </div>
+                            @if($equipment->rental_end_date)
+                            <div>
+                                <span class="text-gray-500 block">تاريخ الانتهاء</span>
+                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($equipment->rental_end_date)->format('Y-m-d') }}</span>
+                            </div>
+                            @endif
+                            @if($equipment->rental_start_date && $equipment->rental_end_date)
+                            <div>
+                                <span class="text-gray-500 block">المدة الإجمالية</span>
+                                <span class="font-medium text-gray-800">
+                                    {{ \Carbon\Carbon::parse($equipment->rental_start_date)->diffInDays(\Carbon\Carbon::parse($equipment->rental_end_date)) }} يوم
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+                        
+                        @if($equipment->notes)
+                        <div class="mt-3 pt-3 border-t border-purple-200">
+                            <span class="text-gray-500 text-sm block">ملاحظات</span>
+                            <p class="text-gray-700 text-sm mt-1">{{ $equipment->notes }}</p>
+                        </div>
+                        @endif
+                        
+                        <div class="mt-3 pt-3 border-t border-purple-200 text-xs text-gray-500">
+                            تم التسجيل بواسطة {{ $equipment->recordedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($equipment->created_at)->format('Y-m-d H:i') }}
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                
+                <!-- إحصائيات المعدات -->
+                <div class="mt-6 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600">{{ $project->rentalEquipment->count() }}</div>
+                            <div class="text-gray-600 text-sm">إجمالي المعدات</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600">
+                                {{ $project->rentalEquipment->where(function($item) { 
+                                    return !$item->rental_end_date || \Carbon\Carbon::now()->lt(\Carbon\Carbon::parse($item->rental_end_date)); 
+                                })->count() }}
+                            </div>
+                            <div class="text-gray-600 text-sm">معدات نشطة</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600">
+                                {{ number_format($project->rentalEquipment->whereNotNull('daily_rate')->sum('daily_rate'), 2) }}
+                            </div>
+                            <div class="text-gray-600 text-sm">إجمالي التكلفة اليومية (ر.س)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- القروض المسجلة -->
+    @if($project->loans && $project->loans->count() > 0)
+        <div class="p-6" dir="rtl">
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-money-dollar-circle-line text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">القروض المسجلة</h2>
+                        <p class="text-gray-600">إجمالي {{ $project->loans->count() }} قرض مسجل</p>
+                    </div>
+                </div>
+                
+                <div class="grid gap-4">
+                    @foreach ($project->loans->sortByDesc('loan_date') as $loan)
+                    <div class="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-4 border border-red-200">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ $loan->loan_source_name }}
+                                </span>
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ $loan->loan_purpose_name }}
+                                </span>
+                            </div>
+                            <div class="text-lg font-bold text-red-600">
+                                {{ $loan->formatted_loan_amount }} ر.س
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500 block">الجهة المقرضة</span>
+                                <span class="font-medium text-gray-800">{{ $loan->lender_name }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">تاريخ القرض</span>
+                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($loan->loan_date)->format('Y-m-d') }}</span>
+                            </div>
+                            @if($loan->due_date)
+                            <div>
+                                <span class="text-gray-500 block">تاريخ الاستحقاق</span>
+                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($loan->due_date)->format('Y-m-d') }}</span>
+                            </div>
+                            @endif
+                            @if($loan->interest_rate)
+                            <div>
+                                <span class="text-gray-500 block">معدل الفائدة</span>
+                                <span class="font-medium text-gray-800">{{ $loan->interest_rate }}% ({{ $loan->interest_type == 'fixed' ? 'ثابت' : 'متغير' }})</span>
+                            </div>
+                            @endif
+                        </div>
+                        
+                        @if($loan->notes)
+                        <div class="mt-3 pt-3 border-t border-red-200">
+                            <span class="text-gray-500 text-sm block">ملاحظات</span>
+                            <p class="text-gray-700 text-sm mt-1">{{ $loan->notes }}</p>
+                        </div>
+                        @endif
+                        
+                        <div class="mt-3 pt-3 border-t border-red-200 text-xs text-gray-500">
+                            تم التسجيل بواسطة {{ $loan->recordedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($loan->created_at)->format('Y-m-d H:i') }}
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                
+                <!-- إحصائيات القروض -->
+                <div class="mt-6 p-4 bg-gradient-to-r from-red-100 to-pink-100 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-red-600">{{ $project->loans->count() }}</div>
+                            <div class="text-gray-600 text-sm">إجمالي القروض</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-red-600">{{ number_format($project->loans->sum('loan_amount'), 2) }}</div>
+                            <div class="text-gray-600 text-sm">إجمالي المبالغ (ر.س)</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-red-600">{{ $project->loans->where('status', 'active')->count() }}</div>
+                            <div class="text-gray-600 text-sm">القروض النشطة</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- صور المشروع في آخر الصفحة -->
     @if ($project->projectImages && $project->projectImages->count() > 0)
         <div class="p-6" dir="rtl">
@@ -1239,6 +2162,8 @@
             </div>
         </div>
     @endif
+
+
 
     <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4">
@@ -1576,6 +2501,357 @@
                 closeLocationModal();
             }
         });
+
+        // عرض تاريخ تحركات المعدة
+        window.showEquipmentHistory = function(equipmentId) {
+            // إنشاء modal لعرض تاريخ التحركات
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 overflow-y-auto';
+            modal.innerHTML = `
+                <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 transition-opacity" aria-hidden="true" onclick="closeEquipmentModal(this)">
+                        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                    </div>
+                    <div class="inline-block align-bottom bg-white rounded-lg text-right overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full" dir="rtl">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">تاريخ تحركات المعدة</h3>
+                                <button onclick="closeEquipmentModal(this)" class="text-gray-400 hover:text-gray-600">
+                                    <i class="ri-close-line text-xl"></i>
+                                </button>
+                            </div>
+                            <div id="equipment-history-content">
+                                <div class="text-center py-4">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                                    <p class="mt-2 text-gray-500">جاري التحميل...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // تحميل تاريخ التحركات عبر AJAX
+            fetch(`/equipment/${equipmentId}/history`)
+                .then(response => response.json())
+                .then(data => {
+                    let historyHtml = '';
+                    if (data.length > 0) {
+                        historyHtml = `
+                            <div class="space-y-3 max-h-96 overflow-y-auto">
+                                ${data.map(movement => `
+                                    <div class="border-r-4 border-indigo-500 pr-4 py-3 bg-gray-50 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-gray-900 mb-1">
+                                                    <i class="ri-arrow-left-right-line text-indigo-600 ml-1"></i>
+                                                    انتقلت من: ${movement.from_location || 'غير محدد'}
+                                                </p>
+                                                <p class="text-sm text-gray-600 mb-1">
+                                                    <i class="ri-map-pin-line text-green-600 ml-1"></i>
+                                                    إلى: ${movement.to_location || 'غير محدد'}
+                                                </p>
+                                                <p class="text-xs text-gray-500">
+                                                    <i class="ri-user-line text-blue-600 ml-1"></i>
+                                                    بواسطة: ${movement.moved_by || 'غير محدد'}
+                                                </p>
+                                            </div>
+                                            <div class="text-left">
+                                                <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                                                    ${new Date(movement.moved_at).toLocaleDateString('ar-SA')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        ${movement.notes ? `
+                                            <div class="mt-2 pt-2 border-t border-gray-200">
+                                                <p class="text-sm text-gray-600">
+                                                    <i class="ri-file-text-line text-orange-600 ml-1"></i>
+                                                    ملاحظات: ${movement.notes}
+                                                </p>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        historyHtml = `
+                            <div class="text-center py-8">
+                                <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <i class="ri-history-line text-3xl text-gray-400"></i>
+                                </div>
+                                <h4 class="text-lg font-medium text-gray-900 mb-2">لا يوجد تاريخ تحركات</h4>
+                                <p class="text-gray-500">لم يتم تسجيل أي تحركات لهذه المعدة حتى الآن</p>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('equipment-history-content').innerHTML = historyHtml;
+                })
+                .catch(error => {
+                    console.error('Error loading equipment history:', error);
+                    document.getElementById('equipment-history-content').innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="ri-error-warning-line text-3xl text-red-400"></i>
+                            </div>
+                            <h4 class="text-lg font-medium text-red-700 mb-2">حدث خطأ</h4>
+                            <p class="text-red-500">فشل في تحميل تاريخ التحركات</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // إغلاق مودال تاريخ المعدة
+        window.closeEquipmentModal = function(button) {
+            const modal = button.closest('.fixed') || button;
+            if (modal.classList && modal.classList.contains('fixed')) {
+                modal.remove();
+            } else if (button.closest('.fixed')) {
+                button.closest('.fixed').remove();
+            }
+        }
+
+        // وظائف قسم العمالة
+        document.addEventListener('DOMContentLoaded', function() {
+            // فلترة الموظفين
+            const employeeFilter = document.getElementById('employeeFilter');
+            const departmentFilter = document.getElementById('departmentFilter');
+            
+            if (employeeFilter) {
+                employeeFilter.addEventListener('change', filterEmployees);
+            }
+            
+            if (departmentFilter) {
+                departmentFilter.addEventListener('change', filterEmployees);
+            }
+        });
+
+        // فلترة الموظفين
+        function filterEmployees() {
+            const statusFilter = document.getElementById('employeeFilter')?.value || 'all';
+            const departmentFilter = document.getElementById('departmentFilter')?.value || 'all';
+            const rows = document.querySelectorAll('.employee-row');
+            
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                const department = row.getAttribute('data-department');
+                
+                let showRow = true;
+                
+                // فلترة حسب الحالة
+                if (statusFilter !== 'all' && status !== statusFilter) {
+                    showRow = false;
+                }
+                
+                // فلترة حسب القسم
+                if (departmentFilter !== 'all' && department !== departmentFilter) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+
+        // تصدير بيانات الموظفين
+        window.exportEmployeesData = function() {
+            const table = document.getElementById('employeesTable');
+            const rows = table.querySelectorAll('tbody .employee-row');
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                alert('لا توجد بيانات لتصديرها');
+                return;
+            }
+            
+            let csvContent = 'الموظف,الحالة,القسم,الوظيفة,الموقع,تاريخ التعيين,الراتب\n';
+            
+            visibleRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const name = cells[0].querySelector('.font-bold').textContent.trim();
+                const status = cells[1].textContent.trim();
+                const department = cells[2].textContent.trim();
+                const position = cells[3].textContent.trim();
+                const location = cells[4].textContent.trim();
+                const hireDate = cells[5].textContent.trim();
+                const salary = cells[6].textContent.trim();
+                
+                csvContent += `"${name}","${status}","${department}","${position}","${location}","${hireDate}","${salary}"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `employees_project_${new Date().getTime()}.csv`;
+            link.click();
+        }
+
+        // عرض تفاصيل الموظف السريعة
+        window.showEmployeeDetails = function(employeeId) {
+            // إنشاء modal لعرض تفاصيل الموظف
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 overflow-y-auto';
+            modal.innerHTML = `
+                <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 transition-opacity" aria-hidden="true" onclick="closeEmployeeModal(this)">
+                        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                    </div>
+                    <div class="inline-block align-bottom bg-white rounded-lg text-right overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full" dir="rtl">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">تفاصيل الموظف</h3>
+                                <button onclick="closeEmployeeModal(this)" class="text-gray-400 hover:text-gray-600">
+                                    <i class="ri-close-line text-xl"></i>
+                                </button>
+                            </div>
+                            <div id="employee-details-content">
+                                <div class="text-center py-4">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                                    <p class="mt-2 text-gray-500">جاري التحميل...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // تحميل تفاصيل الموظف عبر AJAX
+            fetch(`/employees/${employeeId}/details`)
+                .then(response => response.json())
+                .then(data => {
+                    const detailsHtml = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">معلومات أساسية</h4>
+                                <div class="space-y-2 text-sm">
+                                    <p><strong>الاسم:</strong> ${data.name || 'غير محدد'}</p>
+                                    <p><strong>البريد الإلكتروني:</strong> ${data.email || 'غير محدد'}</p>
+                                    <p><strong>الهاتف:</strong> ${data.phone || 'غير محدد'}</p>
+                                    <p><strong>الحالة:</strong> <span class="px-2 py-1 rounded text-xs ${data.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${data.status === 'active' ? 'نشط' : 'غير نشط'}</span></p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">معلومات العمل</h4>
+                                <div class="space-y-2 text-sm">
+                                    <p><strong>القسم:</strong> ${data.department || 'غير محدد'}</p>
+                                    <p><strong>الوظيفة:</strong> ${data.position || 'غير محدد'}</p>
+                                    <p><strong>تاريخ التعيين:</strong> ${data.hire_date ? new Date(data.hire_date).toLocaleDateString('ar-SA') : 'غير محدد'}</p>
+                                    <p><strong>الراتب:</strong> ${data.salary ? data.salary.toLocaleString() + ' ريال' : 'غير محدد'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        ${data.notes ? `
+                            <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">ملاحظات</h4>
+                                <p class="text-sm text-gray-700">${data.notes}</p>
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    document.getElementById('employee-details-content').innerHTML = detailsHtml;
+                })
+                .catch(error => {
+                    console.error('Error loading employee details:', error);
+                    document.getElementById('employee-details-content').innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="ri-error-warning-line text-2xl text-red-400"></i>
+                            </div>
+                            <p class="text-red-500">فشل في تحميل تفاصيل الموظف</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // تبديل القوائم المنسدلة للموظف
+        window.toggleEmployeeMenu = function(employeeId) {
+            // إغلاق جميع القوائم الأخرى
+            document.querySelectorAll('[id^="employeeMenu"]').forEach(menu => {
+                if (menu.id !== `employeeMenu${employeeId}`) {
+                    menu.classList.add('hidden');
+                }
+            });
+            
+            // تبديل القائمة المحددة
+            const menu = document.getElementById(`employeeMenu${employeeId}`);
+            menu.classList.toggle('hidden');
+        }
+
+        // إغلاق القوائم عند النقر خارجها
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('[onclick*="toggleEmployeeMenu"]')) {
+                document.querySelectorAll('[id^="employeeMenu"]').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+
+        // إرسال إشعار للموظف
+        window.sendNotification = function(employeeId) {
+            const message = prompt('أدخل نص الإشعار:');
+            if (message && message.trim()) {
+                // إرسال الإشعار عبر AJAX
+                fetch('/employees/send-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        employee_id: employeeId,
+                        message: message.trim()
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('تم إرسال الإشعار بنجاح');
+                    } else {
+                        alert('فشل في إرسال الإشعار');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ في إرسال الإشعار');
+                });
+            }
+        }
+
+        // تعيين موظفين للمشروع
+        window.bulkAssignToProject = function() {
+            window.location.href = `/projects/{{ $project->id }}/assign-employees`;
+        }
+
+        // وظائف إضافية
+        window.generateEmployeeReport = function(employeeId) {
+            window.open(`/employees/${employeeId}/report`, '_blank');
+        }
+
+        window.viewAttendance = function(employeeId) {
+            window.location.href = `/employees/${employeeId}/attendance`;
+        }
+
+        window.viewPayroll = function(employeeId) {
+            window.location.href = `/employees/${employeeId}/payroll`;
+        }
+
+        window.transferEmployee = function(employeeId) {
+            window.location.href = `/employees/${employeeId}/transfer`;
+        }
+
+        // إغلاق مودال الموظف
+        window.closeEmployeeModal = function(button) {
+            const modal = button.closest('.fixed') || button;
+            if (modal.classList && modal.classList.contains('fixed')) {
+                modal.remove();
+            } else if (button.closest('.fixed')) {
+                button.closest('.fixed').remove();
+            }
+        }
     </script>
 
     <style>
@@ -1676,5 +2952,760 @@
         .location-card-modern:hover .w-8.h-8 {
             transform: rotate(5deg) scale(1.1);
         }
+
+        /* Responsive table fixes */
+        .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Hide horizontal scrollbar on main page */
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Ensure containers don't exceed viewport width */
+        .container,
+        .max-w-full,
+        .w-full {
+            max-width: 100vw;
+            box-sizing: border-box;
+        }
+
+        /* Fix for mobile table cells */
+        @media (max-width: 640px) {
+            .table-cell-compact {
+                padding: 0.5rem 0.25rem !important;
+                font-size: 0.75rem;
+            }
+            
+            .hidden-mobile {
+                display: none !important;
+            }
+        }
+
+        /* Prevent text overflow */
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Progress Slider Styles */
+        .slider {
+            background: linear-gradient(to right, #e5e7eb 0%, #e5e7eb 100%);
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .slider::-webkit-slider-track {
+            background: linear-gradient(to right, #3b82f6 0%, #e5e7eb 0%);
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .slider::-moz-range-track {
+            background: linear-gradient(to right, #3b82f6 0%, #e5e7eb 0%);
+            height: 8px;
+            border-radius: 4px;
+            border: none;
+        }
+
+        /* Progressive color change animation */
+        @keyframes progressUpdate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .progress-animate {
+            animation: progressUpdate 0.3s ease-in-out;
+        }
+
+        /* Interactive progress bar hover effects */
+        .progress-bar-container:hover .progress-info {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .progress-info {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
     </style>
+
+    <!-- Modal تمديد فترة المشروع -->
+    <div id="extendModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeExtendModal()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full" onclick="event.stopPropagation()">
+                <div class="bg-amber-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold">تمديد فترة المشروع</h3>
+                </div>
+                <form id="extendForm" method="POST" action="{{ route('projects.extend', $project) }}">
+                    @csrf
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء الحالي</label>
+                            <input type="text" value="{{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') : 'غير محدد' }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء الجديد <span class="text-red-500">*</span></label>
+                            <input type="date" name="new_end_date" id="new_end_date" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500" 
+                                   required min="{{ now()->format('Y-m-d') }}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">سبب التمديد <span class="text-red-500">*</span></label>
+                            <textarea name="extension_reason" rows="3" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500" 
+                                      placeholder="اكتب سبب التمديد..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
+                        <button type="button" onclick="closeExtendModal()" 
+                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            إلغاء
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700">
+                            حفظ التمديد
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal تسجيل زيارة -->
+    <div id="visitModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeVisitModal()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full" onclick="event.stopPropagation()">
+                <div class="bg-green-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold">تسجيل زيارة مشروع</h3>
+                </div>
+                <form id="visitForm" method="POST" action="{{ route('projects.visit.store', $project) }}">
+                    @csrf
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الزيارة <span class="text-red-500">*</span></label>
+                                <input type="date" name="visit_date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
+                                       value="{{ now()->format('Y-m-d') }}" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">وقت الزيارة</label>
+                                <input type="time" name="visit_time" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
+                                       value="{{ now()->format('H:i') }}">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">الزائر <span class="text-red-500">*</span></label>
+                            <input type="text" name="visitor_name" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
+                                   placeholder="أدخل اسم الزائر" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع الزيارة</label>
+                            <select name="visit_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+                                <option value="inspection">جولة تفتيش</option>
+                                <option value="meeting">اجتماع</option>
+                                <option value="supervision">إشراف</option>
+                                <option value="coordination">تنسيق</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تفاصيل الزيارة <span class="text-red-500">*</span></label>
+                            <textarea name="visit_notes" rows="4" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
+                                      placeholder="اكتب تفاصيل الزيارة والملاحظات..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
+                        <button type="button" onclick="closeVisitModal()" 
+                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            إلغاء
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            حفظ الزيارة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal تسجيل معدة مستأجرة -->
+    <div id="rentalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeRentalModal()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full" onclick="event.stopPropagation()">
+                <div class="bg-purple-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold">تسجيل معدة مستأجرة</h3>
+                </div>
+                <form id="rentalForm" method="POST" action="{{ route('projects.rental.store', $project) }}">
+                    @csrf
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع المعدة <span class="text-red-500">*</span></label>
+                            <select name="equipment_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" required>
+                                <option value="">اختر نوع المعدة</option>
+                                <option value="excavator">حفار</option>
+                                <option value="bulldozer">جرافة</option>
+                                <option value="crane">رافعة</option>
+                                <option value="truck">شاحنة</option>
+                                <option value="concrete_mixer">خلاطة خرسانة</option>
+                                <option value="generator">مولد كهرباء</option>
+                                <option value="compressor">ضاغط هواء</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم/رقم المعدة <span class="text-red-500">*</span></label>
+                            <input type="text" name="equipment_name" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
+                                   placeholder="مثال: حفار كوماتسو PC200" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">المورد/الشركة المؤجرة <span class="text-red-500">*</span></label>
+                            <input type="text" name="rental_company" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
+                                   placeholder="اسم الشركة أو المورد" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ بداية الإيجار <span class="text-red-500">*</span></label>
+                                <input type="date" name="rental_start_date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
+                                       value="{{ now()->format('Y-m-d') }}" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ نهاية الإيجار</label>
+                                <input type="date" name="rental_end_date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تكلفة الإيجار (يومي)</label>
+                                <input type="number" name="daily_rate" step="0.01" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
+                                       placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">العملة</label>
+                                <select name="currency" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                                    <option value="SAR">ريال سعودي</option>
+                                    <option value="USD">دولار أمريكي</option>
+                                    <option value="EUR">يورو</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                            <textarea name="notes" rows="3" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
+                                      placeholder="أي ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
+                        <button type="button" onclick="closeRentalModal()" 
+                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            إلغاء
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                            حفظ المعدة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal تسجيل قرض -->
+    <div id="loanModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeLoanModal()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full" onclick="event.stopPropagation()">
+                <div class="bg-red-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold">تسجيل قرض على المشروع</h3>
+                </div>
+                <form id="loanForm" method="POST" action="{{ route('projects.loan.store', $project) }}">
+                    @csrf
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ القرض (ر.س) <span class="text-red-500">*</span></label>
+                            <input type="number" name="loan_amount" step="0.01" min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
+                                   placeholder="0.00" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">مصدر القرض <span class="text-red-500">*</span></label>
+                            <select name="loan_source" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" required>
+                                <option value="">اختر مصدر القرض</option>
+                                <option value="bank">بنك</option>
+                                <option value="company">شركة</option>
+                                <option value="individual">فرد</option>
+                                <option value="government">جهة حكومية</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم الجهة المقرضة <span class="text-red-500">*</span></label>
+                            <input type="text" name="lender_name" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
+                                   placeholder="مثال: البنك الأهلي السعودي" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ القرض <span class="text-red-500">*</span></label>
+                                <input type="date" name="loan_date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
+                                       value="{{ now()->format('Y-m-d') }}" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الاستحقاق</label>
+                                <input type="date" name="due_date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">معدل الفائدة (%)</label>
+                                <input type="number" name="interest_rate" step="0.01" min="0" max="100"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
+                                       placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">نوع الفائدة</label>
+                                <select name="interest_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
+                                    <option value="">بدون فائدة</option>
+                                    <option value="fixed">ثابتة</option>
+                                    <option value="variable">متغيرة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">الغرض من القرض <span class="text-red-500">*</span></label>
+                            <select name="loan_purpose" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" required>
+                                <option value="">اختر الغرض</option>
+                                <option value="equipment">شراء معدات</option>
+                                <option value="materials">شراء مواد</option>
+                                <option value="wages">دفع أجور</option>
+                                <option value="operations">تكاليف تشغيلية</option>
+                                <option value="expansion">توسعة المشروع</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                            <textarea name="notes" rows="3" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
+                                      placeholder="أي ملاحظات إضافية عن القرض..."></textarea>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
+                        <button type="button" onclick="closeLoanModal()" 
+                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            إلغاء
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            حفظ القرض
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal تحديث نسبة الإنجاز -->
+    <div id="progressModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeProgressModal()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full" onclick="event.stopPropagation()">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold">تحديث نسبة إنجاز المشروع</h3>
+                </div>
+                <form id="progressForm" method="POST" action="{{ route('projects.updateProgress', $project) }}">
+                    @csrf
+                    @method('PATCH')
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">النسبة الحالية</label>
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $project->progress }}%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900 min-w-max">{{ number_format($project->progress) }}%</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">النسبة الجديدة <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="range" 
+                                       name="progress" 
+                                       id="progressSlider"
+                                       min="0" 
+                                       max="100" 
+                                       value="{{ $project->progress }}"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                                       oninput="updateProgressPreview(this.value)">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0%</span>
+                                    <span>25%</span>
+                                    <span>50%</span>
+                                    <span>75%</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" id="progressPreview">
+                                    {{ number_format($project->progress) }}%
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تفاصيل التحديث</label>
+                            <textarea name="update_notes" rows="3" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                                      placeholder="اكتب تفاصيل التقدم المحرز أو الأعمال المكتملة..."></textarea>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div class="flex items-start">
+                                <i class="ri-information-line text-blue-600 mt-0.5 mr-2"></i>
+                                <div class="text-sm text-blue-700">
+                                    <p class="font-medium mb-1">نصائح لتحديث نسبة الإنجاز:</p>
+                                    <ul class="list-disc list-inside space-y-1 text-xs">
+                                        <li>قم بتحديث النسبة بناءً على الأعمال المكتملة فعلياً</li>
+                                        <li>أضف تفاصيل واضحة عن التقدم المحرز</li>
+                                        <li>راجع جميع مراحل المشروع قبل التحديث</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
+                        <button type="button" onclick="closeProgressModal()" 
+                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            إلغاء
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            تحديث النسبة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // وظائف المودالات
+        function openExtendModal() {
+            document.getElementById('extendModal').classList.remove('hidden');
+        }
+
+        function closeExtendModal() {
+            document.getElementById('extendModal').classList.add('hidden');
+        }
+
+        function openVisitModal() {
+            document.getElementById('visitModal').classList.remove('hidden');
+        }
+
+        function closeVisitModal() {
+            document.getElementById('visitModal').classList.add('hidden');
+        }
+
+        function openRentalModal() {
+            document.getElementById('rentalModal').classList.remove('hidden');
+        }
+
+        function closeRentalModal() {
+            document.getElementById('rentalModal').classList.add('hidden');
+        }
+
+        function openLoanModal() {
+            document.getElementById('loanModal').classList.remove('hidden');
+        }
+
+        function closeLoanModal() {
+            document.getElementById('loanModal').classList.add('hidden');
+        }
+
+        // وظائف مودال تحديث نسبة الإنجاز
+        function openProgressModal() {
+            document.getElementById('progressModal').classList.remove('hidden');
+            
+            // تأثير صوتي خفيف (اختياري - يمكن إزالته)
+            try {
+                // إنشاء تأثير صوتي بسيط
+                const audio = new AudioContext();
+                const oscillator = audio.createOscillator();
+                const gainNode = audio.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audio.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audio.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, audio.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.1);
+                
+                oscillator.start(audio.currentTime);
+                oscillator.stop(audio.currentTime + 0.1);
+            } catch (e) {
+                // تجاهل الأخطاء الصوتية
+            }
+            
+            // تركيز على شريط التمرير
+            setTimeout(() => {
+                const slider = document.getElementById('progressSlider');
+                if (slider) {
+                    slider.focus();
+                }
+            }, 100);
+        }
+
+        function updateProgressPreview(value) {
+            const preview = document.getElementById('progressPreview');
+            const percentage = parseInt(value);
+            
+            // تحديث النص
+            preview.textContent = percentage + '%';
+            
+            // تحديث الألوان بناءً على النسبة
+            preview.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ';
+            
+            if (percentage < 25) {
+                preview.className += 'bg-red-100 text-red-800';
+            } else if (percentage < 50) {
+                preview.className += 'bg-orange-100 text-orange-800';
+            } else if (percentage < 75) {
+                preview.className += 'bg-yellow-100 text-yellow-800';
+            } else if (percentage < 100) {
+                preview.className += 'bg-blue-100 text-blue-800';
+            } else {
+                preview.className += 'bg-green-100 text-green-800';
+            }
+            
+            // تحديث شريط التقدم في المعاينة
+            const previewBar = document.querySelector('#progressModal .bg-blue-600');
+            if (previewBar) {
+                previewBar.style.width = percentage + '%';
+                previewBar.classList.add('progress-animate');
+                setTimeout(() => {
+                    previewBar.classList.remove('progress-animate');
+                }, 300);
+            }
+
+            // تحديث شريط التقدم الرئيسي في الوقت الفعلي (معاينة فقط)
+            const mainProgressBar = document.getElementById('progress-bar');
+            const mainProgressPercentage = document.getElementById('progress-percentage');
+            
+            if (mainProgressBar && mainProgressPercentage) {
+                // إضافة تأثير بصري
+                mainProgressBar.style.width = percentage + '%';
+                mainProgressPercentage.textContent = percentage + '%';
+                
+                // تحديث لون الشريط الرئيسي
+                mainProgressBar.className = 'h-3 rounded-full transition-all duration-500 ';
+                if (percentage < 25) {
+                    mainProgressBar.className += 'bg-gradient-to-r from-red-500 to-red-600';
+                } else if (percentage < 50) {
+                    mainProgressBar.className += 'bg-gradient-to-r from-orange-500 to-orange-600';
+                } else if (percentage < 75) {
+                    mainProgressBar.className += 'bg-gradient-to-r from-yellow-500 to-yellow-600';
+                } else if (percentage < 100) {
+                    mainProgressBar.className += 'bg-gradient-to-r from-blue-500 to-blue-600';
+                } else {
+                    mainProgressBar.className += 'bg-gradient-to-r from-green-500 to-green-600';
+                }
+                
+                // تحديث نص الحالة
+                const statusTexts = document.querySelectorAll('.text-center');
+                statusTexts.forEach(element => {
+                    if (element.textContent.includes('بداية المشروع') || 
+                        element.textContent.includes('في التطوير') || 
+                        element.textContent.includes('قرب الانتهاء')) {
+                        if (percentage < 25) {
+                            element.textContent = 'بداية المشروع';
+                        } else if (percentage < 50) {
+                            element.textContent = 'في مرحلة مبكرة';
+                        } else if (percentage < 75) {
+                            element.textContent = 'في التطوير';
+                        } else if (percentage < 100) {
+                            element.textContent = 'قرب الانتهاء';
+                        } else {
+                            element.textContent = 'مكتمل!';
+                        }
+                    }
+                });
+            }
+        }
+
+        // إعادة تعيين الشريط الرئيسي عند إغلاق المودال
+        function closeProgressModal() {
+            document.getElementById('progressModal').classList.add('hidden');
+            
+            // إعادة الشريط الرئيسي لحالته الأصلية
+            const mainProgressBar = document.getElementById('progress-bar');
+            const mainProgressPercentage = document.getElementById('progress-percentage');
+            
+            if (mainProgressBar && mainProgressPercentage) {
+                const originalProgress = {{ $project->progress }};
+                mainProgressBar.style.width = originalProgress + '%';
+                mainProgressPercentage.textContent = originalProgress + '%';
+                
+                // إعادة اللون الأصلي
+                mainProgressBar.className = 'bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 hover:from-blue-600 hover:to-blue-700';
+                
+                // إعادة نص الحالة الأصلي
+                const statusTexts = document.querySelectorAll('.text-center');
+                statusTexts.forEach(element => {
+                    if (element.textContent.includes('بداية المشروع') || 
+                        element.textContent.includes('في التطوير') || 
+                        element.textContent.includes('قرب الانتهاء') ||
+                        element.textContent.includes('في مرحلة مبكرة') ||
+                        element.textContent.includes('مكتمل!')) {
+                        if (originalProgress < 50) {
+                            element.textContent = 'بداية المشروع';
+                        } else if (originalProgress < 80) {
+                            element.textContent = 'في التطوير';
+                        } else {
+                            element.textContent = 'قرب الانتهاء';
+                        }
+                    }
+                });
+            }
+        }
+
+        // إغلاق المودال بالضغط على Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeExtendModal();
+                closeVisitModal();
+                closeRentalModal();
+                closeLoanModal();
+                closeProgressModal();
+            }
+        });
+
+        // إضافة مستمعي الأحداث عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // تحسين تجربة استخدام شريط التمرير
+            const slider = document.getElementById('progressSlider');
+            if (slider) {
+                // إضافة تأثيرات بصرية عند الاستخدام
+                slider.addEventListener('input', function(e) {
+                    updateProgressPreview(e.target.value);
+                });
+                
+                // تأثير عند بداية التحريك
+                slider.addEventListener('mousedown', function() {
+                    this.style.transform = 'scale(1.02)';
+                });
+                
+                // إزالة التأثير عند الانتهاء
+                slider.addEventListener('mouseup', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            }
+            
+            // إضافة تأثيرات للشريط الرئيسي
+            const mainProgressBar = document.getElementById('progress-bar');
+            if (mainProgressBar) {
+                mainProgressBar.addEventListener('mouseover', function() {
+                    this.style.transform = 'scaleY(1.1)';
+                });
+                
+                mainProgressBar.addEventListener('mouseout', function() {
+                    this.style.transform = 'scaleY(1)';
+                });
+            }
+            
+            // إضافة تأثير نبضة للأزرار التفاعلية
+            const editButtons = document.querySelectorAll('[onclick*="openProgressModal"]');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+        });
+    </script>
 @endsection

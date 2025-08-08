@@ -188,14 +188,14 @@
                             <select id="fuel_type" name="fuel_type"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('fuel_type') border-red-500 @enderror">
                                 <option value="">اختر نوع الوقود</option>
-                                <option value="بنزين"
-                                    {{ old('fuel_type', $internalTruck->fuel_type) == 'بنزين' ? 'selected' : '' }}>بنزين
+                                <option value="gasoline"
+                                    {{ old('fuel_type', $internalTruck->fuel_type) == 'gasoline' ? 'selected' : '' }}>بنزين
                                 </option>
-                                <option value="ديزل"
-                                    {{ old('fuel_type', $internalTruck->fuel_type) == 'ديزل' ? 'selected' : '' }}>ديزل
+                                <option value="diesel"
+                                    {{ old('fuel_type', $internalTruck->fuel_type) == 'diesel' ? 'selected' : '' }}>ديزل
                                 </option>
-                                <option value="هجين"
-                                    {{ old('fuel_type', $internalTruck->fuel_type) == 'هجين' ? 'selected' : '' }}>هجين
+                                <option value="hybrid"
+                                    {{ old('fuel_type', $internalTruck->fuel_type) == 'hybrid' ? 'selected' : '' }}>هجين
                                 </option>
                             </select>
                             @error('fuel_type')
@@ -208,19 +208,20 @@
                                 الداخلية</label>
                             <select id="status" name="status"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('status') border-red-500 @enderror">
-                                <option value="متاح"
-                                    {{ old('status', $internalTruck->status) == 'متاح' ? 'selected' : '' }}>متاحة
+                                <option value="available"
+                                    {{ old('status', $internalTruck->status) == 'available' ? 'selected' : '' }}>
+                                    متاحة
                                 </option>
-                                <option value="قيد الاستخدام"
-                                    {{ old('status', $internalTruck->status) == 'قيد الاستخدام' ? 'selected' : '' }}>قيد
-                                    الاستخدام
+                                <option value="in_use"
+                                    {{ old('status', $internalTruck->status) == 'in_use' ? 'selected' : '' }}>
+                                    قيد الاستخدام
                                 </option>
-                                <option value="تحت الصيانة"
-                                    {{ old('status', $internalTruck->status) == 'تحت الصيانة' ? 'selected' : '' }}>تحت
-                                    الصيانة</option>
-                                <option value="غير متاح"
-                                    {{ old('status', $internalTruck->status) == 'غير متاح' ? 'selected' : '' }}>خارج
-                                    الخدمة</option>
+                                <option value="maintenance"
+                                    {{ old('status', $internalTruck->status) == 'maintenance' ? 'selected' : '' }}>
+                                    تحت الصيانة</option>
+                                <option value="out_of_service"
+                                    {{ old('status', $internalTruck->status) == 'out_of_service' ? 'selected' : '' }}>
+                                    خارج الخدمة</option>
                             </select>
                             @error('status')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>

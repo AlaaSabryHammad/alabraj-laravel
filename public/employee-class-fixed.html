@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تم إصلاح خطأ التصدير - Employee Class</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-gradient {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+
+        .fix-gradient {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-4xl w-full">
+            <!-- Fix Notification -->
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden fade-in">
+                <!-- Header -->
+                <div class="fix-gradient text-white p-6 text-center">
+                    <div
+                        class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-bug-fix-line text-3xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold mb-2">تم إصلاح الخطأ بنجاح!</h1>
+                    <p class="text-lg opacity-90">مشكلة Employee Class محلولة والتصدير يعمل بشكل طبيعي</p>
+                </div>
+
+                <!-- Error Details -->
+                <div class="p-6">
+                    <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="ri-error-warning-line text-red-400 text-xl"></i>
+                            </div>
+                            <div class="mr-3">
+                                <h3 class="text-sm font-medium text-red-800">الخطأ الذي تم إصلاحه:</h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <code
+                                        class="bg-red-100 px-2 py-1 rounded">Class "App\Http\Controllers\Employee" not found</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fix Explanation -->
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="ri-tools-line text-green-600"></i>
+                            سبب المشكلة والحل
+                        </h2>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <!-- Problem -->
+                            <div class="bg-red-50 rounded-lg p-4">
+                                <h3 class="font-semibold text-red-900 mb-3 flex items-center gap-2">
+                                    <i class="ri-close-circle-line text-red-600"></i>
+                                    المشكلة
+                                </h3>
+                                <ul class="space-y-2 text-sm text-red-800">
+                                    <li>• مفقود <code>use App\Models\Employee;</code> في الكونترولر</li>
+                                    <li>• محاولة استخدام Employee::find() بدون استيراد</li>
+                                    <li>• خطأ في namespace resolution</li>
+                                </ul>
+                            </div>
+
+                            <!-- Solution -->
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h3 class="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                                    <i class="ri-check-circle-line text-green-600"></i>
+                                    الحل
+                                </h3>
+                                <ul class="space-y-2 text-sm text-green-800">
+                                    <li>• إضافة <code>use App\Models\Employee;</code></li>
+                                    <li>• تحديث imports في WarehouseController</li>
+                                    <li>• التأكد من استيراد جميع Models المطلوبة</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Code Fix -->
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="ri-code-line text-blue-600"></i>
+                            الكود المُحديث
+                        </h2>
+
+                        <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                            <pre class="text-green-400 text-sm"><code><?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Location;
+use App\Models\SparePart;
+use App\Models\SparePartSerial;
+use App\Models\WarehouseInventory;
+use App\Models\SparePartTransaction;
+use App\Models\Equipment;
+<span class="text-yellow-400">use App\Models\Employee;  // ← تم إضافة هذا السطر</span>
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Status Check -->
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="ri-shield-check-line text-green-600"></i>
+                            حالة النظام الآن
+                        </h2>
+
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="bg-green-50 rounded-lg p-4 text-center">
+                                <div
+                                    class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-check-line text-2xl text-green-600"></i>
+                                </div>
+                                <h3 class="font-semibold text-green-900">التصدير</h3>
+                                <p class="text-sm text-green-700">يعمل بشكل طبيعي</p>
+                            </div>
+
+                            <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                <div
+                                    class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-bar-chart-line text-2xl text-blue-600"></i>
+                                </div>
+                                <h3 class="font-semibold text-blue-900">التقارير</h3>
+                                <p class="text-sm text-blue-700">جاهزة للاستخدام</p>
+                            </div>
+
+                            <div class="bg-purple-50 rounded-lg p-4 text-center">
+                                <div
+                                    class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-database-line text-2xl text-purple-600"></i>
+                                </div>
+                                <h3 class="font-semibold text-purple-900">قاعدة البيانات</h3>
+                                <p class="text-sm text-purple-700">محدثة ومتوافقة</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testing Steps -->
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="ri-test-tube-line text-orange-600"></i>
+                            خطوات الاختبار
+                        </h2>
+
+                        <div class="bg-orange-50 rounded-lg p-4">
+                            <ol class="list-decimal list-inside space-y-2 text-orange-800">
+                                <li>انتقل إلى صفحة المستودع</li>
+                                <li>اضغط على أيقونة التصدير لأي قطعة غيار</li>
+                                <li>املأ بيانات الموظف المستلم</li>
+                                <li>حدد الغرض من التصدير</li>
+                                <li>اضغط "تصدير قطع الغيار"</li>
+                                <li>تأكد من ظهور رسالة النجاح</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="http://127.0.0.1:8000/warehouses/40"
+                            class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                            <i class="ri-arrow-up-line"></i>
+                            اختبر التصدير الآن
+                        </a>
+                        <a href="http://127.0.0.1:8000/reports/spare-parts"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                            <i class="ri-bar-chart-line"></i>
+                            عرض التقارير
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-6 text-gray-500">
+                <p class="text-sm">
+                    <i class="ri-time-line"></i>
+                    تم إصلاح الخطأ بتاريخ {{ date('Y-m-d H:i:s') }}
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

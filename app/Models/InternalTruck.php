@@ -14,7 +14,7 @@ class InternalTruck extends Model
         'brand',
         'model',
         'year',
-        
+
         'load_capacity',
         'engine_number',
         'chassis_number',
@@ -29,7 +29,19 @@ class InternalTruck extends Model
         'description',
         'driver_id',
         'location_id',
-        'user_id'
+        'user_id',
+        'images'
+    ];
+
+    protected $casts = [
+        'purchase_date' => 'date',
+        'warranty_expiry' => 'date',
+        'last_maintenance' => 'date',
+        'license_expiry' => 'date',
+        'insurance_expiry' => 'date',
+        'purchase_price' => 'decimal:2',
+        'load_capacity' => 'decimal:2',
+        'images' => 'array',
     ];
 
     // علاقة مع المستخدم الذي أضاف الشاحنة
@@ -41,7 +53,7 @@ class InternalTruck extends Model
     // علاقة مع السائق المسؤول
     public function driver()
     {
-        return $this->belongsTo(User::class, 'driver_id');
+        return $this->belongsTo(Employee::class, 'driver_id');
     }
 
     // علاقة مع الموقع
@@ -56,30 +68,48 @@ class InternalTruck extends Model
         parent::boot();
 
         static::created(function ($truck) {
-            Equipment::create([
-                'name' => $truck->brand . ' ' . $truck->model . ' - ' . $truck->plate_number,
-                'category' => 'شاحنات',
-                'description' => 'شاحنة داخلية - رقم اللوحة: ' . $truck->plate_number,
-                'serial_number' => $truck->chassis_number ?? 'INT-' . $truck->id,
-                'purchase_date' => now()->toDateString(),
-                'purchase_price' => 0.00,
-                'status' => 'available',
-                'notes' => 'شاحنة داخلية مضافة تلقائياً',
-                'user_id' => $truck->user_id,
-                'truck_id' => $truck->id // لربط المعدة بالشاحنة
-            ]);
+            // تحقق من عدم وجود معدة مرتبطة بهذه الشاحنة
+            $existingEquipment = Equipment::where('truck_id', $truck->id)->first();
+            if (!$existingEquipment) {
+                Equipment::create([
+                    'name' => $truck->brand . ' ' . $truck->model . ' - ' . $truck->plate_number,
+                    'category' => 'شاحنات',
+                    'description' => 'شاحنة داخلية - رقم اللوحة: ' . $truck->plate_number,
+                    'serial_number' => $truck->chassis_number ?? 'INT-' . $truck->id,
+                    'purchase_date' => $truck->purchase_date ?? now()->toDateString(),
+                    'purchase_price' => $truck->purchase_price ?? 0.00,
+                    'status' => $truck->driver_id ? 'in_use' : 'available',
+                    'notes' => 'شاحنة داخلية مضافة تلقائياً',
+                    'user_id' => $truck->user_id,
+                    'truck_id' => $truck->id, // لربط المعدة بالشاحنة
+                    'driver_id' => $truck->driver_id, // ربط السائق
+                ]);
+            }
         });
 
         static::updated(function ($truck) {
             // تحديث المعدة المرتبطة عند تعديل الشاحنة
             $equipment = Equipment::where('truck_id', $truck->id)->first();
             if ($equipment) {
-                $equipment->update([
+                // التحقق من أن الرقم التسلسلي الجديد غير مستخدم
+                $newSerialNumber = $truck->chassis_number ?? 'INT-' . $truck->id;
+                $existingEquipment = Equipment::where('serial_number', $newSerialNumber)
+                    ->where('id', '!=', $equipment->id)
+                    ->first();
+
+                $updateData = [
                     'name' => $truck->brand . ' ' . $truck->model . ' - ' . $truck->plate_number,
                     'description' => 'شاحنة داخلية - رقم اللوحة: ' . $truck->plate_number,
-                    'serial_number' => $truck->chassis_number ?? 'INT-' . $truck->id,
-                    'status' => $truck->status == 'متاح' ? 'available' : 'in_use'
-                ]);
+                    'status' => $truck->driver_id ? 'in_use' : 'available',
+                    'driver_id' => $truck->driver_id, // تحديث السائق
+                ];
+
+                // إضافة الرقم التسلسلي فقط إذا لم يكن مستخدماً
+                if (!$existingEquipment) {
+                    $updateData['serial_number'] = $newSerialNumber;
+                }
+
+                $equipment->update($updateData);
             }
         });
 

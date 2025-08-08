@@ -20,7 +20,7 @@ class AttendanceSeeder extends Seeder
         
         $employees = Employee::all();
         $startDate = Carbon::parse('2025-01-01');
-        $endDate = Carbon::parse('2025-08-06'); // Current date
+        $endDate = Carbon::now(); // Current date
         
         $this->command->info('Generating attendance data from ' . $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'));
         $this->command->info('Total employees: ' . $employees->count());
@@ -82,6 +82,7 @@ class AttendanceSeeder extends Seeder
                 'notes' => $this->getRandomAbsentReason(),
                 'late_minutes' => 0,
                 'working_hours' => 0,
+                'overtime_hours' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -97,7 +98,9 @@ class AttendanceSeeder extends Seeder
                 'notes' => rand(1, 2) === 1 ? 'إجازة اعتيادية' : 'إجازة مرضية',
                 'late_minutes' => 0,
                 'working_hours' => 0,
+                'overtime_hours' => 0,
                 'created_at' => now(),
+                'updated_at' => now(),
                 'updated_at' => now(),
             ];
         }
@@ -116,9 +119,12 @@ class AttendanceSeeder extends Seeder
         
         // Generate check-out time with overtime possibility
         $overtimeChance = rand(1, 100);
+        $overtimeHours = 0;
+        
         if ($overtimeChance <= 30) { // 30% chance of overtime
             $overtimeMinutes = rand(60, 240); // 1-4 hours overtime
             $checkOut = $baseCheckOut->copy()->addMinutes($overtimeMinutes);
+            $overtimeHours = round($overtimeMinutes / 60, 2);
         } else {
             // Normal working hours with slight variation
             $checkOutVariation = rand(-30, 60);
@@ -129,9 +135,15 @@ class AttendanceSeeder extends Seeder
         $totalMinutes = $checkOut->diffInMinutes($checkIn);
         $workingHours = max(0, ($totalMinutes - 60) / 60); // Subtract 1 hour lunch break
         
+        // Adjust overtime hours based on actual working time
+        if ($workingHours > 8) {
+            $overtimeHours = round($workingHours - 8, 2);
+        }
+        
         // Add some randomness for sick days, half days, etc.
         if (rand(1, 100) <= 2) { // 2% half day
-            $workingHours = $workingHours / 2;
+            $workingHours = 4;
+            $overtimeHours = 0;
             $checkOut = $checkIn->copy()->addHours(4);
         }
         
@@ -141,9 +153,10 @@ class AttendanceSeeder extends Seeder
             'check_in' => $checkIn->format('H:i:s'),
             'check_out' => $checkOut->format('H:i:s'),
             'status' => $status,
-            'notes' => $this->getRandomNotes($status, $workingHours),
+            'notes' => $this->getRandomNotes($status, $workingHours, $overtimeHours),
             'late_minutes' => $lateMinutes,
             'working_hours' => round($workingHours, 2),
+            'overtime_hours' => $overtimeHours,
             'created_at' => now(),
             'updated_at' => now(),
         ];
@@ -168,7 +181,7 @@ class AttendanceSeeder extends Seeder
     /**
      * Get random notes based on status and working hours
      */
-    private function getRandomNotes(string $status, float $workingHours): ?string
+    private function getRandomNotes(string $status, float $workingHours, float $overtimeHours = 0): ?string
     {
         if ($status === 'late') {
             $lateReasons = [
@@ -176,17 +189,21 @@ class AttendanceSeeder extends Seeder
                 'ازدحام مروري',
                 'ظروف شخصية',
                 'موعد طبي',
+                'عذر مقبول',
                 null // No note sometimes
             ];
             return $lateReasons[array_rand($lateReasons)];
         }
         
-        if ($workingHours > 9) {
+        if ($overtimeHours > 0) {
             $overtimeReasons = [
                 'عمل إضافي لإنهاء المشروع',
                 'اجتماعات مطولة',
                 'ساعات إضافية مطلوبة',
                 'عمل إضافي اختياري',
+                'إنهاء مهام عاجلة',
+                'تغطية نقص في العمالة',
+                'عمل إضافي مدفوع الأجر',
                 null
             ];
             return $overtimeReasons[array_rand($overtimeReasons)];
@@ -198,7 +215,9 @@ class AttendanceSeeder extends Seeder
                 'يوم عمل عادي',
                 'أداء ممتاز',
                 'حضور منتظم',
-                'التزام بالمواعيد'
+                'التزام بالمواعيد',
+                'إنجاز جيد للمهام',
+                'تعاون مع الفريق'
             ];
             return $generalNotes[array_rand($generalNotes)];
         }

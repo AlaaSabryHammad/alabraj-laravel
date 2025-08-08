@@ -70,6 +70,30 @@
                         </div>
 
                         <div>
+                            <label for="bank_guarantee_amount" class="block text-sm font-medium text-gray-700 mb-2">قيمة الضمان البنكي (ر.س)</label>
+                            <input type="number" id="bank_guarantee_amount" name="bank_guarantee_amount" value="{{ old('bank_guarantee_amount') }}" step="0.01"
+                                min="0"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('bank_guarantee_amount') border-red-500 @enderror"
+                                placeholder="0.00">
+                            @error('bank_guarantee_amount')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="bank_guarantee_type" class="block text-sm font-medium text-gray-700 mb-2">نوع الضمان البنكي</label>
+                            <select id="bank_guarantee_type" name="bank_guarantee_type"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('bank_guarantee_type') border-red-500 @enderror">
+                                <option value="">اختر نوع الضمان</option>
+                                <option value="cash" {{ old('bank_guarantee_type') == 'cash' ? 'selected' : '' }}>كاش</option>
+                                <option value="facilities" {{ old('bank_guarantee_type') == 'facilities' ? 'selected' : '' }}>تسهيلات</option>
+                            </select>
+                            @error('bank_guarantee_type')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
                             <label for="government_entity" class="block text-sm font-medium text-gray-700 mb-2">الجهة
                                 الحكومية</label>
                             <input type="text" id="government_entity" name="government_entity"

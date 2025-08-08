@@ -10,17 +10,14 @@ class ExternalTruck extends Model
     use HasFactory;
 
     protected $fillable = [
+        'supplier_id',
         'plate_number',
         'driver_name',
         'driver_phone',
-        'supplier_id',
         'contract_number',
         'daily_rate',
         'contract_start_date',
         'contract_end_date',
-        'loading_type',
-        'capacity_volume',
-        'capacity_weight',
         'notes',
         'photos',
         'status'
@@ -28,31 +25,17 @@ class ExternalTruck extends Model
 
     protected $casts = [
         'photos' => 'array',
-        'capacity_volume' => 'decimal:2',
-        'capacity_weight' => 'decimal:2',
         'daily_rate' => 'decimal:2',
         'contract_start_date' => 'date',
         'contract_end_date' => 'date'
     ];
 
     /**
-     * Get the loading type in Arabic
-     */
-    public function getLoadingTypeTextAttribute(): string
-    {
-        return match($this->loading_type) {
-            'box' => 'صندوق',
-            'tank' => 'تانك',
-            default => 'غير محدد'
-        };
-    }
-
-    /**
      * Get the status in Arabic
      */
     public function getStatusTextAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'active' => 'نشطة',
             'inactive' => 'غير نشطة',
             'maintenance' => 'قيد الصيانة',
@@ -61,16 +44,38 @@ class ExternalTruck extends Model
     }
 
     /**
-     * Get capacity with unit
+     * Check if contract is active
      */
-    public function getCapacityWithUnitAttribute(): string
+    public function getContractStatusAttribute(): string
     {
-        if ($this->loading_type === 'box' && $this->capacity_volume) {
-            return number_format((float) $this->capacity_volume, 2) . ' م³';
-        } elseif ($this->loading_type === 'tank' && $this->capacity_weight) {
-            return number_format((float) $this->capacity_weight, 2) . ' طن';
+        if (!$this->contract_start_date || !$this->contract_end_date) {
+            return 'غير محدد';
         }
-        return 'غير محدد';
+
+        $today = now()->startOfDay();
+        $startDate = $this->contract_start_date->startOfDay();
+        $endDate = $this->contract_end_date->startOfDay();
+
+        if ($today < $startDate) {
+            return 'لم يبدأ';
+        } elseif ($today > $endDate) {
+            return 'منتهي';
+        } else {
+            return 'نشط';
+        }
+    }
+
+    /**
+     * Get contract status with color class
+     */
+    public function getContractStatusColorAttribute(): string
+    {
+        return match ($this->contract_status) {
+            'نشط' => 'text-green-600 bg-green-100',
+            'منتهي' => 'text-red-600 bg-red-100',
+            'لم يبدأ' => 'text-yellow-600 bg-yellow-100',
+            default => 'text-gray-600 bg-gray-100'
+        };
     }
 
     /**
@@ -98,7 +103,7 @@ class ExternalTruck extends Model
             return [];
         }
 
-        return array_map(function($photo) {
+        return array_map(function ($photo) {
             return asset('storage/' . $photo);
         }, $this->photos);
     }

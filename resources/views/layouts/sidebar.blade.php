@@ -115,6 +115,13 @@
                 'color' => 'from-green-600 to-green-700'
             ],
             [
+                'id' => 'reports',
+                'title' => 'تقارير قطع الغيار',
+                'icon' => 'ri-bar-chart-line',
+                'route' => 'reports.spare-parts.index',
+                'color' => 'from-purple-600 to-purple-700'
+            ],
+            [
                 'id' => 'settings',
                 'title' => 'الإعدادات',
                 'icon' => 'ri-settings-line',

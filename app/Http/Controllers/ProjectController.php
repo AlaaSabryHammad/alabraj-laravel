@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Project;
 use App\Models\ProjectExtract;
+use App\Models\ProjectExtension;
+use App\Models\ProjectVisit;
+use App\Models\ProjectRentalEquipment;
+use App\Models\ProjectLoan;
 
 class ProjectController extends Controller
 {
@@ -45,6 +49,8 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
             'project_number' => 'nullable|string|max:255|unique:projects',
             'budget' => 'required|numeric|min:0',
+            'bank_guarantee_amount' => 'nullable|numeric|min:0',
+            'bank_guarantee_type' => 'nullable|in:cash,facilities',
             'government_entity' => 'nullable|string|max:255',
             'consulting_office' => 'nullable|string|max:255',
             'project_scope' => 'nullable|string|max:255',
@@ -177,7 +183,15 @@ class ProjectController extends Controller
             'projectExtracts.creator',
             'locations.equipment',
             'locations.employees',
-            'locations.manager'
+            'locations.manager',
+            'equipment.driver',
+            'equipment.user',
+            'equipment.locationDetail',
+            'equipment.movementHistory',
+            'loans.recordedBy',
+            'extensions.extendedBy',
+            'visits.recordedBy',
+            'rentalEquipment.recordedBy'
         ]);
 
         // Get correspondences related to this project
@@ -220,35 +234,19 @@ class ProjectController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'budget' => 'required|numeric|min:0',
+            'bank_guarantee_amount' => 'nullable|numeric|min:0',
+            'bank_guarantee_type' => 'nullable|in:cash,facilities',
             'location' => 'required|string|max:255',
-            'project_manager_id' => 'required|exists:employees,id',
+            'project_manager_id' => 'nullable|exists:employees,id',
+            'project_manager' => 'nullable|string|max:255',
+            'client_name' => 'nullable|string|max:255',
             'status' => 'required|in:planning,active,on_hold,completed,cancelled',
             'progress' => 'nullable|integer|min:0|max:100',
-            // New fields
             'project_number' => 'nullable|string|max:255',
             'government_entity' => 'nullable|string|max:255',
             'consulting_office' => 'nullable|string|max:255',
             'project_scope' => 'nullable|string|max:255',
-            // Images
             'new_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            // Project items validation
-            'existing_items.*.name' => 'nullable|string|max:255',
-            'existing_items.*.quantity' => 'nullable|numeric|min:0',
-            'existing_items.*.unit' => 'nullable|string|max:50',
-            'existing_items.*.unit_price' => 'nullable|numeric|min:0',
-            'existing_items.*.total_price' => 'nullable|numeric|min:0',
-            'existing_items.*.total_with_tax' => 'nullable|numeric|min:0',
-            'new_items.*.name' => 'nullable|string|max:255',
-            'new_items.*.quantity' => 'nullable|numeric|min:0',
-            'new_items.*.unit' => 'nullable|string|max:50',
-            'new_items.*.unit_price' => 'nullable|numeric|min:0',
-            'new_items.*.total_price' => 'nullable|numeric|min:0',
-            'new_items.*.total_with_tax' => 'nullable|numeric|min:0',
-            'deleted_items.*' => 'nullable|integer|exists:project_items,id',
-            'subtotal' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'final_total' => 'nullable|numeric|min:0',
-            'tax_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Debug: Log all received data
@@ -258,8 +256,34 @@ class ProjectController extends Controller
         // Debug: Log the status value before update
         Log::info('Project Update - Status received:', ['status' => $validated['status'], 'project_id' => $project->id]);
 
-                // Update project with validated data
-        $project->update($validated);
+        // If project_manager_id is provided, get the manager name
+        if (!empty($validated['project_manager_id'])) {
+            $manager = \App\Models\Employee::find($validated['project_manager_id']);
+            if ($manager) {
+                $validated['project_manager'] = $manager->name;
+            }
+        }
+
+        // Update project with validated data (exclude new_images from mass assignment)
+        $projectData = collect($validated)->except('new_images')->toArray();
+        $project->update($projectData);
+
+        // Handle new images upload
+        if ($request->hasFile('new_images')) {
+            foreach ($request->file('new_images') as $image) {
+                if ($image->isValid()) {
+                    // Store the image
+                    $imagePath = $image->store('projects/images', 'public');
+                    
+                    // Create image record
+                    \App\Models\ProjectImage::create([
+                        'project_id' => $project->id,
+                        'image_path' => $imagePath,
+                        'alt_text' => 'صورة مشروع ' . $project->name,
+                    ]);
+                }
+            }
+        }
 
         // Log successful update for debugging
         Log::info('Project Update Success:', [
@@ -285,7 +309,9 @@ class ProjectController extends Controller
                 'name' => $updatedProject->name,
                 'status' => $updatedProject->status_label,
                 'progress' => $updatedProject->progress,
-                'manager' => $updatedProject->projectManager->name ?? 'غير محدد'
+                'manager' => $updatedProject->projectManager->name ?? $updatedProject->project_manager ?? 'غير محدد',
+                'client' => $updatedProject->client_name ?? 'غير محدد',
+                'location' => $updatedProject->location ?? 'غير محدد'
             ]);
     }
 
@@ -628,6 +654,292 @@ class ProjectController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'حدث خطأ أثناء حذف المستخلص: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Extend project duration
+     */
+    public function extendProject(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'new_end_date' => 'required|date|after:' . ($project->end_date ?? now()->format('Y-m-d')),
+            'extension_reason' => 'required|string|max:1000',
+        ], [
+            'new_end_date.required' => 'تاريخ الانتهاء الجديد مطلوب',
+            'new_end_date.after' => 'تاريخ الانتهاء الجديد يجب أن يكون بعد التاريخ الحالي',
+            'extension_reason.required' => 'سبب التمديد مطلوب',
+            'extension_reason.max' => 'سبب التمديد لا يجب أن يزيد عن 1000 حرف',
+        ]);
+
+        try {
+            $oldEndDate = $project->end_date;
+
+            // Create extension record
+            ProjectExtension::create([
+                'project_id' => $project->id,
+                'old_end_date' => $oldEndDate,
+                'new_end_date' => $validated['new_end_date'],
+                'extension_reason' => $validated['extension_reason'],
+                'extended_by' => Auth::id(),
+            ]);
+
+            // Update project end date
+            $project->update(['end_date' => $validated['new_end_date']]);
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم تمديد فترة المشروع بنجاح من ' . ($oldEndDate ? \Carbon\Carbon::parse($oldEndDate)->format('Y-m-d') : 'غير محدد') . ' إلى ' . \Carbon\Carbon::parse($validated['new_end_date'])->format('Y-m-d'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'حدث خطأ أثناء تمديد فترة المشروع: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store project visit
+     */
+    public function storeVisit(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'visit_date' => 'required|date',
+            'visit_time' => 'nullable|date_format:H:i',
+            'visitor_name' => 'required|string|max:255',
+            'visit_type' => 'required|in:inspection,meeting,supervision,coordination,other',
+            'visit_notes' => 'required|string|max:2000',
+        ], [
+            'visit_date.required' => 'تاريخ الزيارة مطلوب',
+            'visitor_name.required' => 'اسم الزائر مطلوب',
+            'visitor_name.max' => 'اسم الزائر لا يجب أن يزيد عن 255 حرف',
+            'visit_type.required' => 'نوع الزيارة مطلوب',
+            'visit_notes.required' => 'تفاصيل الزيارة مطلوبة',
+            'visit_notes.max' => 'تفاصيل الزيارة لا يجب أن تزيد عن 2000 حرف',
+        ]);
+
+        try {
+            // Create visit record
+            ProjectVisit::create([
+                'project_id' => $project->id,
+                'visit_date' => $validated['visit_date'],
+                'visit_time' => $validated['visit_time'],
+                'visitor_name' => $validated['visitor_name'],
+                'visit_type' => $validated['visit_type'],
+                'visit_notes' => $validated['visit_notes'],
+                'recorded_by' => Auth::id(),
+            ]);
+
+            $visitTypeLabels = [
+                'inspection' => 'جولة تفتيش',
+                'meeting' => 'اجتماع',
+                'supervision' => 'إشراف',
+                'coordination' => 'تنسيق',
+                'other' => 'أخرى'
+            ];
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم تسجيل زيارة ' . $visitTypeLabels[$validated['visit_type']] . ' للمشروع بواسطة ' . $validated['visitor_name'] . ' بتاريخ ' . \Carbon\Carbon::parse($validated['visit_date'])->format('Y-m-d'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'حدث خطأ أثناء تسجيل الزيارة: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store rental equipment for project
+     */
+    public function storeRental(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'equipment_type' => 'required|string|max:100',
+            'equipment_name' => 'required|string|max:255',
+            'rental_company' => 'required|string|max:255',
+            'rental_start_date' => 'required|date',
+            'rental_end_date' => 'nullable|date|after:rental_start_date',
+            'daily_rate' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|in:SAR,USD,EUR',
+            'notes' => 'nullable|string|max:1000',
+        ], [
+            'equipment_type.required' => 'نوع المعدة مطلوب',
+            'equipment_name.required' => 'اسم/رقم المعدة مطلوب',
+            'rental_company.required' => 'المورد/الشركة المؤجرة مطلوب',
+            'rental_start_date.required' => 'تاريخ بداية الإيجار مطلوب',
+            'rental_end_date.after' => 'تاريخ نهاية الإيجار يجب أن يكون بعد تاريخ البداية',
+            'daily_rate.min' => 'تكلفة الإيجار لا يمكن أن تكون سالبة',
+            'notes.max' => 'الملاحظات لا يجب أن تزيد عن 1000 حرف',
+        ]);
+
+        try {
+            // Create rental equipment record
+            ProjectRentalEquipment::create([
+                'project_id' => $project->id,
+                'equipment_type' => $validated['equipment_type'],
+                'equipment_name' => $validated['equipment_name'],
+                'rental_company' => $validated['rental_company'],
+                'rental_start_date' => $validated['rental_start_date'],
+                'rental_end_date' => $validated['rental_end_date'],
+                'daily_rate' => $validated['daily_rate'],
+                'currency' => $validated['currency'] ?? 'SAR',
+                'notes' => $validated['notes'],
+                'recorded_by' => Auth::id(),
+            ]);
+
+            $equipmentTypeLabels = [
+                'excavator' => 'حفار',
+                'bulldozer' => 'جرافة',
+                'crane' => 'رافعة',
+                'truck' => 'شاحنة',
+                'concrete_mixer' => 'خلاطة خرسانة',
+                'generator' => 'مولد كهرباء',
+                'compressor' => 'ضاغط هواء',
+                'other' => 'أخرى'
+            ];
+
+            $equipmentLabel = $equipmentTypeLabels[$validated['equipment_type']] ?? $validated['equipment_type'];
+            $startDate = \Carbon\Carbon::parse($validated['rental_start_date'])->format('Y-m-d');
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم تسجيل ' . $equipmentLabel . ' (' . $validated['equipment_name'] . ') كمعدة مستأجرة للمشروع من شركة ' . $validated['rental_company'] . ' بتاريخ ' . $startDate);
+
+        } catch (\Exception $e) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'حدث خطأ أثناء تسجيل المعدة المستأجرة: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store project loan
+     */
+    public function storeLoan(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'loan_amount' => 'required|numeric|min:0',
+            'loan_source' => 'required|in:bank,company,individual,government,other',
+            'lender_name' => 'required|string|max:255',
+            'loan_date' => 'required|date',
+            'due_date' => 'nullable|date|after:loan_date',
+            'interest_rate' => 'nullable|numeric|min:0|max:100',
+            'interest_type' => 'nullable|in:fixed,variable',
+            'loan_purpose' => 'required|in:equipment,materials,wages,operations,expansion,other',
+            'notes' => 'nullable|string|max:2000',
+        ], [
+            'loan_amount.required' => 'مبلغ القرض مطلوب',
+            'loan_amount.min' => 'مبلغ القرض لا يمكن أن يكون سالباً',
+            'loan_source.required' => 'مصدر القرض مطلوب',
+            'lender_name.required' => 'اسم الجهة المقرضة مطلوب',
+            'loan_date.required' => 'تاريخ القرض مطلوب',
+            'due_date.after' => 'تاريخ الاستحقاق يجب أن يكون بعد تاريخ القرض',
+            'interest_rate.max' => 'معدل الفائدة لا يمكن أن يزيد عن 100%',
+            'loan_purpose.required' => 'الغرض من القرض مطلوب',
+            'notes.max' => 'الملاحظات لا يجب أن تزيد عن 2000 حرف',
+        ]);
+
+        try {
+            // Create loan record
+            ProjectLoan::create([
+                'project_id' => $project->id,
+                'loan_amount' => $validated['loan_amount'],
+                'loan_source' => $validated['loan_source'],
+                'lender_name' => $validated['lender_name'],
+                'loan_date' => $validated['loan_date'],
+                'due_date' => $validated['due_date'],
+                'interest_rate' => $validated['interest_rate'],
+                'interest_type' => $validated['interest_type'],
+                'loan_purpose' => $validated['loan_purpose'],
+                'notes' => $validated['notes'],
+                'status' => 'active',
+                'recorded_by' => Auth::id(),
+            ]);
+
+            $loanSourceLabels = [
+                'bank' => 'بنك',
+                'company' => 'شركة',
+                'individual' => 'فرد',
+                'government' => 'جهة حكومية',
+                'other' => 'أخرى'
+            ];
+
+            $sourceLabel = $loanSourceLabels[$validated['loan_source']] ?? $validated['loan_source'];
+            $loanDate = \Carbon\Carbon::parse($validated['loan_date'])->format('Y-m-d');
+            $formattedAmount = number_format($validated['loan_amount'], 2);
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم تسجيل قرض بمبلغ ' . $formattedAmount . ' ر.س من ' . $sourceLabel . ' (' . $validated['lender_name'] . ') بتاريخ ' . $loanDate);
+
+        } catch (\Exception $e) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'حدث خطأ أثناء تسجيل القرض: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update project progress
+     */
+    public function updateProgress(Request $request, Project $project)
+    {
+        try {
+            $validated = $request->validate([
+                'progress' => 'required|numeric|min:0|max:100',
+                'update_notes' => 'nullable|string|max:1000',
+            ], [
+                'progress.required' => 'نسبة الإنجاز مطلوبة',
+                'progress.numeric' => 'نسبة الإنجاز يجب أن تكون رقماً',
+                'progress.min' => 'نسبة الإنجاز لا يمكن أن تكون أقل من 0%',
+                'progress.max' => 'نسبة الإنجاز لا يمكن أن تتجاوز 100%',
+                'update_notes.max' => 'الملاحظات لا يمكن أن تتجاوز 1000 حرف',
+            ]);
+
+            $oldProgress = $project->progress;
+            $newProgress = $validated['progress'];
+            
+            // Update project progress
+            $project->update([
+                'progress' => $newProgress
+            ]);
+
+            // Determine status based on progress
+            if ($newProgress == 100) {
+                $project->update(['status' => 'completed']);
+            } elseif ($newProgress > 0 && $project->status == 'planning') {
+                $project->update(['status' => 'active']);
+            }
+
+            // Create a progress update record (you might want to create a separate model for this)
+            // For now, we'll just add it to project notes or create a simple log
+            
+            $progressChange = $newProgress - $oldProgress;
+            $changeDirection = $progressChange > 0 ? 'زيادة' : 'تقليل';
+            $changeAmount = abs($progressChange);
+            
+            $logMessage = "تم تحديث نسبة الإنجاز من {$oldProgress}% إلى {$newProgress}% ({$changeDirection} {$changeAmount}%)";
+            
+            if (!empty($validated['update_notes'])) {
+                $logMessage .= " - الملاحظات: " . $validated['update_notes'];
+            }
+            
+            $logMessage .= " بواسطة: " . Auth::user()->name . " في " . now()->format('Y-m-d H:i');
+
+            // You could log this to a separate progress_updates table
+            // For now, we'll use the success message
+            
+            $successMessage = "تم تحديث نسبة الإنجاز بنجاح من {$oldProgress}% إلى {$newProgress}%";
+            
+            if ($newProgress == 100) {
+                $successMessage .= " - تهانينا! تم إكمال المشروع 🎉";
+            } elseif ($newProgress >= 75) {
+                $successMessage .= " - المشروع قارب على الانتهاء 📈";
+            } elseif ($newProgress >= 50) {
+                $successMessage .= " - المشروع في منتصف الطريق 💪";
+            } elseif ($newProgress >= 25) {
+                $successMessage .= " - تقدم جيد في المشروع ✨";
+            }
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', $successMessage);
+
+        } catch (\Exception $e) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'حدث خطأ أثناء تحديث نسبة الإنجاز: ' . $e->getMessage());
         }
     }
 }

@@ -23,6 +23,17 @@ class EquipmentSeeder extends Seeder
         $locations = Location::where('status', 'active')->get();
         $drivers = Employee::where('status', 'active')->get();
 
+        // التحقق من وجود البيانات المطلوبة
+        if ($equipmentTypes->isEmpty()) {
+            $this->command->error('لا توجد أنواع معدات في قاعدة البيانات. يرجى تشغيل EquipmentTypeSeeder أولاً.');
+            return;
+        }
+
+        if ($locations->isEmpty()) {
+            $this->command->error('لا توجد مواقع نشطة في قاعدة البيانات. يرجى إضافة مواقع أولاً.');
+            return;
+        }
+
         // قائمة الشركات المصنعة
         $manufacturers = [
             'كاتربيلر', 'كوماتسو', 'فولفو', 'ليبهر', 'مرسيدس', 'سكانيا', 'مان', 'دايو',
@@ -88,13 +99,19 @@ class EquipmentSeeder extends Seeder
 
         // إنشاء 200 معدة
         for ($i = 1; $i <= 200; $i++) {
-            $equipmentType = $faker->randomElement($equipmentTypes);
-            $location = $faker->randomElement($locations);
-            $driver = $faker->optional(0.7)->randomElement($drivers); // 70% من المعدات لها سائق
+            $equipmentType = $faker->randomElement($equipmentTypes->toArray());
+            $location = $faker->randomElement($locations->toArray());
+            $driver = $faker->optional(0.7)->randomElement($drivers->toArray()); // 70% من المعدات لها سائق
             $manufacturer = $faker->randomElement($manufacturers);
 
+            // التحقق من صحة البيانات
+            if (!$equipmentType || !isset($equipmentType['name'])) {
+                $this->command->warn("تخطي المعدة رقم $i - نوع المعدة غير صالح");
+                continue;
+            }
+
             // اختيار اسم مناسب حسب نوع المعدة
-            $typeNames = $equipmentNames[$equipmentType->name] ?? ['معدة ' . $equipmentType->name];
+            $typeNames = $equipmentNames[$equipmentType['name']] ?? ['معدة ' . $equipmentType['name']];
             $equipmentName = $faker->randomElement($typeNames) . ' - ' . str_pad($i, 3, '0', STR_PAD_LEFT);
 
             // إنتاج موديل عشوائي
@@ -134,19 +151,19 @@ class EquipmentSeeder extends Seeder
                 'آلة لحام' => [5000, 25000]
             ];
 
-            $priceRange = $priceRanges[$equipmentType->name] ?? [50000, 200000];
+            $priceRange = $priceRanges[$equipmentType['name']] ?? [50000, 200000];
             $purchasePrice = $faker->randomFloat(2, $priceRange[0], $priceRange[1]);
 
             Equipment::create([
                 'name' => $equipmentName,
-                'type' => $equipmentType->name,
-                'type_id' => $equipmentType->id,
+                'type' => $equipmentType['name'],
+                'type_id' => $equipmentType['id'],
                 'model' => $model,
                 'manufacturer' => $manufacturer,
                 'serial_number' => 'EQP-' . date('Y') . '-' . str_pad($i, 3, '0', STR_PAD_LEFT),
                 'status' => $status,
-                'location_id' => $location->id,
-                'driver_id' => $driver ? $driver->id : null,
+                'location_id' => $location['id'],
+                'driver_id' => $driver ? $driver['id'] : null,
                 'purchase_date' => $purchaseDate,
                 'purchase_price' => $purchasePrice,
                 'warranty_expiry' => $warrantyExpiry,

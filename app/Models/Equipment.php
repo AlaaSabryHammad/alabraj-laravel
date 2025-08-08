@@ -50,6 +50,60 @@ class Equipment extends Model
                 $model->type = $equipmentType ? $equipmentType->name : null;
             }
         });
+
+        // عند إنشاء معدة من نوع "شاحنات" وليس لها truck_id، ننشئ شاحنة داخلية
+        static::created(function ($equipment) {
+            if (($equipment->category == 'شاحنات' || $equipment->category == 'شاحنة') && !$equipment->truck_id) {
+                // استخراج معلومات الشاحنة من اسم المعدة
+                $equipmentName = $equipment->name;
+                $parts = explode(' - ', $equipmentName);
+
+                $brand = 'غير محدد';
+                $model = 'غير محدد';
+                $plateNumber = 'غير محدد';
+
+                if (count($parts) >= 2) {
+                    $brandModel = trim($parts[0]);
+                    $plateNumber = trim($parts[1]);
+
+                    // محاولة فصل العلامة التجارية والموديل
+                    $brandModelParts = explode(' ', $brandModel, 2);
+                    $brand = $brandModelParts[0];
+                    $model = isset($brandModelParts[1]) ? $brandModelParts[1] : $brand;
+                }
+
+                $internalTruck = \App\Models\InternalTruck::create([
+                    'plate_number' => $plateNumber,
+                    'brand' => $brand,
+                    'model' => $model,
+                    'year' => date('Y'), // السنة الحالية كقيمة افتراضية
+                    'load_capacity' => 5.0, // قيمة افتراضية
+                    'fuel_type' => 'diesel', // ديزل كقيمة افتراضية
+                    'status' => $equipment->status == 'in_use' ? 'in_use' : 'available',
+                    'purchase_date' => $equipment->purchase_date ?? now(),
+                    'purchase_price' => $equipment->purchase_price ?? 0,
+                    'description' => $equipment->description ?? 'شاحنة مضافة من المعدات',
+                    'driver_id' => $equipment->driver_id,
+                    'user_id' => $equipment->user_id ?? (\Illuminate\Support\Facades\Auth::id() ?? 1),
+                ]);
+
+                // ربط المعدة بالشاحنة المنشأة حديثاً
+                $equipment->update(['truck_id' => $internalTruck->id]);
+            }
+        });
+
+        // عند تحديث معدة من نوع شاحنات، نحدث الشاحنة المرتبطة
+        static::updated(function ($equipment) {
+            if (($equipment->category == 'شاحنات' || $equipment->category == 'شاحنة') && $equipment->truck_id) {
+                $truck = \App\Models\InternalTruck::find($equipment->truck_id);
+                if ($truck) {
+                    $truck->update([
+                        'status' => $equipment->status == 'in_use' ? 'in_use' : 'available',
+                        'driver_id' => $equipment->driver_id,
+                    ]);
+                }
+            }
+        });
     }
 
     public function files()
@@ -70,6 +124,11 @@ class Equipment extends Model
     public function equipmentType()
     {
         return $this->belongsTo(EquipmentType::class, 'type_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // History relationships

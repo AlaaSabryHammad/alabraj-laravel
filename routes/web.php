@@ -22,6 +22,7 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\CorrespondenceController;
 use App\Http\Controllers\MyTasksController;
+use App\Http\Controllers\SparePartReportController;
 
 // Authentication Routes (Public)
 Route::middleware('guest')->group(function () {
@@ -127,6 +128,7 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::get('/', [InternalTruckController::class, 'index'])->name('internal-trucks.index');
         Route::get('/create', [InternalTruckController::class, 'create'])->name('internal-trucks.create');
         Route::post('/', [InternalTruckController::class, 'store'])->name('internal-trucks.store');
+        Route::post('/link-equipment', [InternalTruckController::class, 'linkEquipment'])->name('internal-trucks.link-equipment');
         Route::get('/{internalTruck}', [InternalTruckController::class, 'show'])->name('internal-trucks.show');
         Route::get('/{internalTruck}/edit', [InternalTruckController::class, 'edit'])->name('internal-trucks.edit');
         Route::put('/{internalTruck}', [InternalTruckController::class, 'update'])->name('internal-trucks.update');
@@ -309,5 +311,16 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::post('/{correspondence}/reply', [MyTasksController::class, 'storeReply'])->name('my-tasks.reply');
         Route::patch('/{correspondence}/status', [MyTasksController::class, 'updateStatus'])->name('my-tasks.update-status');
         Route::get('/reply/{reply}/download', [MyTasksController::class, 'downloadReply'])->name('my-tasks.download-reply');
+    });
+
+    // Reports Routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::prefix('spare-parts')->name('spare-parts.')->group(function () {
+            Route::get('/', [SparePartReportController::class, 'index'])->name('index');
+            Route::get('/daily', [SparePartReportController::class, 'daily'])->name('daily');
+            Route::get('/monthly', [SparePartReportController::class, 'monthly'])->name('monthly');
+            Route::get('/inventory', [SparePartReportController::class, 'inventory'])->name('inventory');
+            Route::get('/employees', [SparePartReportController::class, 'employees'])->name('employees');
+        });
     });
 }); // End of auth middleware group

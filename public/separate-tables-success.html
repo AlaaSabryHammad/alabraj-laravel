@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تم إنشاء جداول منفصلة لقطع الغيار بنجاح</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-gradient {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-4xl w-full">
+            <!-- Success Card -->
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden fade-in">
+                <!-- Header -->
+                <div class="success-gradient text-white p-8 text-center">
+                    <div
+                        class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-check-double-line text-4xl"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold mb-2">تم بنجاح!</h1>
+                    <p class="text-xl opacity-90">تم إنشاء جداول منفصلة لقطع الغيار</p>
+                </div>
+
+                <!-- Content -->
+                <div class="p-8">
+                    <!-- What's New Section -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <i class="ri-star-line text-yellow-500"></i>
+                            الميزات الجديدة
+                        </h2>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-green-50 rounded-xl p-6">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <i class="ri-tools-line text-2xl text-green-600"></i>
+                                    <h3 class="text-xl font-semibold text-gray-900">جدول قطع الغيار الجديدة</h3>
+                                </div>
+                                <ul class="space-y-2 text-gray-600">
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        عرض القطع الجديدة والصالحة فقط
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        إظهار الكمية المتوفرة والكلية
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        بحث وفلترة متقدمة
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        أيقونات للتصدير والاستلام والتفاصيل
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-red-50 rounded-xl p-6">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <i class="ri-tools-fill text-2xl text-red-600"></i>
+                                    <h3 class="text-xl font-semibold text-gray-900">جدول قطع الغيار التالفة</h3>
+                                </div>
+                                <ul class="space-y-2 text-gray-600">
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        عرض القطع التالفة منفصلة
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        إظهار نوع التلف وتاريخ الاستلام
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        بحث وفلترة حسب نوع التلف
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        أيقونة للتخلص من القطع التالفة
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Update -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                            <i class="ri-bar-chart-line text-blue-500"></i>
+                            تحديثات الإحصائيات
+                        </h2>
+                        <div class="bg-blue-50 rounded-xl p-6">
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="text-center">
+                                    <i class="ri-tools-line text-3xl text-green-600 mb-2"></i>
+                                    <p class="text-sm text-gray-600">قطع غيار جديدة</p>
+                                    <p class="text-lg font-bold text-green-600">منفصلة</p>
+                                </div>
+                                <div class="text-center">
+                                    <i class="ri-tools-fill text-3xl text-red-600 mb-2"></i>
+                                    <p class="text-sm text-gray-600">قطع غيار تالفة</p>
+                                    <p class="text-lg font-bold text-red-600">منفصلة</p>
+                                </div>
+                                <div class="text-center">
+                                    <i class="ri-stack-line text-3xl text-blue-600 mb-2"></i>
+                                    <p class="text-sm text-gray-600">الكمية المتوفرة</p>
+                                    <p class="text-lg font-bold text-blue-600">محدثة</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                            <i class="ri-code-line text-purple-500"></i>
+                            التفاصيل التقنية
+                        </h2>
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">تحديثات الكود</h4>
+                                    <ul class="space-y-2 text-sm text-gray-600">
+                                        <li>• تعديل WarehouseController لفصل البيانات</li>
+                                        <li>• إنشاء متغيرات منفصلة: newInventory و damagedInventory</li>
+                                        <li>• تصفية البيانات حسب source و is_active</li>
+                                        <li>• تحديث العرض لاستخدام الجداول المنفصلة</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">تحسينات واجهة المستخدم</h4>
+                                    <ul class="space-y-2 text-sm text-gray-600">
+                                        <li>• جداول منفصلة مع ألوان مميزة</li>
+                                        <li>• بحث مستقل لكل جدول</li>
+                                        <li>• فلترة متقدمة للقطع التالفة</li>
+                                        <li>• إحصائيات محدثة ومفصلة</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="http://127.0.0.1:8000/warehouses/40"
+                            class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                            <i class="ri-eye-line"></i>
+                            عرض المستودع مع الجداول الجديدة
+                        </a>
+                        <a href="http://127.0.0.1:8000/warehouses"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                            <i class="ri-list-check"></i>
+                            عرض جميع المستودعات
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-8 text-gray-500">
+                <p class="text-sm">
+                    <i class="ri-time-line"></i>
+                    تم إنشاء الجداول المنفصلة بتاريخ {{ date('Y-m-d H:i:s') }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto redirect after 10 seconds
+        setTimeout(() => {
+            if (confirm('هل تريد الانتقال إلى صفحة المستودع لرؤية الجداول الجديدة؟')) {
+                window.location.href = 'http://127.0.0.1:8000/warehouses/40';
+            }
+        }, 10000);
+    </script>
+</body>
+
+</html>

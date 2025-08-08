@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Employee;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeSeeder extends Seeder
 {
@@ -12,66 +15,30 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
-        $employees = [
-            [
-                'name' => 'أحمد محمد الأحمد',
-                'position' => 'مدير المشاريع',
-                'department' => 'الإدارة',
-                'email' => 'ahmed.mohamed@albarajco.com',
-                'phone' => '+966501234567',
-                'hire_date' => '2020-01-15',
-                'salary' => 12000.00,
-                'national_id' => '1234567890',
-                'address' => 'الرياض، حي النرجس'
-            ],
-            [
-                'name' => 'فاطمة علي السالم',
-                'position' => 'محاسبة رئيسية',
-                'department' => 'المالية',
-                'email' => 'fatima.ali@albarajco.com',
-                'phone' => '+966501234568',
-                'hire_date' => '2019-03-20',
-                'salary' => 8500.00,
-                'national_id' => '2234567890',
-                'address' => 'الرياض، حي الملقا'
-            ],
-            [
-                'name' => 'خالد عبدالله الخالد',
-                'position' => 'مهندس مدني',
-                'department' => 'الهندسة',
-                'email' => 'khalid.abdullah@albarajco.com',
-                'phone' => '+966501234569',
-                'hire_date' => '2021-06-10',
-                'salary' => 9500.00,
-                'national_id' => '3234567890',
-                'address' => 'الرياض، حي العليا'
-            ],
-            [
-                'name' => 'نورا سعد الدوسري',
-                'position' => 'مديرة الموارد البشرية',
-                'department' => 'الموارد البشرية',
-                'email' => 'nora.saad@albarajco.com',
-                'phone' => '+966501234570',
-                'hire_date' => '2020-09-05',
-                'salary' => 11000.00,
-                'national_id' => '4234567890',
-                'address' => 'الرياض، حي الياسمين'
-            ],
-            [
-                'name' => 'محمد سالم القحطاني',
-                'position' => 'فني معدات',
-                'department' => 'الصيانة',
-                'email' => 'mohammed.salem@albarajco.com',
-                'phone' => '+966501234571',
-                'hire_date' => '2022-02-14',
-                'salary' => 6500.00,
-                'national_id' => '5234567890',
-                'address' => 'الرياض، حي الربوة'
-            ]
-        ];
+        $departments = ['management', 'engineering', 'it', 'hr', 'finance', 'operations'];
 
-        foreach ($employees as $employee) {
-            Employee::create($employee);
+        for ($i = 0; $i < 200; $i++) {
+            $national_id = '2' . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);
+            $email = $national_id . '@abraj.com';
+
+            $user = User::create([
+                'name' => 'Employee ' . ($i + 1),
+                'email' => $email,
+                'password' => Hash::make($national_id),
+                'department' => $departments[array_rand($departments)],
+            ]);
+
+            Employee::create([
+                'name' => $user->name,
+                'email' => $user->email,
+                'national_id' => $national_id,
+                'phone' => '05' . mt_rand(10000000, 99999999),
+                'department' => $user->department,
+                'position' => 'Position ' . ($i + 1),
+                'salary' => mt_rand(3000, 15000),
+                'status' => 'active',
+                'user_id' => $user->id,
+            ]);
         }
     }
 }

@@ -17,6 +17,8 @@ class Project extends Model
         'start_date',
         'end_date',
         'budget',
+        'bank_guarantee_amount',
+        'bank_guarantee_type',
         'client_name',
         'location',
         'project_manager',
@@ -88,6 +90,28 @@ class Project extends Model
         return number_format((float)$this->budget, 0) . ' ر.س';
     }
 
+    // Format bank guarantee amount with currency
+    public function getFormattedBankGuaranteeAmountAttribute()
+    {
+        if ($this->bank_guarantee_amount) {
+            return number_format((float)$this->bank_guarantee_amount, 0) . ' ر.س';
+        }
+        return 'غير محدد';
+    }
+
+    // Get bank guarantee type in Arabic
+    public function getBankGuaranteeTypeNameAttribute()
+    {
+        switch ($this->bank_guarantee_type) {
+            case 'cash':
+                return 'كاش';
+            case 'facilities':
+                return 'تسهيلات';
+            default:
+                return 'غير محدد';
+        }
+    }
+
     // Calculate days remaining
     public function getDaysRemainingAttribute()
     {
@@ -132,5 +156,30 @@ class Project extends Model
     public function locations()
     {
         return $this->hasMany(Location::class, 'project_id');
+    }
+
+    public function equipment()
+    {
+        return $this->hasManyThrough(Equipment::class, Location::class, 'project_id', 'location_id');
+    }
+
+    public function extensions()
+    {
+        return $this->hasMany(ProjectExtension::class);
+    }
+
+    public function visits()
+    {
+        return $this->hasMany(ProjectVisit::class);
+    }
+
+    public function rentalEquipment()
+    {
+        return $this->hasMany(ProjectRentalEquipment::class);
+    }
+
+    public function loans()
+    {
+        return $this->hasMany(ProjectLoan::class);
     }
 }

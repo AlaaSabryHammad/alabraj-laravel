@@ -139,6 +139,12 @@ class Employee extends Model
         return $this->hasMany(Equipment::class, 'driver_id');
     }
 
+    // Internal Trucks relationship - trucks that this employee drives
+    public function internalTrucks()
+    {
+        return $this->hasMany(\App\Models\InternalTruck::class, 'driver_id');
+    }
+
     // Attendance relationship
     public function attendances()
     {

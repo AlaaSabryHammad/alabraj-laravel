@@ -15,8 +15,18 @@ class InternalTruckController extends Controller
      */
     public function index()
     {
-        $trucks = InternalTruck::with('user', 'equipment')->paginate(10);
-        return view('internal-trucks.index', compact('trucks'));
+        $trucks = InternalTruck::with('user', 'equipment', 'driver', 'location')->paginate(10);
+
+        // جلب المعدات من نوع شاحنات التي لا تملك شاحنة مرتبطة
+        $unlinkedTruckEquipments = \App\Models\Equipment::where(function ($query) {
+            $query->where('category', 'شاحنات')
+                ->orWhere('category', 'شاحنة');
+        })
+            ->whereNull('truck_id')
+            ->with('driver')
+            ->get();
+
+        return view('internal-trucks.index', compact('trucks', 'unlinkedTruckEquipments'));
     }
 
     /**
@@ -24,7 +34,7 @@ class InternalTruckController extends Controller
      */
     public function create()
     {
-        $employees = User::where('role', 'employee')->get();
+        $employees = \App\Models\Employee::all();
         $locations = Location::all();
 
         return view('internal-trucks.create', compact('employees', 'locations'));
@@ -40,7 +50,7 @@ class InternalTruckController extends Controller
             'brand' => 'required|string|max:255',
             'model' => 'nullable|string|max:255',
             'year' => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
-            
+
             'load_capacity' => 'nullable|numeric|min:0',
             'engine_number' => 'nullable|string|max:255',
             'chassis_number' => 'nullable|string|max:255',
@@ -53,35 +63,23 @@ class InternalTruckController extends Controller
             'license_expiry' => 'nullable|date',
             'insurance_expiry' => 'nullable|date',
             'description' => 'nullable|string',
-            'driver_id' => 'nullable|exists:users,id',
+            'driver_id' => 'nullable|exists:employees,id',
             'location_id' => 'nullable|exists:locations,id',
+            'images' => 'nullable|array',
+            'images.*' => 'nullable|file|image|mimes:jpeg,png,jpg,gif|max:40960', // 40MB max
         ]);
 
-        // Convert status from English to Arabic
-        $statusMap = [
-            'available' => 'متاح',
-            'in_use' => 'قيد الاستخدام',
-            'maintenance' => 'تحت الصيانة',
-            'out_of_service' => 'غير متاح'
-        ];
-
-        $validated['status'] = $statusMap[$validated['status']];
-
-        // Convert fuel_type from English to Arabic
-        $fuelTypeMap = [
-            'gasoline' => 'بنزين',
-            'diesel' => 'ديزل',
-            'hybrid' => 'هجين'
-        ];
-
-        if (isset($validated['fuel_type'])) {
-            $validated['fuel_type'] = $fuelTypeMap[$validated['fuel_type']];
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('internal-trucks', 'public');
+                $imagePaths[] = $path;
+            }
+            $validated['images'] = $imagePaths;
         }
 
         // If driver is assigned, set status to in_use
-        if ($validated['driver_id']) {
-            $validated['status'] = 'قيد الاستخدام';
-        }
         if ($validated['driver_id']) {
             $validated['status'] = 'in_use';
         }
@@ -108,7 +106,7 @@ class InternalTruckController extends Controller
      */
     public function edit(InternalTruck $internalTruck)
     {
-        $employees = User::where('role', 'employee')->get();
+        $employees = \App\Models\Employee::all();
         $locations = Location::all();
 
         return view('internal-trucks.edit', compact('internalTruck', 'employees', 'locations'));
@@ -124,7 +122,7 @@ class InternalTruckController extends Controller
             'brand' => 'required|string|max:255',
             'model' => 'nullable|string|max:255',
             'year' => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
-            
+
             'load_capacity' => 'nullable|numeric|min:0',
             'engine_number' => 'nullable|string|max:255',
             'chassis_number' => 'nullable|string|max:255',
@@ -137,34 +135,45 @@ class InternalTruckController extends Controller
             'license_expiry' => 'nullable|date',
             'insurance_expiry' => 'nullable|date',
             'description' => 'nullable|string',
-            'driver_id' => 'nullable|exists:users,id',
+            'driver_id' => 'nullable|exists:employees,id',
             'location_id' => 'nullable|exists:locations,id',
+            'images' => 'nullable|array',
+            'images.*' => 'nullable|file|image|mimes:jpeg,png,jpg,gif|max:40960', // 40MB max
+            'removed_images' => 'nullable|array',
         ]);
 
-        // Convert status from English to Arabic
-        $statusMap = [
-            'available' => 'متاح',
-            'in_use' => 'قيد الاستخدام',
-            'maintenance' => 'تحت الصيانة',
-            'out_of_service' => 'غير متاح'
-        ];
+        // Handle removed images
+        $existingImages = $internalTruck->images ?? [];
+        if ($request->has('removed_images')) {
+            $removedImages = $request->input('removed_images');
+            // Remove deleted images from storage
+            foreach ($removedImages as $imagePath) {
+                \Storage::disk('public')->delete($imagePath);
+            }
+            // Filter out removed images from existing images
+            $existingImages = array_filter($existingImages, function ($imagePath) use ($removedImages) {
+                return !in_array($imagePath, $removedImages);
+            });
+            $existingImages = array_values($existingImages); // Re-index array
+        }
 
-        $validated['status'] = $statusMap[$validated['status']];
-
-        // Convert fuel_type from English to Arabic
-        $fuelTypeMap = [
-            'gasoline' => 'بنزين',
-            'diesel' => 'ديزل',
-            'hybrid' => 'هجين'
-        ];
-
-        if (isset($validated['fuel_type'])) {
-            $validated['fuel_type'] = $fuelTypeMap[$validated['fuel_type']];
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('internal-trucks', 'public');
+                $imagePaths[] = $path;
+            }
+            // Merge with existing images
+            $validated['images'] = array_merge($existingImages, $imagePaths);
+        } else {
+            // Keep existing images if no new images uploaded
+            $validated['images'] = $existingImages;
         }
 
         // If driver is assigned, set status to in_use
         if ($validated['driver_id']) {
-            $validated['status'] = 'قيد الاستخدام';
+            $validated['status'] = 'in_use';
         }
 
         $internalTruck->update($validated);
@@ -182,5 +191,63 @@ class InternalTruckController extends Controller
 
         return redirect()->route('internal-trucks.index')
             ->with('success', 'تم حذف الشاحنة بنجاح');
+    }
+
+    /**
+     * Convert an equipment to internal truck
+     */
+    public function linkEquipment(Request $request)
+    {
+        $validated = $request->validate([
+            'equipment_id' => 'required|exists:equipment,id',
+            'year' => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
+            'fuel_type' => 'required|in:gasoline,diesel,hybrid',
+        ]);
+
+        $equipment = \App\Models\Equipment::findOrFail($validated['equipment_id']);
+
+        // تحقق من أن المعدة ليست مرتبطة بشاحنة
+        if ($equipment->truck_id) {
+            return redirect()->back()->with('error', 'هذه المعدة مرتبطة بشاحنة بالفعل');
+        }
+
+        // استخراج معلومات من اسم المعدة
+        $equipmentName = $equipment->name;
+        $parts = explode(' - ', $equipmentName);
+
+        $brand = 'غير محدد';
+        $model = 'غير محدد';
+        $plateNumber = 'EQ-' . $equipment->id;
+
+        if (count($parts) >= 2) {
+            $brandModel = trim($parts[0]);
+            $plateNumber = trim($parts[1]);
+
+            $brandModelParts = explode(' ', $brandModel, 2);
+            $brand = $brandModelParts[0];
+            $model = isset($brandModelParts[1]) ? $brandModelParts[1] : $brand;
+        }
+
+        // إنشاء شاحنة داخلية
+        $internalTruck = InternalTruck::create([
+            'plate_number' => $plateNumber,
+            'brand' => $brand,
+            'model' => $model,
+            'year' => $validated['year'] ?? date('Y'),
+            'load_capacity' => 5.0, // قيمة افتراضية
+            'fuel_type' => $validated['fuel_type'],
+            'status' => $equipment->status == 'in_use' ? 'in_use' : 'available',
+            'purchase_date' => $equipment->purchase_date ?? now(),
+            'purchase_price' => $equipment->purchase_price ?? 0,
+            'description' => $equipment->description ?? 'شاحنة محولة من المعدات',
+            'driver_id' => $equipment->driver_id,
+            'user_id' => $equipment->user_id ?? \Illuminate\Support\Facades\Auth::id(),
+        ]);
+
+        // ربط المعدة بالشاحنة الجديدة
+        $equipment->update(['truck_id' => $internalTruck->id]);
+
+        return redirect()->route('internal-trucks.index')
+            ->with('success', 'تم تحويل المعدة إلى شاحنة داخلية بنجاح');
     }
 }

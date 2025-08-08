@@ -196,6 +196,103 @@
                 @endif
             @endif
         </div>
+
+        <!-- قسم المعدات غير المربوطة -->
+        @if ($unlinkedTruckEquipments->isNotEmpty())
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden mt-6">
+                <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
+                    <div class="flex items-center">
+                        <i class="ri-tools-line text-blue-600 text-xl ml-2"></i>
+                        <h3 class="text-lg font-semibold text-blue-900">معدات شاحنات غير مربوطة</h3>
+                        <span class="mr-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                            {{ $unlinkedTruckEquipments->count() }}
+                        </span>
+                    </div>
+                    <p class="text-blue-700 text-sm mt-1">هذه المعدات من فئة "شاحنات" ولا تملك شاحنة داخلية مرتبطة</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    المعدة
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    النوع
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    الحالة
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    السائق
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    الإجراءات
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach ($unlinkedTruckEquipments as $equipment)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ $equipment->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ $equipment->serial_number }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ $equipment->type }}</div>
+                                        <div class="text-sm text-gray-500">{{ $equipment->manufacturer }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            @if ($equipment->status == 'available') bg-green-100 text-green-800
+                                            @elseif($equipment->status == 'in_use') bg-blue-100 text-blue-800
+                                            @elseif($equipment->status == 'maintenance') bg-yellow-100 text-yellow-800
+                                            @else bg-red-100 text-red-800 @endif">
+                                            @if ($equipment->status == 'available')
+                                                متاح
+                                            @elseif($equipment->status == 'in_use')
+                                                قيد الاستخدام
+                                            @elseif($equipment->status == 'maintenance')
+                                                صيانة
+                                            @else
+                                                خارج الخدمة
+                                            @endif
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if ($equipment->driver)
+                                            <div class="text-sm text-gray-900">{{ $equipment->driver->name }}</div>
+                                        @else
+                                            <span class="text-gray-400 text-sm">غير محدد</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <form action="{{ route('internal-trucks.link-equipment') }}" method="POST"
+                                            onsubmit="return confirm('هل تريد تحويل هذه المعدة إلى شاحنة داخلية؟')"
+                                            class="inline">
+                                            @csrf
+                                            <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
+                                            <button type="submit"
+                                                class="text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded transition-colors">
+                                                <i class="ri-link ml-1"></i>
+                                                تحويل لشاحنة
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- Delete Confirmation Modal -->

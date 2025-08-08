@@ -19,9 +19,32 @@ class EquipmentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $equipment = Equipment::with('driver')->latest()->paginate(10);
+        $query = Equipment::with('driver');
+
+        // Handle search
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('serial_number', 'LIKE', "%{$search}%")
+                    ->orWhere('category', 'LIKE', "%{$search}%")
+                    ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Handle status filter
+        if ($request->filled('status') && $request->get('status') != 'all') {
+            $query->where('status', $request->get('status'));
+        }
+
+        // Handle category filter
+        if ($request->filled('category') && $request->get('category') != 'all') {
+            $query->where('category', $request->get('category'));
+        }
+
+        $equipment = $query->latest()->paginate(10)->withQueryString();
 
         // Statistics for cards
         $stats = [
@@ -32,7 +55,14 @@ class EquipmentController extends Controller
             'total' => Equipment::count()
         ];
 
-        return view('equipment.index', compact('equipment', 'stats'));
+        // Get unique categories for filter dropdown
+        $categories = Equipment::select('category')
+            ->distinct()
+            ->whereNotNull('category')
+            ->pluck('category')
+            ->sort();
+
+        return view('equipment.index', compact('equipment', 'stats', 'categories'));
     }
 
     /**

@@ -49,6 +49,11 @@ class EquipmentMovementHistory extends Model
         return $this->belongsTo(User::class, 'moved_by');
     }
 
+    public function movedByUser()
+    {
+        return $this->belongsTo(User::class, 'moved_by');
+    }
+
     // Helper methods
     public function getFromLocationNameAttribute()
     {

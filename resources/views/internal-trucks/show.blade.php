@@ -418,7 +418,12 @@
         @if ($internalTruck->images && count($internalTruck->images) > 0)
             <div class="bg-white rounded-xl shadow-sm border mb-6">
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">صور الشاحنة</h2>
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900">صور الشاحنة</h2>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                            {{ count($internalTruck->images) }} صورة
+                        </span>
+                    </div>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -427,14 +432,36 @@
                                 onclick="openImageModal('{{ asset('storage/' . $imagePath) }}', '{{ $internalTruck->plate_number }} - صورة {{ $index + 1 }}')">
                                 <img src="{{ asset('storage/' . $imagePath) }}"
                                     class="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform group-hover:scale-105"
-                                    alt="صورة الشاحنة {{ $index + 1 }}">
+                                    alt="صورة الشاحنة {{ $index + 1 }}"
+                                    onerror="this.src='/assets/images/truck-placeholder.svg'">
                                 <div
                                     class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30
                                 transition-all rounded-lg flex items-center justify-center">
                                     <i class="ri-eye-line text-white opacity-0 group-hover:opacity-100 text-2xl"></i>
                                 </div>
+                                <div
+                                    class="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                    {{ $index + 1 }}
+                                </div>
                             </div>
                         @endforeach
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="bg-white rounded-xl shadow-sm border mb-6">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">صور الشاحنة</h2>
+                </div>
+                <div class="p-6">
+                    <div class="text-center py-8">
+                        <i class="ri-image-line text-gray-400 text-6xl mb-4"></i>
+                        <p class="text-gray-500 text-lg mb-4">لم يتم رفع صور للشاحنة بعد</p>
+                        <a href="{{ route('internal-trucks.edit', $internalTruck) }}"
+                            class="inline-flex items-center px-4 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors">
+                            <i class="ri-add-line ml-2"></i>
+                            إضافة صور
+                        </a>
                     </div>
                 </div>
             </div>

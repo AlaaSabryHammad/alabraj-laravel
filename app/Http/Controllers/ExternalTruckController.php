@@ -15,15 +15,16 @@ class ExternalTruckController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ExternalTruck::query();
+        $query = ExternalTruck::with('supplier');
 
         // Handle search
         if ($request->filled('search')) {
             $search = $request->get('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('plate_number', 'like', "%{$search}%")
-                  ->orWhere('driver_name', 'like', "%{$search}%")
-                  ->orWhere('driver_phone', 'like', "%{$search}%");
+                    ->orWhere('driver_name', 'like', "%{$search}%")
+                    ->orWhere('driver_phone', 'like', "%{$search}%")
+                    ->orWhere('contract_number', 'like', "%{$search}%");
             });
         }
 
@@ -32,17 +33,20 @@ class ExternalTruckController extends Controller
             $query->where('status', $request->get('status'));
         }
 
-        // Handle loading type filter
-        if ($request->filled('loading_type')) {
-            $query->where('loading_type', $request->get('loading_type'));
+        // Handle supplier filter
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->get('supplier_id'));
         }
 
         $trucks = $query->latest()->paginate(10);
 
         // Preserve filters in pagination links
-        $trucks->appends($request->only(['search', 'status', 'loading_type']));
+        $trucks->appends($request->only(['search', 'status', 'supplier_id']));
 
-        return view('external-trucks.index', compact('trucks'));
+        // Get suppliers for filter dropdown
+        $suppliers = \App\Models\Supplier::orderBy('name')->get();
+
+        return view('external-trucks.index', compact('trucks', 'suppliers'));
     }
 
     /**
@@ -51,14 +55,15 @@ class ExternalTruckController extends Controller
     public function create(Request $request)
     {
         $suppliers = Supplier::where('status', 'نشط')
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'company_name', 'phone', 'email']);
+            ->orderBy('name')
+            ->get(['id', 'name', 'company_name', 'phone', 'email']);
 
         // Get the pre-selected supplier if provided
         $selectedSupplierId = $request->get('supplier');
 
         return view('external-trucks.create', compact('suppliers', 'selectedSupplierId'));
-    }    /**
+    }
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -72,9 +77,6 @@ class ExternalTruckController extends Controller
             'daily_rate' => 'nullable|numeric|min:0',
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after_or_equal:contract_start_date',
-            'loading_type' => 'nullable|in:box,tank',
-            'capacity_volume' => 'nullable|numeric|min:0',
-            'capacity_weight' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'status' => 'required|in:active,inactive,maintenance'
@@ -111,8 +113,8 @@ class ExternalTruckController extends Controller
     public function edit(ExternalTruck $externalTruck)
     {
         $suppliers = Supplier::where('status', 'نشط')
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'company_name', 'phone', 'email']);
+            ->orderBy('name')
+            ->get(['id', 'name', 'company_name', 'phone', 'email']);
 
         return view('external-trucks.edit', compact('externalTruck', 'suppliers'));
     }
@@ -131,9 +133,6 @@ class ExternalTruckController extends Controller
             'daily_rate' => 'nullable|numeric|min:0',
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after_or_equal:contract_start_date',
-            'loading_type' => 'nullable|in:box,tank',
-            'capacity_volume' => 'nullable|numeric|min:0',
-            'capacity_weight' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'status' => 'required|in:active,inactive,maintenance'

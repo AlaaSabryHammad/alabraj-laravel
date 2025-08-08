@@ -10,6 +10,7 @@ class SparePart extends Model
     use HasFactory;
 
     protected $fillable = [
+        'spare_part_type_id',
         'code',
         'name',
         'description',
@@ -22,6 +23,11 @@ class SparePart extends Model
         'supplier',
         'location_shelf',
         'specifications',
+        'serial_number',
+        'barcode',
+        'source',
+        'returned_by_employee_id',
+        'return_notes',
         'is_active',
     ];
 
@@ -64,5 +70,87 @@ class SparePart extends Model
     public function getWarehouseStock($locationId)
     {
         return $this->inventories()->where('location_id', $locationId)->first();
+    }
+
+    /**
+     * Get spare part type
+     */
+    public function sparePartType()
+    {
+        return $this->belongsTo(SparePartType::class);
+    }
+
+    /**
+     * Get employee who returned this part (if returned)
+     */
+    public function returnedByEmployee()
+    {
+        return $this->belongsTo(Employee::class, 'returned_by_employee_id');
+    }
+
+    /**
+     * Get serial numbers for this spare part
+     */
+    public function serialNumbers()
+    {
+        return $this->hasMany(SparePartSerial::class);
+    }
+
+    /**
+     * Get available serial numbers
+     */
+    public function availableSerialNumbers()
+    {
+        return $this->serialNumbers()->where('status', 'available');
+    }
+
+    /**
+     * Generate barcode for specific spare part instance
+     */
+    public function generateBarcode()
+    {
+        $timestamp = date('Ymd');
+        
+        // استخدام microtime للحصول على رقم فريد
+        $microtime = (int)(microtime(true) * 1000);
+        $lastDigits = $microtime % 10000; // آخر 4 أرقام
+        
+        // في حالة التطابق، إضافة رقم عشوائي
+        $randomSuffix = rand(100, 999);
+        
+        return "BC-{$this->id}-{$timestamp}-{$lastDigits}{$randomSuffix}";
+    }
+
+    /**
+     * Generate serial number for specific spare part instance
+     */
+    public function generateSerialNumber()
+    {
+        $year = date('Y');
+        
+        // استخدام microtime + الرقم التعريفي + رقم عشوائي للحصول على رقم فريد
+        $microtime = (int)(microtime(true) * 1000);
+        $uniqueNumber = ($microtime + $this->id + rand(1, 999)) % 1000000;
+        
+        return "SP-{$year}-" . str_pad($uniqueNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate unique spare part code
+     */
+    public static function generateCode()
+    {
+        do {
+            $lastSparePart = self::orderBy('id', 'desc')->first();
+            $nextNumber = $lastSparePart ? $lastSparePart->id + 1 : 1;
+            $code = 'SP-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            
+            // إضافة microtime للتأكد من الفرادة في حالة الطلبات المتزامنة
+            $microSuffix = (int)(microtime(true) * 1000) % 1000;
+            $code .= '-' . str_pad($microSuffix, 3, '0', STR_PAD_LEFT);
+            
+        } while (self::where('code', $code)->exists());
+        
+        return $code;
     }
 }

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تم إعادة النموذج الأصلي مع التحديد التلقائي</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-gradient {
+            background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-5xl w-full">
+            <!-- Success Card -->
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden fade-in">
+                <!-- Header -->
+                <div class="success-gradient text-white p-8 text-center">
+                    <div
+                        class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-refresh-line text-4xl"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold mb-2">تم إعادة النموذج الأصلي!</h1>
+                    <p class="text-xl opacity-90">الآن النموذج يتم تعبئة البيانات تلقائياً بدون نافذة الاختيار</p>
+                </div>
+
+                <!-- Content -->
+                <div class="p-8">
+                    <!-- What Changed -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <i class="ri-check-double-line text-green-500"></i>
+                            ما تم تحديثه
+                        </h2>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-green-50 rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-green-900 mb-3 flex items-center gap-2">
+                                    <i class="ri-arrow-up-line text-green-600"></i>
+                                    التحسينات الجديدة
+                                </h3>
+                                <ul class="space-y-2 text-gray-700">
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        إعادة النموذج الأصلي الكامل
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        تحديد نوع القطعة تلقائياً
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        تعبئة اسم القطعة تلقائياً
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        عرض الوصف تلقائياً
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-check-line text-green-600"></i>
+                                        اقتراح السعر الحالي
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-blue-50 rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                                    <i class="ri-delete-bin-line text-blue-600"></i>
+                                    ما تم إزالته
+                                </h3>
+                                <ul class="space-y-2 text-gray-700">
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-close-line text-red-600"></i>
+                                        نافذة اختيار نوع الاستلام
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-close-line text-red-600"></i>
+                                        النموذج المبسط
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-close-line text-red-600"></i>
+                                        خطوات إضافية غير ضرورية
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-close-line text-red-600"></i>
+                                        الحاجة لكتابة اسم القطعة يدوياً
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- How it Works Now -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <i class="ri-play-circle-line text-purple-500"></i>
+                            كيف يعمل النظام الآن
+                        </h2>
+                        <div class="grid md:grid-cols-4 gap-4">
+                            <div class="bg-purple-50 rounded-xl p-4 text-center">
+                                <div
+                                    class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-cursor-line text-xl text-purple-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-900 mb-2">1. النقر</h4>
+                                <p class="text-sm text-gray-600">اضغط على أيقونة الاستلام لأي قطعة</p>
+                            </div>
+
+                            <div class="bg-green-50 rounded-xl p-4 text-center">
+                                <div
+                                    class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-magic-line text-xl text-green-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-900 mb-2">2. التعبئة التلقائية</h4>
+                                <p class="text-sm text-gray-600">النموذج يُعبأ تلقائياً بالبيانات</p>
+                            </div>
+
+                            <div class="bg-blue-50 rounded-xl p-4 text-center">
+                                <div
+                                    class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-edit-line text-xl text-blue-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-900 mb-2">3. التعديل</h4>
+                                <p class="text-sm text-gray-600">أدخل الكمية وبيانات الفاتورة</p>
+                            </div>
+
+                            <div class="bg-orange-50 rounded-xl p-4 text-center">
+                                <div
+                                    class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-check-double-line text-xl text-orange-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-900 mb-2">4. الحفظ</h4>
+                                <p class="text-sm text-gray-600">استكمال عملية الاستلام</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                            <i class="ri-code-line text-orange-500"></i>
+                            التفاصيل التقنية
+                        </h2>
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">النموذج الجديد</h4>
+                                    <ul class="space-y-2 text-sm text-gray-600">
+                                        <li>• نموذج autoReceiveModal بدلاً من directReceiveModal</li>
+                                        <li>• تعبئة تلقائية لجميع البيانات الأساسية</li>
+                                        <li>• عرض السعر الحالي كاقتراح</li>
+                                        <li>• حقول للوصف والملاحظات</li>
+                                        <li>• تحديد تلقائي للنوع والاسم</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">JavaScript Functions</h4>
+                                    <ul class="space-y-2 text-sm text-gray-600">
+                                        <li>• openReceiveModalWithData() بدلاً من openDirectReceiveModal()</li>
+                                        <li>• closeAutoReceiveModal() للإغلاق</li>
+                                        <li>• Focus تلقائي على حقل الكمية</li>
+                                        <li>• استخدام النموذج الأصلي receive-new-spares</li>
+                                        <li>• حذف الكود الخاص بالنموذج المبسط</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                            <i class="ri-compare-line text-red-500"></i>
+                            مقارنة بين النسختين
+                        </h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse border border-gray-200 rounded-lg">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="border border-gray-200 px-4 py-3 text-right font-semibold">المقارنة
+                                        </th>
+                                        <th
+                                            class="border border-gray-200 px-4 py-3 text-right font-semibold text-red-600">
+                                            النموذج المبسط</th>
+                                        <th
+                                            class="border border-gray-200 px-4 py-3 text-right font-semibold text-green-600">
+                                            النموذج الأصلي المحدث</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border border-gray-200 px-4 py-3 font-medium">البيانات المطلوبة</td>
+                                        <td class="border border-gray-200 px-4 py-3">الكمية والملاحظات فقط</td>
+                                        <td class="border border-gray-200 px-4 py-3">جميع بيانات الفاتورة والقطعة</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-200 px-4 py-3 font-medium">التعبئة التلقائية</td>
+                                        <td class="border border-gray-200 px-4 py-3">اسم القطعة فقط</td>
+                                        <td class="border border-gray-200 px-4 py-3">النوع، الاسم، الوصف، السعر المقترح
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-200 px-4 py-3 font-medium">بيانات الفاتورة</td>
+                                        <td class="border border-gray-200 px-4 py-3">غير متوفرة</td>
+                                        <td class="border border-gray-200 px-4 py-3">رقم الفاتورة، المورد، التاريخ</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-200 px-4 py-3 font-medium">المرونة</td>
+                                        <td class="border border-gray-200 px-4 py-3">محدودة</td>
+                                        <td class="border border-gray-200 px-4 py-3">عالية مع إمكانية التعديل</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="http://127.0.0.1:8000/warehouses/40"
+                            class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                            <i class="ri-play-line"></i>
+                            جرب النموذج الأصلي المحدث
+                        </a>
+                        <a href="http://127.0.0.1:8000/warehouses"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                            <i class="ri-list-check"></i>
+                            عرض جميع المستودعات
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-8 text-gray-500">
+                <p class="text-sm">
+                    <i class="ri-time-line"></i>
+                    تم إعادة النموذج الأصلي مع التحديث التلقائي بتاريخ {{ date('Y-m-d H:i:s') }}
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

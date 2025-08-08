@@ -7,8 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Location;
 use App\Models\LocationType;
 use App\Models\Employee;
-use App\Models\Project;
-use Faker\Factory as Faker;
+use Illuminate\Support\Facades\DB;
 
 class LocationSeeder extends Seeder
 {
@@ -17,94 +16,124 @@ class LocationSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create('ar_SA');
-        
-        // الحصول على أنواع المواقع والموظفين والمشاريع المتاحة
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Location::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $locationTypes = LocationType::all();
-        $managers = Employee::where('status', 'active')
-            ->whereIn('role', ['manager', 'supervisor', 'admin'])
-            ->get();
-        $projects = Project::all();
+        $employees = Employee::all();
 
-        // أسماء المواقع بالعربية
-        $locationNames = [
-            'موقع الرياض الرئيسي',
-            'مستودع الدمام الكبير',
-            'فرع جدة التجاري',
-            'موقع الخبر الصناعي',
-            'مجمع مكة الإداري',
-            'مستودع المدينة المنورة',
-            'موقع الطائف الجبلي',
-            'فرع الأحساء الزراعي',
-            'مجمع القصيم التجاري',
-            'موقع حائل الشمالي',
-            'مستودع تبوك الحدودي',
-            'فرع عسير الجنوبي',
-            'موقع نجران الحديث',
-            'مجمع الباحة السياحي',
-            'مستودع الجوف الكبير',
-            'فرع سكاكا الإداري',
-            'موقع رفحاء الحدودي',
-            'مجمع عرعر الصناعي',
-            'مستودع القريات التجاري',
-            'فرع طريف الشمالي',
-            'موقع الرس الزراعي',
-            'مجمع بريدة الرئيسي',
-            'مستودع عنيزة الحديث',
-            'فرع البكيرية الصغير',
-            'موقع المذنب الإداري',
-            'مجمع الزلفي التجاري',
-            'مستودع شقراء الكبير',
-            'فرع الدوادمي الجنوبي',
-            'موقع الأفلاج الزراعي',
-            'مجمع وادي الدواسر الحديث',
-            'مستودع السليل الصحراوي',
-            'فرع الخرج الإنتاجي',
-            'موقع الدلم الإداري',
-            'مجمع المزاحمية التجاري',
-            'مستودع ضرما الأخير'
+        $locations = [
+            ['name' => 'Main Office - Riyadh'],
+            ['name' => 'Jeddah Branch'],
+            ['name' => 'Dammam Logistics Hub'],
+            ['name' => 'Project Site Alpha - Neom'],
+            ['name' => 'Project Site Beta - Qiddiya'],
+            ['name' => 'Al Khobar Warehouse'],
+            ['name' => 'Yanbu Petrochemical Plant'],
+            ['name' => 'Jubail Industrial Area'],
+            ['name' => 'Makkah Expansion Project'],
+            ['name' => 'Madinah High-Speed Rail Station'],
+            ['name' => 'Tabuk Regional Airport'],
+            ['name' => 'Abha Mountain Resort'],
+            ['name' => 'Jizan Economic City'],
+            ['name' => 'Hail Agricultural Project'],
+            ['name' => 'Buraidah Central Market'],
+            ['name' => 'Al-Qassim University Campus'],
+            ['name' => 'King Abdullah Financial District'],
+            ['name' => 'Red Sea Tourism Site 1'],
+            ['name' => 'Red Sea Tourism Site 2'],
+            ['name' => 'Diriyah Historical Site'],
+            ['name' => 'AlUla Heritage Village'],
+            ['name' => 'Amaala Luxury Resort'],
+            ['name' => 'King Salman Energy Park (SPARK)'],
+            ['name' => 'Riyadh Metro Line 1'],
+            ['name' => 'Riyadh Metro Line 2'],
+            ['name' => 'Jeddah Tower Construction Site'],
+            ['name' => 'Soudah Peaks Project'],
+            ['name' => 'King Fahd Causeway Authority'],
+            ['name' => 'King Khalid Military City'],
+            ['name' => 'Prince Sultan Air Base'],
+            ['name' => 'Al-Ahsa Oasis Site'],
+            ['name' => 'Taif Cable Car Station'],
+            ['name' => 'Gassim Date Factory'],
+            ['name' => 'Abha Dam'],
+            ['name' => 'Najran Cement Factory'],
         ];
 
-        // المدن السعودية
-        $cities = [
-            'الرياض', 'جدة', 'مكة المكرمة', 'المدينة المنورة', 'الدمام', 'الخبر', 'الطائف',
-            'بريدة', 'تبوك', 'خميس مشيط', 'الأحساء', 'حفر الباطن', 'الجبيل', 'نجران',
-            'ينبع', 'الباحة', 'عرعر', 'سكاكا', 'جازان', 'القطيف', 'الرس', 'عنيزة',
-            'الظهران', 'الخفجي', 'رابغ', 'القريات', 'طريف', 'الدوادمي', 'الزلفي',
-            'الأفلاج', 'وادي الدواسر', 'الخرج', 'شقراء', 'المذنب', 'البكيرية'
-        ];
-
-        // المناطق السعودية
-        $regions = [
-            'منطقة الرياض', 'منطقة مكة المكرمة', 'المنطقة الشرقية', 'منطقة عسير',
-            'منطقة المدينة المنورة', 'منطقة القصيم', 'منطقة حائل', 'منطقة تبوك',
-            'منطقة الحدود الشمالية', 'منطقة جازان', 'منطقة نجران', 'منطقة الباحة', 'منطقة الجوف'
-        ];
-
-        // إنشاء 35 موقع
-        for ($i = 0; $i < 35; $i++) {
-            $locationType = $faker->randomElement($locationTypes);
-            $manager = $faker->randomElement($managers);
-            $project = $projects->isNotEmpty() ? $faker->optional(0.7)->randomElement($projects) : null;
-            
+        foreach ($locations as $location) {
+            $manager = $employees->random();
             Location::create([
-                'name' => $locationNames[$i],
-                'type' => $locationType->name,
-                'location_type_id' => $locationType->id,
-                'address' => $faker->address,
-                'city' => $faker->randomElement($cities),
-                'region' => $faker->randomElement($regions),
-                'coordinates' => $faker->latitude . ',' . $faker->longitude,
-                'description' => $faker->paragraph(2),
-                'status' => $faker->randomElement(['active', 'inactive', 'maintenance']),
+                'name' => $location['name'],
+                'location_type_id' => $locationTypes->random()->id,
                 'manager_id' => $manager->id,
                 'manager_name' => $manager->name,
-                'contact_phone' => $faker->phoneNumber,
-                'area_size' => $faker->randomFloat(2, 100, 10000), // مساحة من 100 إلى 10000 متر مربع
-                'project_id' => $project ? $project->id : null,
-                'created_at' => $faker->dateTimeBetween('-2 years', 'now'),
-                'updated_at' => now(),
+                'status' => 'نشط',
+                'city' => 'الرياض',
+                'region' => 'منطقة الرياض',
+                'address' => 'العنوان تلقائي - ' . $location['name'],
+                'area_size' => rand(1000, 10000) . '.00',
             ]);
+        }
+
+        // إضافة مستودعات مخصصة
+        $warehouseType = $locationTypes->where('name', 'مستودع')->first();
+        
+        if ($warehouseType) {
+            $warehouseLocations = [
+                [
+                    'name' => 'مستودع الرياض المركزي',
+                    'city' => 'الرياض',
+                    'region' => 'منطقة الرياض',
+                    'address' => 'المنطقة الصناعية الثانية، طريق الملك فهد',
+                    'area_size' => 5000.00,
+                ],
+                [
+                    'name' => 'مستودع جدة للإمدادات',
+                    'city' => 'جدة',
+                    'region' => 'منطقة مكة المكرمة',
+                    'address' => 'المنطقة الصناعية الأولى، شارع المدينة',
+                    'area_size' => 3500.00,
+                ],
+                [
+                    'name' => 'مستودع الدمام الشرقي',
+                    'city' => 'الدمام',
+                    'region' => 'المنطقة الشرقية',
+                    'address' => 'مجمع الدمام الصناعي، طريق الملك عبدالعزيز',
+                    'area_size' => 4200.00,
+                ],
+                [
+                    'name' => 'مستودع المواد الإنشائية - أبها',
+                    'city' => 'أبها',
+                    'region' => 'منطقة عسير',
+                    'address' => 'حي النهضة، طريق الملك خالد',
+                    'area_size' => 2800.00,
+                ],
+                [
+                    'name' => 'مستودع قطع الغيار والمعدات',
+                    'city' => 'الرياض',
+                    'region' => 'منطقة الرياض',
+                    'address' => 'حي الصناعية، شارع التخصصي',
+                    'area_size' => 6000.00,
+                ],
+            ];
+
+            foreach ($warehouseLocations as $warehouseData) {
+                $manager = $employees->random();
+                Location::create([
+                    'name' => $warehouseData['name'],
+                    'location_type_id' => $warehouseType->id,
+                    'manager_id' => $manager->id,
+                    'manager_name' => $manager->name,
+                    'status' => 'نشط',
+                    'city' => $warehouseData['city'],
+                    'region' => $warehouseData['region'],
+                    'address' => $warehouseData['address'],
+                    'area_size' => $warehouseData['area_size'],
+                    'contact_phone' => '0' . rand(500000000, 599999999),
+                    'description' => 'مستودع مخصص لتخزين المواد والمعدات اللازمة للمشاريع',
+                ]);
+            }
         }
     }
 }
