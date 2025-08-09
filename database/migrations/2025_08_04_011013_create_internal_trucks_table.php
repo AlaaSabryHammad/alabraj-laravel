@@ -19,8 +19,8 @@ return new class extends Migration
             $table->integer('year');
             $table->string('engine_number')->nullable();
             $table->string('chassis_number')->nullable();
-            $table->decimal('load_capacity', 8, 2); // بالطن
-            $table->string('fuel_type')->default('ديزل');
+            $table->decimal('load_capacity', 8, 2)->default(5.0); // بالطن
+            $table->enum('fuel_type', ['petrol', 'diesel', 'hybrid', 'electric'])->default('diesel');
             $table->date('license_expiry')->nullable();
             $table->date('insurance_expiry')->nullable();
             $table->string('truck_type')->nullable();
@@ -29,6 +29,15 @@ return new class extends Migration
             $table->integer('mileage')->nullable();
             $table->date('last_maintenance_date')->nullable();
             $table->decimal('maintenance_cost', 10, 2)->nullable();
+
+            // Additional fields that were added later
+            $table->date('purchase_date')->nullable();
+            $table->decimal('purchase_price', 12, 2)->nullable();
+            $table->text('description')->nullable();
+            $table->unsignedBigInteger('driver_id')->nullable();
+            $table->unsignedBigInteger('location_id')->nullable();
+            $table->json('images')->nullable();
+
             $table->text('notes')->nullable();
             $table->enum('status', ['available', 'in_use', 'maintenance', 'unavailable'])->default('available');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');

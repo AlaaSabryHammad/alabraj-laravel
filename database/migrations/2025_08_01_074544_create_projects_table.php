@@ -26,6 +26,16 @@ return new class extends Migration
             $table->string('location');
             $table->string('project_manager')->nullable();
             $table->unsignedBigInteger('project_manager_id')->nullable();
+
+            // Bank Guarantee Fields
+            $table->decimal('bank_guarantee_amount', 12, 2)->nullable();
+            $table->string('bank_guarantee_number')->nullable();
+            $table->date('bank_guarantee_issue_date')->nullable();
+            $table->date('bank_guarantee_expiry_date')->nullable();
+            $table->string('bank_guarantee_issuing_bank')->nullable();
+            $table->enum('bank_guarantee_type', ['performance', 'advance_payment', 'maintenance', 'other'])->nullable();
+            $table->text('bank_guarantee_notes')->nullable();
+
             $table->enum('status', ['planning', 'active', 'on_hold', 'completed', 'cancelled'])->default('planning');
             $table->integer('progress')->default(0);
             $table->timestamps();

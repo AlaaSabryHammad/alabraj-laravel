@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('equipment', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('category')->nullable();
             $table->string('type')->nullable();
             $table->unsignedBigInteger('type_id')->nullable();
             $table->string('model')->nullable();
@@ -29,9 +30,12 @@ return new class extends Migration
             $table->decimal('purchase_price', 12, 2);
             $table->date('warranty_expiry')->nullable();
             $table->date('last_maintenance')->nullable();
+            $table->text('description')->nullable();
+            $table->text('notes')->nullable();
             $table->json('images')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
-            
+
             // Foreign Keys will be added later
             // $table->foreign('type_id')->references('id')->on('equipment_types')->onDelete('set null');
             // $table->foreign('location_id')->references('id')->on('locations')->onDelete('set null');

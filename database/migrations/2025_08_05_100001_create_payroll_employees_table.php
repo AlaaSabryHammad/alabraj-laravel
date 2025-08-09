@@ -16,6 +16,14 @@ return new class extends Migration
             $table->decimal('total_deductions', 10, 2)->default(0);
             $table->decimal('total_bonuses', 10, 2)->default(0);
             $table->decimal('net_salary', 10, 2)->default(0);
+
+            // Attendance fields
+            $table->integer('days_present')->default(0);
+            $table->integer('days_absent')->default(0);
+            $table->integer('working_days')->default(0);
+            $table->decimal('overtime_hours', 8, 2)->default(0);
+            $table->decimal('overtime_amount', 10, 2)->default(0);
+
             $table->boolean('is_eligible')->default(true);
             $table->text('notes')->nullable();
             $table->timestamps();

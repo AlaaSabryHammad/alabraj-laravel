@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->integer('late_minutes')->default(0);
             $table->decimal('working_hours', 5, 2)->nullable();
+            $table->decimal('overtime_hours', 5, 2)->default(0);
             $table->timestamps();
 
             $table->unique(['employee_id', 'date']);

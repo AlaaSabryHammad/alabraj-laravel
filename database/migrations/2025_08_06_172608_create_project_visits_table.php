@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date('visit_date');
             $table->time('visit_time')->nullable();
             $table->foreignId('visitor_id')->constrained('employees')->onDelete('cascade');
+            $table->string('visitor_name')->nullable(); // Additional visitor name field
             $table->enum('visit_type', ['inspection', 'meeting', 'supervision', 'coordination', 'other'])->default('inspection');
             $table->text('visit_notes');
             $table->foreignId('recorded_by')->constrained('users')->onDelete('cascade');

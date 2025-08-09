@@ -19,6 +19,15 @@ return new class extends Migration
             $table->enum('loading_type', ['box', 'tank'])->comment('نوع التحميل: صندوق أو تانك');
             $table->decimal('capacity_volume', 8, 2)->nullable()->comment('سعة الصندوق بالمتر المكعب');
             $table->decimal('capacity_weight', 8, 2)->nullable()->comment('سعة التانك بالطن');
+
+            // Contract fields
+            $table->unsignedBigInteger('supplier_id')->nullable();
+            $table->string('contract_number')->nullable();
+            $table->date('contract_start_date')->nullable();
+            $table->date('contract_end_date')->nullable();
+            $table->decimal('contract_value', 12, 2)->nullable();
+            $table->text('contract_terms')->nullable();
+
             $table->text('notes')->nullable()->comment('ملاحظات إضافية');
             $table->json('photos')->nullable()->comment('صور الشاحنة');
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active')->comment('حالة الشاحنة');

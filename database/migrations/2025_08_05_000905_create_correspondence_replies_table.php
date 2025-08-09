@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('correspondence_id')->constrained('correspondences')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->text('reply_content');
+            $table->enum('reply_type', ['reply', 'forward', 'note'])->default('reply');
             $table->enum('status', ['draft', 'sent'])->default('draft');
             $table->string('file_path')->nullable();
             $table->string('file_name')->nullable();

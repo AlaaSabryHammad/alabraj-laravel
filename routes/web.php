@@ -235,6 +235,9 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::delete('/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
         Route::delete('/images/{image}', [ProjectController::class, 'deleteImage'])->name('projects.images.delete');
 
+        // Project Extension Route
+        Route::post('/{project}/extend', [ProjectController::class, 'extendProject'])->name('projects.extend');
+
         // Project Extract Routes
         Route::get('/{project}/extract/create', [ProjectController::class, 'createExtract'])->name('projects.extract.create');
         Route::post('/{project}/extract/store', [ProjectController::class, 'storeExtract'])->name('projects.extract.store');

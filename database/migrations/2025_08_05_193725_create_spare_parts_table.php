@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name'); // اسم قطعة الغيار
             $table->text('description')->nullable(); // وصف قطعة الغيار
             $table->string('category')->nullable(); // فئة قطعة الغيار
+            $table->unsignedBigInteger('spare_part_type_id')->nullable(); // نوع قطعة الغيار
             $table->string('brand')->nullable(); // العلامة التجارية
             $table->string('model')->nullable(); // رقم الموديل
             $table->decimal('unit_price', 10, 2); // سعر الوحدة
@@ -27,7 +28,7 @@ return new class extends Migration
             $table->json('specifications')->nullable(); // مواصفات إضافية
             $table->boolean('is_active')->default(true); // حالة قطعة الغيار
             $table->timestamps();
-            
+
             $table->index(['code', 'name']);
             $table->index('category');
         });
