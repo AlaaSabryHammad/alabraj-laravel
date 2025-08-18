@@ -70,9 +70,10 @@
                         </div>
 
                         <div>
-                            <label for="bank_guarantee_amount" class="block text-sm font-medium text-gray-700 mb-2">قيمة الضمان البنكي (ر.س)</label>
-                            <input type="number" id="bank_guarantee_amount" name="bank_guarantee_amount" value="{{ old('bank_guarantee_amount') }}" step="0.01"
-                                min="0"
+                            <label for="bank_guarantee_amount" class="block text-sm font-medium text-gray-700 mb-2">قيمة
+                                الضمان البنكي (ر.س)</label>
+                            <input type="number" id="bank_guarantee_amount" name="bank_guarantee_amount"
+                                value="{{ old('bank_guarantee_amount') }}" step="0.01" min="0"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('bank_guarantee_amount') border-red-500 @enderror"
                                 placeholder="0.00">
                             @error('bank_guarantee_amount')
@@ -81,12 +82,15 @@
                         </div>
 
                         <div>
-                            <label for="bank_guarantee_type" class="block text-sm font-medium text-gray-700 mb-2">نوع الضمان البنكي</label>
+                            <label for="bank_guarantee_type" class="block text-sm font-medium text-gray-700 mb-2">نوع الضمان
+                                البنكي</label>
                             <select id="bank_guarantee_type" name="bank_guarantee_type"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('bank_guarantee_type') border-red-500 @enderror">
                                 <option value="">اختر نوع الضمان</option>
-                                <option value="cash" {{ old('bank_guarantee_type') == 'cash' ? 'selected' : '' }}>كاش</option>
-                                <option value="facilities" {{ old('bank_guarantee_type') == 'facilities' ? 'selected' : '' }}>تسهيلات</option>
+                                <option value="cash" {{ old('bank_guarantee_type') == 'cash' ? 'selected' : '' }}>كاش
+                                </option>
+                                <option value="facilities"
+                                    {{ old('bank_guarantee_type') == 'facilities' ? 'selected' : '' }}>تسهيلات</option>
                             </select>
                             @error('bank_guarantee_type')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -152,7 +156,8 @@
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">تاريخ بداية المشروع
+                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">تاريخ بداية
+                                المشروع
                                 *</label>
                             <input type="date" id="start_date" name="start_date" value="{{ old('start_date') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('start_date') border-red-500 @enderror"
@@ -510,7 +515,7 @@
             const container = document.getElementById('requests-container');
             const requestItem = document.createElement('div');
             requestItem.className =
-            'grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-xl bg-blue-50';
+                'grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-xl bg-blue-50';
             requestItem.innerHTML = `
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">رقم الطلب</label>

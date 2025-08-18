@@ -12,16 +12,59 @@ use App\Models\ProjectExtension;
 use App\Models\ProjectVisit;
 use App\Models\ProjectRentalEquipment;
 use App\Models\ProjectLoan;
+use Carbon\Carbon;
 
 class ProjectController extends Controller
 {
+    /**
+     * Check if current user can access the given project
+     */
+    private function checkEngineerAccess(Project $project, $action = 'الوصول')
+    {
+        $currentUser = Auth::user();
+        if ($currentUser) {
+            $currentEmployee = \App\Models\Employee::where('user_id', $currentUser->id)->first();
+
+            if ($currentEmployee && $currentEmployee->role) {
+                $engineerVariants = \App\Models\Employee::variantsForArabic('مهندس');
+
+                // If current user is an engineer, check if they manage this project
+                if (in_array($currentEmployee->role, $engineerVariants)) {
+                    if ($project->project_manager_id !== $currentEmployee->id) {
+                        abort(403, "غير مخول {$action} لهذا المشروع");
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // Clear any model cache and get fresh data
-        $projects = Project::with('projectManager')->latest()->paginate(10);
+        // Get current authenticated user and their employee record
+        $currentUser = Auth::user();
+        $currentEmployee = null;
+
+        if ($currentUser) {
+            $currentEmployee = \App\Models\Employee::where('user_id', $currentUser->id)->first();
+        }
+
+        // Start with base query
+        $query = Project::with('projectManager')->latest();
+
+        // If current user is an engineer, show only projects they manage
+        if ($currentEmployee && $currentEmployee->role) {
+            $engineerVariants = \App\Models\Employee::variantsForArabic('مهندس');
+
+            if (in_array($currentEmployee->role, $engineerVariants)) {
+                // Engineer can only see projects they manage
+                $query->where('project_manager_id', $currentEmployee->id);
+            }
+        }
+
+        $projects = $query->paginate(10);
 
         // Ensure fresh attributes are loaded
         $projects->getCollection()->each(function ($project) {
@@ -36,7 +79,12 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        $employees = \App\Models\Employee::where('status', 'active')->get();
+        // Get only employees with "engineer" role (both Arabic and English variants)
+        $engineerVariants = \App\Models\Employee::variantsForArabic('مهندس');
+        $employees = \App\Models\Employee::where('status', 'active')
+            ->whereIn('role', $engineerVariants)
+            ->get();
+
         return view('projects.create', compact('employees'));
     }
 
@@ -172,6 +220,9 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+        // Check if current user can access this project
+        $this->checkEngineerAccess($project, 'للوصول');
+
         // Load all relationships including project items and extracts
         $project->load([
             'projectManager',
@@ -208,17 +259,23 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
+        // Check if current user can access this project
+        $this->checkEngineerAccess($project, 'لتعديل');
+
         // Load relationships for editing including project items, extracts, and images
         $project->load([
             'projectImages',
             'projectItems',
-            'projectExtracts' => function($query) {
+            'projectExtracts' => function ($query) {
                 $query->orderBy('created_at', 'desc');
             }
         ]);
 
-        // Get active employees for project manager dropdown
-        $employees = \App\Models\Employee::where('status', 'active')->orderBy('name')->get();
+        // Get active employees with "engineer" role for project manager dropdown
+        $engineerVariants = \App\Models\Employee::variantsForArabic('مهندس');
+        $employees = \App\Models\Employee::where('status', 'active')
+            ->whereIn('role', $engineerVariants)
+            ->orderBy('name')->get();
 
         return view('projects.edit', compact('project', 'employees'));
     }
@@ -274,7 +331,7 @@ class ProjectController extends Controller
                 if ($image->isValid()) {
                     // Store the image
                     $imagePath = $image->store('projects/images', 'public');
-                    
+
                     // Create image record
                     \App\Models\ProjectImage::create([
                         'project_id' => $project->id,
@@ -342,6 +399,9 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        // Check if current user can access this project
+        $this->checkEngineerAccess($project, 'لحذف');
+
         $project->delete();
 
         return redirect()->route('projects.index')
@@ -450,7 +510,6 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم حفظ المستخلص بنجاح');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -612,7 +671,6 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تحديث المستخلص بنجاح');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -650,7 +708,6 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم حذف المستخلص بنجاح');
-
         } catch (\Exception $e) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'حدث خطأ أثناء حذف المستخلص: ' . $e->getMessage());
@@ -689,7 +746,6 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تمديد فترة المشروع بنجاح من ' . ($oldEndDate ? \Carbon\Carbon::parse($oldEndDate)->format('Y-m-d') : 'غير محدد') . ' إلى ' . \Carbon\Carbon::parse($validated['new_end_date'])->format('Y-m-d'));
-
         } catch (\Exception $e) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'حدث خطأ أثناء تمديد فترة المشروع: ' . $e->getMessage());
@@ -701,30 +757,43 @@ class ProjectController extends Controller
      */
     public function storeVisit(Request $request, Project $project)
     {
-        $validated = $request->validate([
-            'visit_date' => 'required|date',
-            'visit_time' => 'nullable|date_format:H:i',
-            'visitor_name' => 'required|string|max:255',
-            'visit_type' => 'required|in:inspection,meeting,supervision,coordination,other',
-            'visit_notes' => 'required|string|max:2000',
-        ], [
-            'visit_date.required' => 'تاريخ الزيارة مطلوب',
-            'visitor_name.required' => 'اسم الزائر مطلوب',
-            'visitor_name.max' => 'اسم الزائر لا يجب أن يزيد عن 255 حرف',
-            'visit_type.required' => 'نوع الزيارة مطلوب',
-            'visit_notes.required' => 'تفاصيل الزيارة مطلوبة',
-            'visit_notes.max' => 'تفاصيل الزيارة لا يجب أن تزيد عن 2000 حرف',
-        ]);
-
         try {
-            // Create visit record
+            $validated = $request->validate([
+                'visit_date' => 'required|date',
+                'visit_time' => 'nullable|date_format:H:i',
+                'visitor_name' => 'required|string|max:255',
+                'visit_type' => 'required|in:inspection,meeting,supervision,coordination,other',
+                'visit_notes' => 'required|string|max:2000',
+                'purpose' => 'nullable|string|max:500',
+                'duration_hours' => 'nullable|numeric|min:0|max:24',
+            ], [
+                'visit_date.required' => 'تاريخ الزيارة مطلوب',
+                'visitor_name.required' => 'اسم الزائر مطلوب',
+                'visitor_name.max' => 'اسم الزائر لا يجب أن يزيد عن 255 حرف',
+                'visit_type.required' => 'نوع الزيارة مطلوب',
+                'visit_notes.required' => 'تفاصيل الزيارة مطلوبة',
+                'visit_notes.max' => 'تفاصيل الزيارة لا يجب أن تزيد عن 2000 حرف',
+                'duration_hours.numeric' => 'المدة يجب أن تكون رقم',
+                'duration_hours.max' => 'المدة لا تتجاوز 24 ساعة',
+            ]);
+
+            // Optional employee linking: try to find employee by exact name (can be improved later)
+            $visitorId = null;
+            if ($request->filled('visitor_employee_id')) {
+                $visitorId = (int) $request->input('visitor_employee_id');
+            }
+
             ProjectVisit::create([
                 'project_id' => $project->id,
                 'visit_date' => $validated['visit_date'],
                 'visit_time' => $validated['visit_time'],
+                'visitor_id' => $visitorId,
                 'visitor_name' => $validated['visitor_name'],
                 'visit_type' => $validated['visit_type'],
                 'visit_notes' => $validated['visit_notes'],
+                'duration_hours' => $validated['duration_hours'] ?? null,
+                'purpose' => $validated['purpose'] ?? null,
+                'notes' => $validated['visit_notes'],
                 'recorded_by' => Auth::id(),
             ]);
 
@@ -738,10 +807,16 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تسجيل زيارة ' . $visitTypeLabels[$validated['visit_type']] . ' للمشروع بواسطة ' . $validated['visitor_name'] . ' بتاريخ ' . \Carbon\Carbon::parse($validated['visit_date'])->format('Y-m-d'));
-
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
+            \Log::error('Project visit store failed', [
+                'project_id' => $project->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return redirect()->route('projects.show', $project)
-                ->with('error', 'حدث خطأ أثناء تسجيل الزيارة: ' . $e->getMessage());
+                ->with('error', 'حدث خطأ أثناء تسجيل الزيارة. الرجاء مراجعة السجلات.');
         }
     }
 
@@ -800,7 +875,6 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تسجيل ' . $equipmentLabel . ' (' . $validated['equipment_name'] . ') كمعدة مستأجرة للمشروع من شركة ' . $validated['rental_company'] . ' بتاريخ ' . $startDate);
-
         } catch (\Exception $e) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'حدث خطأ أثناء تسجيل المعدة المستأجرة: ' . $e->getMessage());
@@ -865,7 +939,6 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تسجيل قرض بمبلغ ' . $formattedAmount . ' ر.س من ' . $sourceLabel . ' (' . $validated['lender_name'] . ') بتاريخ ' . $loanDate);
-
         } catch (\Exception $e) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'حدث خطأ أثناء تسجيل القرض: ' . $e->getMessage());
@@ -891,7 +964,7 @@ class ProjectController extends Controller
 
             $oldProgress = $project->progress;
             $newProgress = $validated['progress'];
-            
+
             // Update project progress
             $project->update([
                 'progress' => $newProgress
@@ -906,24 +979,24 @@ class ProjectController extends Controller
 
             // Create a progress update record (you might want to create a separate model for this)
             // For now, we'll just add it to project notes or create a simple log
-            
+
             $progressChange = $newProgress - $oldProgress;
             $changeDirection = $progressChange > 0 ? 'زيادة' : 'تقليل';
             $changeAmount = abs($progressChange);
-            
+
             $logMessage = "تم تحديث نسبة الإنجاز من {$oldProgress}% إلى {$newProgress}% ({$changeDirection} {$changeAmount}%)";
-            
+
             if (!empty($validated['update_notes'])) {
                 $logMessage .= " - الملاحظات: " . $validated['update_notes'];
             }
-            
+
             $logMessage .= " بواسطة: " . Auth::user()->name . " في " . now()->format('Y-m-d H:i');
 
             // You could log this to a separate progress_updates table
             // For now, we'll use the success message
-            
+
             $successMessage = "تم تحديث نسبة الإنجاز بنجاح من {$oldProgress}% إلى {$newProgress}%";
-            
+
             if ($newProgress == 100) {
                 $successMessage .= " - تهانينا! تم إكمال المشروع 🎉";
             } elseif ($newProgress >= 75) {
@@ -936,10 +1009,220 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', $successMessage);
-
         } catch (\Exception $e) {
             return redirect()->route('projects.show', $project)
                 ->with('error', 'حدث خطأ أثناء تحديث نسبة الإنجاز: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Store a new rental equipment for the project.
+     */
+    /**
+     * Update rental equipment information.
+     */
+    public function updateRental(Request $request, Project $project, ProjectRentalEquipment $rental)
+    {
+        $validated = $request->validate([
+            'equipment_type' => 'required|string|max:255',
+            'equipment_number' => 'required|string|max:255',
+            'rental_company' => 'required|string|max:255',
+            'daily_rate' => 'required|numeric|min:0',
+            'rental_start_date' => 'required|date',
+            'rental_end_date' => 'nullable|date|after_or_equal:rental_start_date',
+            'notes' => 'nullable|string'
+        ]);
+
+        $rental->update($validated);
+
+        return redirect()->back()->with('success', 'تم تحديث بيانات المعدة المستأجرة بنجاح');
+    }
+
+    /**
+     * Remove rental equipment from the project.
+     */
+    public function destroyRental(Project $project, ProjectRentalEquipment $rental)
+    {
+        $rental->delete();
+        return redirect()->back()->with('success', 'تم حذف المعدة المستأجرة بنجاح');
+    }
+
+    public function storeItems(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'items.*.name' => 'required|string|max:255',
+            'items.*.quantity' => 'required|numeric|min:0',
+            'items.*.unit' => 'required|string|max:50',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.total_price' => 'required|numeric|min:0',
+            'items.*.total_with_tax' => 'nullable|numeric|min:0',
+            'tax_rate' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        foreach ($validated['items'] as $itemData) {
+            // if client passed total_with_tax, use it; otherwise compute using provided tax_rate or default 0
+            if (empty($itemData['total_with_tax'])) {
+                $taxRate = $validated['tax_rate'] ?? ($request->input('tax_rate') ?? 0);
+                $itemData['total_with_tax'] = $itemData['total_price'] + ($itemData['total_price'] * ($taxRate / 100));
+            }
+
+            $project->projectItems()->create([
+                'name' => $itemData['name'],
+                'quantity' => $itemData['quantity'],
+                'unit' => $itemData['unit'],
+                'unit_price' => $itemData['unit_price'],
+                'total_price' => $itemData['total_price'],
+                'total_with_tax' => $itemData['total_with_tax'],
+            ]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'تم حفظ البنود بنجاح']);
+        }
+
+        return redirect()->route('projects.extract.create', $project)
+            ->with('success', 'تم حفظ البنود بنجاح');
+    }
+
+    /**
+     * Store new images for the project
+     */
+    public function storeImages(Request $request, Project $project)
+    {
+        // Log incoming request details
+        Log::info('Image upload request received', [
+            'project_id' => $project->id,
+            'project_name' => $project->name,
+            'is_ajax' => $request->ajax(),
+            'content_type' => $request->header('Content-Type'),
+            'accept' => $request->header('Accept'),
+            'files_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
+            'request_headers' => $request->headers->all()
+        ]);
+
+        try {
+            $this->checkEngineerAccess($project, 'إضافة صور إلى');
+        } catch (\Exception $e) {
+            Log::error('Engineer access check failed', ['error' => $e->getMessage()]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'غير مخول بإضافة صور لهذا المشروع'
+                ], 403);
+            }
+
+            abort(403, 'غير مخول بإضافة صور لهذا المشروع');
+        }
+
+        try {
+            $request->validate([
+                'images' => 'required|array|min:1|max:10',
+                'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max per image
+                'description' => 'nullable|string|max:1000',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed for image upload', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'بيانات غير صحيحة',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            throw $e;
+        }
+
+        $uploadedImages = [];
+        $images = $request->file('images');
+
+        Log::info('Starting image processing', ['images_count' => count($images)]);
+
+        foreach ($images as $index => $image) {
+            try {
+                Log::info("Processing image {$index}", [
+                    'original_name' => $image->getClientOriginalName(),
+                    'mime_type' => $image->getMimeType(),
+                    'size' => $image->getSize()
+                ]);
+
+                // Generate unique filename
+                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+
+                // Store the image
+                $path = $image->storeAs('projects/' . $project->id . '/images', $filename, 'public');
+
+                if ($path) {
+                    $uploadedImages[] = $path;
+                    Log::info("Image {$index} uploaded successfully", ['path' => $path]);
+                } else {
+                    Log::error("Failed to store image {$index}");
+                }
+            } catch (\Exception $e) {
+                Log::error("Error uploading individual project image {$index}: " . $e->getMessage());
+                continue;
+            }
+        }
+
+        Log::info('Image processing complete', [
+            'total_processed' => count($images),
+            'successfully_uploaded' => count($uploadedImages)
+        ]);
+
+        if (!empty($uploadedImages)) {
+            try {
+                // Create ProjectImage records for each uploaded image
+                foreach ($uploadedImages as $imagePath) {
+                    $projectImage = $project->projectImages()->create([
+                        'image_path' => $imagePath,
+                        'alt_text' => $request->description ?: null
+                    ]);
+                    Log::info('ProjectImage record created', ['id' => $projectImage->id, 'path' => $imagePath]);
+                }
+
+                // Log the activity
+                Log::info("تم رفع " . count($uploadedImages) . " صورة جديدة للمشروع: " . $project->name);
+
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'تم رفع ' . count($uploadedImages) . ' صورة بنجاح',
+                        'uploaded_count' => count($uploadedImages)
+                    ]);
+                }
+
+                return redirect()->route('projects.show', $project)
+                    ->with('success', 'تم رفع ' . count($uploadedImages) . ' صورة بنجاح');
+            } catch (\Exception $e) {
+                Log::error('Error creating ProjectImage records', ['error' => $e->getMessage()]);
+
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'فشل في حفظ بيانات الصور في قاعدة البيانات'
+                    ], 500);
+                }
+
+                return redirect()->route('projects.show', $project)
+                    ->with('error', 'فشل في حفظ بيانات الصور في قاعدة البيانات');
+            }
+        }
+
+        Log::error('No images were uploaded successfully');
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'فشل في رفع الصور. يرجى المحاولة مرة أخرى.'
+            ], 500);
+        }
+
+        return redirect()->route('projects.show', $project)
+            ->with('error', 'فشل في رفع الصور. يرجى المحاولة مرة أخرى.');
     }
 }

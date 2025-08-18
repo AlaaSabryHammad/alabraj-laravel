@@ -107,6 +107,14 @@ class Project extends Model
                 return 'كاش';
             case 'facilities':
                 return 'تسهيلات';
+            case 'performance':
+                return 'أداء';
+            case 'advance_payment':
+                return 'سلفة';
+            case 'maintenance':
+                return 'صيانة';
+            case 'other':
+                return 'أخرى';
             default:
                 return 'غير محدد';
         }
@@ -181,5 +189,11 @@ class Project extends Model
     public function loans()
     {
         return $this->hasMany(ProjectLoan::class);
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 }

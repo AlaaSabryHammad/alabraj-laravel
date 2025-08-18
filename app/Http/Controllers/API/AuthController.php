@@ -26,6 +26,14 @@ class AuthController extends Controller
             ]);
         }
 
+        // التحقق من حالة الموظف - منع تسجيل الدخول للموظفين غير النشطين
+        $employee = $user->employee;
+        if ($employee && $employee->status === 'inactive') {
+            throw ValidationException::withMessages([
+                'email' => ['حسابك غير نشط. يرجى التواصل مع الإدارة لتفعيل حسابك.'],
+            ]);
+        }
+
         $token = $user->createToken('mobile-app')->plainTextToken;
 
         return response()->json([

@@ -9,10 +9,12 @@ use App\Models\Attendance;
 use App\Models\Location;
 use App\Models\User;
 use App\Models\ManagerAssignment;
+use App\Models\Role;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Services\EmailService;
 
 class EmployeeController extends Controller
 {
@@ -20,15 +22,79 @@ class EmployeeController extends Controller
     {
         $query = Employee::with(['user', 'location']);
 
+        // Site manager filter: show only employees in same location
+        $currentUser = Auth::user();
+        if ($currentUser && $currentUser->employee) {
+            $currentEmployee = $currentUser->employee;
+
+            // Check if current user is a site manager (includes all variants)
+            $siteManagerRoles = ['مشرف موقع', 'supervisor', 'site_manager'];
+            if (in_array($currentEmployee->role, $siteManagerRoles)) {
+                // Filter to show only employees in the same location
+                if ($currentEmployee->location_id) {
+                    $query->where('location_id', $currentEmployee->location_id);
+                }
+                // Exclude the site manager himself from the list
+                $query->where('id', '!=', $currentEmployee->id);
+            }
+
+            // Engineer filter: show only employees in locations under managed projects
+            $engineerVariants = Employee::variantsForArabic('مهندس');
+            if (in_array($currentEmployee->role, $engineerVariants)) {
+                // Get projects managed by this engineer
+                $managedProjectIds = \App\Models\Project::where('project_manager_id', $currentEmployee->id)
+                    ->pluck('id');
+
+                if ($managedProjectIds->isNotEmpty()) {
+                    // Get all locations under these projects
+                    $projectLocationIds = \App\Models\Location::whereIn('project_id', $managedProjectIds)
+                        ->pluck('id');
+
+                    if ($projectLocationIds->isNotEmpty()) {
+                        // Show employees in these locations
+                        $query->whereIn('location_id', $projectLocationIds);
+                    } else {
+                        // If no locations in managed projects, show empty result
+                        $query->where('id', 0);
+                    }
+                } else {
+                    // If engineer has no projects, show empty result
+                    $query->where('id', 0);
+                }
+            }
+
+            // Manager filter: show all employees except managers and general managers
+            $managerVariants = Employee::variantsForArabic('مدير');
+            if (in_array($currentEmployee->role, $managerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+
+            // Project Manager filter: show all employees except managers and general managers
+            $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
+            if (in_array($currentEmployee->role, $projectManagerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+        }
+
         // Handle search
         if ($request->filled('search')) {
             $search = $request->get('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('position', 'like', "%{$search}%")
-                  ->orWhere('department', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('position', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -39,7 +105,19 @@ class EmployeeController extends Controller
 
         // Handle role filter
         if ($request->filled('role')) {
-            $query->where('role', $request->get('role'));
+            $roleName = trim($request->get('role'));
+            // Get role from Role model 
+            $role = Role::where('name', $roleName)->first();
+            if ($role) {
+                // Try to match employees with this role name or display name
+                $query->where(function ($q) use ($role, $roleName) {
+                    $q->where('role', $roleName)
+                        ->orWhere('role', $role->display_name);
+                });
+            } else {
+                // Fallback to exact match if role not found in Role model
+                $query->where('role', $roleName);
+            }
         }
 
         // Handle status filter
@@ -115,8 +193,9 @@ class EmployeeController extends Controller
         $employees->appends($request->except('page'));
 
         // Get filter options for dropdowns
-        $departments = Employee::distinct()->pluck('department')->filter()->sort();
-        $roles = Employee::distinct()->pluck('role')->filter()->sort();
+        $departments = Employee::distinct()->pluck('department')->filter()->map(fn($d) => trim($d))->unique()->sort();
+        // Get roles from Role model with Arabic display names
+        $roles = Role::where('is_active', true)->pluck('display_name', 'name');
         $sponsorshipStatuses = Employee::distinct()->pluck('sponsorship_status')->filter()->sort();
         $locations = Location::where('status', 'active')->get();
 
@@ -126,11 +205,15 @@ class EmployeeController extends Controller
     public function create()
     {
         $locations = Location::where('status', 'active')->get();
-        return view('employees.create', compact('locations'));
+        $roles = Role::where('is_active', true)->orderBy('display_name')->get();
+        return view('employees.create', compact('locations', 'roles'));
     }
 
     public function store(Request $request)
     {
+        // Get valid role names from database
+        $validRoles = Role::where('is_active', true)->pluck('name')->toArray();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'position' => 'required|string|max:255',
@@ -155,7 +238,7 @@ class EmployeeController extends Controller
             ],
             'national_id_expiry' => 'nullable|date|after:today',
             'address' => 'nullable|string',
-            'role' => 'required|in:عامل,مشرف موقع,مهندس,إداري,مسئول رئيسي',
+            'role' => 'required|in:' . implode(',', $validRoles),
             'sponsorship_status' => 'required|in:شركة الأبراج للمقاولات المحدودة,فرع1 شركة الأبراج للمقاولات المحدودة,فرع2 شركة الأبراج للمقاولات المحدودة,مؤسسة فريق التعمير للمقاولات,فرع مؤسسة فريق التعمير للنقل,مؤسسة الزفاف الذهبي,مؤسسة عنوان الكادي,عمالة منزلية,عمالة كفالة خارجية تحت التجربة,أخرى',
             'category' => 'required|in:A+,A,B,C,D,E',
 
@@ -206,9 +289,14 @@ class EmployeeController extends Controller
             'additional_documents' => 'nullable|array',
             'additional_documents.*.name' => 'required_with:additional_documents|string|max:255',
             'additional_documents.*.file' => 'required_with:additional_documents|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+        ], [
+            // Custom validation messages in Arabic
+            'role.required' => 'الدور الوظيفي مطلوب.',
+            'role.in' => 'الدور الوظيفي المختار غير صحيح. يرجى اختيار دور صحيح من القائمة.',
         ]);
 
-        $validated['status'] = 'active';
+        // Set employee status to inactive by default for new employees
+        $validated['status'] = 'inactive';
 
         // Handle file uploads
         if ($request->hasFile('photo')) {
@@ -292,6 +380,14 @@ class EmployeeController extends Controller
             $successMessage .= " وتم إنشاء حساب مستخدم له. بيانات الدخول: البريد الإلكتروني: {$userEmail} | كلمة المرور: {$validated['national_id']}";
         }
 
+        // إرسال بريد إلكتروني للمدير العام
+        try {
+            EmailService::sendNewEmployeeNotification($employee);
+            Log::info("تم إرسال إشعار بريد إلكتروني للمدير العام بخصوص إضافة الموظف الجديد: {$employee->name}");
+        } catch (\Exception $e) {
+            Log::error("فشل إرسال إشعار بريد إلكتروني للمدير العام: " . $e->getMessage());
+        }
+
         return redirect()->route('employees.index')
             ->with('success', $successMessage);
     }
@@ -308,18 +404,19 @@ class EmployeeController extends Controller
             'managerAssignments.assignedBy',
             'balances.creator'
         ]);
-        
+
         // Get balances ordered by transaction date
         $balances = $employee->balances()->with('creator')->orderBy('transaction_date', 'desc')->get();
         $netBalance = $employee->getNetBalance();
-        
+
         return view('employees.show', compact('employee', 'balances', 'netBalance'));
     }
 
     public function edit(Employee $employee)
     {
         $locations = Location::where('status', 'active')->get();
-        return view('employees.edit', compact('employee', 'locations'));
+        $roles = Role::where('is_active', true)->orderBy('display_name')->get();
+        return view('employees.edit', compact('employee', 'locations', 'roles'));
     }
 
     public function update(Request $request, Employee $employee)
@@ -343,77 +440,83 @@ class EmployeeController extends Controller
         ]);
 
         try {
+            // Get valid role names from database
+            $validRoles = Role::where('is_active', true)->pluck('name')->toArray();
+
             $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'position' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $employee->id,
-            'phone' => 'required|string|max:20',
-            'hire_date' => 'required|date',
-            'salary' => 'required|numeric|min:0',
-            'working_hours' => 'required|numeric|min:1|max:24',
-            'national_id' => 'required|string|max:20|unique:employees,national_id,' . $employee->id,
-            'national_id_expiry' => 'nullable|date|after:today',
-            'address' => 'nullable|string',
-            'status' => 'required|in:active,inactive,suspended,terminated',
-            'role' => 'required|string|max:255',
-            'sponsorship_status' => 'nullable|string|max:255',
-            'category' => 'nullable|string|max:255',
+                'name' => 'required|string|max:255',
+                'position' => 'required|string|max:255',
+                'department' => 'required|string|max:255',
+                'email' => 'required|email|unique:employees,email,' . $employee->id,
+                'phone' => 'required|string|max:20',
+                'hire_date' => 'required|date',
+                'salary' => 'required|numeric|min:0',
+                'working_hours' => 'required|numeric|min:1|max:24',
+                'national_id' => 'required|string|max:20|unique:employees,national_id,' . $employee->id,
+                'national_id_expiry' => 'nullable|date|after:today',
+                'address' => 'nullable|string',
+                'status' => 'nullable|in:active,inactive,suspended,terminated',
+                'role' => 'required|in:' . implode(',', $validRoles),
+                'sponsorship_status' => 'nullable|string|max:255',
+                'category' => 'nullable|string|max:255',
 
-            // Photo uploads
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'national_id_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'work_permit_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                // Photo uploads
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'national_id_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'work_permit_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
 
-            // Passport data
-            'passport_number' => 'nullable|string|max:50',
-            'passport_issue_date' => 'nullable|date',
-            'passport_expiry_date' => 'nullable|date|after:passport_issue_date',
+                // Passport data
+                'passport_number' => 'nullable|string|max:50',
+                'passport_issue_date' => 'nullable|date',
+                'passport_expiry_date' => 'nullable|date|after:passport_issue_date',
 
-            // Work permit data
-            'work_permit_number' => 'nullable|string|max:50',
-            'work_permit_issue_date' => 'nullable|date',
-            'work_permit_expiry_date' => 'nullable|date|after:work_permit_issue_date',
+                // Work permit data
+                'work_permit_number' => 'nullable|string|max:50',
+                'work_permit_issue_date' => 'nullable|date',
+                'work_permit_expiry_date' => 'nullable|date|after:work_permit_issue_date',
 
-            // Driving license data
-            'driving_license_issue_date' => 'nullable|date',
-            'driving_license_expiry' => 'nullable|date|after:driving_license_issue_date',
-            'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                // Driving license data
+                'driving_license_issue_date' => 'nullable|date',
+                'driving_license_expiry' => 'nullable|date|after:driving_license_issue_date',
+                'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
 
-            // Location assignment
-            'location_id' => 'nullable|exists:locations,id',
-
-
-            // Bank account information
-            'bank_name' => 'nullable|string|max:255',
-            'iban' => [
-                'nullable',
-                'string',
-                'regex:/^[0-9]{22}$/',
-            ],
-
-            // Personal information (newly added fields)
-            'birth_date' => 'nullable|date|before:today',
-            'nationality' => 'nullable|string|max:100',
-            'religion' => 'nullable|string|max:100',
+                // Location assignment
+                'location_id' => 'nullable|exists:locations,id',
 
 
+                // Bank account information
+                'bank_name' => 'nullable|string|max:255',
+                'iban' => [
+                    'nullable',
+                    'string',
+                    'regex:/^[0-9]{22}$/',
+                ],
 
-            // Rating
-            'rating' => 'nullable|numeric|min:1|max:5',
+                // Personal information (newly added fields)
+                'birth_date' => 'nullable|date|before:today',
+                'nationality' => 'nullable|string|max:100',
+                'religion' => 'nullable|string|max:100',
 
-            // Additional documents
-            'additional_documents' => 'nullable|array',
-            'additional_documents.*.name' => 'required_with:additional_documents|string|max:255',
-            'additional_documents.*.file' => 'required_with:additional_documents|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-        ]);
-        
-        Log::info('Validation passed successfully', [
-            'employee_id' => $employee->id,
-            'validated_data_keys' => array_keys($validated)
-        ]);
 
+
+                // Rating
+                'rating' => 'nullable|numeric|min:1|max:5',
+
+                // Additional documents
+                'additional_documents' => 'nullable|array',
+                'additional_documents.*.name' => 'required_with:additional_documents|string|max:255',
+                'additional_documents.*.file' => 'required_with:additional_documents|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            ], [
+                // Custom validation messages in Arabic
+                'role.required' => 'الدور الوظيفي مطلوب.',
+                'role.in' => 'الدور الوظيفي المختار غير صحيح. يرجى اختيار دور صحيح من القائمة.',
+            ]);
+
+            Log::info('Validation passed successfully', [
+                'employee_id' => $employee->id,
+                'validated_data_keys' => array_keys($validated)
+            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed', [
                 'employee_id' => $employee->id,
@@ -505,17 +608,30 @@ class EmployeeController extends Controller
 
         try {
             $oldData = $employee->toArray();
-            
+
+            // Handle status field - only admin users can modify employee status
+            if (isset($validated['status'])) {
+                if (!Auth::check() || Auth::user()->role !== 'admin') {
+                    // Remove status from validated data if user is not admin
+                    unset($validated['status']);
+
+                    Log::info('Non-admin user attempted to modify employee status', [
+                        'user_id' => Auth::id(),
+                        'user_role' => Auth::user()->role ?? 'guest',
+                        'employee_id' => $employee->id
+                    ]);
+                }
+            }
+
             $employee->update($validated);
-            
+
             $newData = $employee->fresh()->toArray();
-            
+
             Log::info('Employee updated successfully', [
                 'employee_id' => $employee->id,
                 'changes_made' => array_diff_assoc($newData, $oldData),
                 'updated_fields_count' => count($validated)
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to update employee', [
                 'employee_id' => $employee->id,
@@ -523,7 +639,7 @@ class EmployeeController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'validated_data' => $validated
             ]);
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'فشل في تحديث بيانات الموظف: ' . $e->getMessage());
@@ -558,10 +674,86 @@ class EmployeeController extends Controller
         $today = now()->toDateString();
 
         // Get all active employees with their today's attendance
-        $employees = Employee::where('status', 'active')
-            ->with(['attendances' => function($query) use ($today) {
-                $query->where('date', $today);
-            }])
+        $query = Employee::where('status', 'active');
+
+        // Site manager filter: show only employees in same location
+        $currentUser = Auth::user();
+        if ($currentUser && $currentUser->employee) {
+            $currentEmployee = $currentUser->employee;
+
+            // Check if current user is a site manager (includes all variants)
+            $siteManagerRoles = ['مشرف موقع', 'supervisor', 'site_manager'];
+            if (in_array($currentEmployee->role, $siteManagerRoles)) {
+                // Filter to show only employees in the same location
+                if ($currentEmployee->location_id) {
+                    $query->where('location_id', $currentEmployee->location_id);
+                }
+                // Exclude the site manager himself from the list
+                $query->where('id', '!=', $currentEmployee->id);
+            }
+
+            // Engineer filter: show only employees in locations under managed projects
+            $engineerVariants = Employee::variantsForArabic('مهندس');
+            if (in_array($currentEmployee->role, $engineerVariants)) {
+                // Get projects managed by this engineer
+                $managedProjectIds = \App\Models\Project::where('project_manager_id', $currentEmployee->id)
+                    ->pluck('id');
+
+                if ($managedProjectIds->isNotEmpty()) {
+                    // Get all locations under these projects
+                    $projectLocationIds = \App\Models\Location::whereIn('project_id', $managedProjectIds)
+                        ->pluck('id');
+
+                    if ($projectLocationIds->isNotEmpty()) {
+                        // Show employees in these locations
+                        $query->whereIn('location_id', $projectLocationIds);
+                    } else {
+                        // If no locations in managed projects, show empty result
+                        $query->where('id', 0);
+                    }
+                } else {
+                    // If engineer has no projects, show empty result
+                    $query->where('id', 0);
+                }
+            }
+
+            // Manager filter: show all employees except managers and general managers
+            $managerVariants = Employee::variantsForArabic('مدير');
+            if (in_array($currentEmployee->role, $managerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+
+            // Manager filter: show all employees except managers and general managers
+            $managerVariants = Employee::variantsForArabic('مدير');
+            if (in_array($currentEmployee->role, $managerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+
+            // Project Manager filter: show all employees except managers and general managers
+            $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
+            if (in_array($currentEmployee->role, $projectManagerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+        }
+
+        $employees = $query->with(['attendances' => function ($query) use ($today) {
+            $query->where('date', $today);
+        }])
             ->get();
 
         // Calculate attendance statistics for today
@@ -620,7 +812,7 @@ class EmployeeController extends Controller
 
         // Calculate total days in month
         $totalDaysInMonth = $date->daysInMonth;
-        
+
         // Calculate Fridays (weekends) in the month
         $fridaysCount = 0;
         $currentDate = $startOfMonth->copy();
@@ -630,37 +822,114 @@ class EmployeeController extends Controller
             }
             $currentDate->addDay();
         }
-        
+
         // Calculate working days (excluding Fridays)
         $workingDaysInMonth = $totalDaysInMonth - $fridaysCount;
 
-        $employees = Employee::where('status', 'active')
-            ->with(['attendances' => function ($query) use ($startOfMonth, $endOfMonth) {
-                $query->whereBetween('date', [$startOfMonth, $endOfMonth]);
-            }])
+        // Get employees with site manager filter
+        $query = Employee::where('status', 'active');
+
+        // Site manager filter: show only employees in same location
+        $currentUser = Auth::user();
+        if ($currentUser && $currentUser->employee) {
+            $currentEmployee = $currentUser->employee;
+
+            // Check if current user is a site manager (includes all variants)
+            $siteManagerRoles = ['مشرف موقع', 'supervisor', 'site_manager'];
+            if (in_array($currentEmployee->role, $siteManagerRoles)) {
+                // Filter to show only employees in the same location
+                if ($currentEmployee->location_id) {
+                    $query->where('location_id', $currentEmployee->location_id);
+                }
+                // Exclude the site manager himself from the list
+                $query->where('id', '!=', $currentEmployee->id);
+            }
+
+            // Engineer filter: show only employees in locations under managed projects
+            $engineerVariants = Employee::variantsForArabic('مهندس');
+            if (in_array($currentEmployee->role, $engineerVariants)) {
+                // Get projects managed by this engineer
+                $managedProjectIds = \App\Models\Project::where('project_manager_id', $currentEmployee->id)
+                    ->pluck('id');
+
+                if ($managedProjectIds->isNotEmpty()) {
+                    // Get all locations under these projects
+                    $projectLocationIds = \App\Models\Location::whereIn('project_id', $managedProjectIds)
+                        ->pluck('id');
+
+                    if ($projectLocationIds->isNotEmpty()) {
+                        // Show employees in these locations
+                        $query->whereIn('location_id', $projectLocationIds);
+                    } else {
+                        // If no locations in managed projects, show empty result
+                        $query->where('id', 0);
+                    }
+                } else {
+                    // If engineer has no projects, show empty result
+                    $query->where('id', 0);
+                }
+            }
+
+            // Manager filter: show all employees except managers and general managers
+            $managerVariants = Employee::variantsForArabic('مدير');
+            if (in_array($currentEmployee->role, $managerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+
+            // Manager filter: show all employees except managers and general managers
+            $managerVariants = Employee::variantsForArabic('مدير');
+            if (in_array($currentEmployee->role, $managerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+
+            // Project Manager filter: show all employees except managers and general managers
+            $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
+            if (in_array($currentEmployee->role, $projectManagerVariants)) {
+                // Exclude managers and general managers
+                $excludedRoles = array_merge(
+                    Employee::variantsForArabic('مدير'),
+                    Employee::variantsForArabic('مدير عام')
+                );
+                $query->whereNotIn('role', $excludedRoles);
+            }
+        }
+
+        $employees = $query->with(['attendances' => function ($query) use ($startOfMonth, $endOfMonth) {
+            $query->whereBetween('date', [$startOfMonth, $endOfMonth]);
+        }])
             ->get();
 
         foreach ($employees as $employee) {
             $employee->present_days = $employee->attendances->where('status', 'present')->count();
             $employee->late_days = $employee->attendances->where('status', 'late')->count();
             $employee->leave_days = $employee->attendances->whereIn('status', ['leave', 'sick_leave'])->count();
-            
+
             // Calculate absent days (working days - all recorded attendances)
             $totalRecordedDays = $employee->attendances->count();
             $employee->absent_days = max(0, $workingDaysInMonth - $totalRecordedDays);
-            
+
             // Set Friday count for display
             $employee->friday_days = $fridaysCount;
             $employee->working_days_in_month = $workingDaysInMonth;
             $employee->total_days_in_month = $totalDaysInMonth;
-            
+
             // Calculate overtime hours (hours worked beyond 8 hours per day)
             $employee->overtime_hours = $employee->attendances
                 ->where('working_hours', '>', 8)
                 ->sum(function ($attendance) {
                     return max(0, $attendance->working_hours - 8);
                 });
-                
+
             // Round to 2 decimal places
             $employee->overtime_hours = round($employee->overtime_hours, 2);
         }
@@ -678,10 +947,75 @@ class EmployeeController extends Controller
             $selectedDate = \Carbon\Carbon::parse($date);
 
             // Get all active employees with their attendance for the selected date
-            $employees = Employee::where('status', 'active')
-                ->with(['attendances' => function($query) use ($date) {
-                    $query->whereDate('date', $date);
-                }])
+            $query = Employee::where('status', 'active');
+
+            // Site manager filter: show only employees in same location
+            $currentUser = Auth::user();
+            if ($currentUser && $currentUser->employee) {
+                $currentEmployee = $currentUser->employee;
+
+                // Check if current user is a site manager (includes all variants)
+                $siteManagerRoles = ['مشرف موقع', 'supervisor', 'site_manager'];
+                if (in_array($currentEmployee->role, $siteManagerRoles)) {
+                    // Filter to show only employees in the same location
+                    if ($currentEmployee->location_id) {
+                        $query->where('location_id', $currentEmployee->location_id);
+                    }
+                    // Exclude the site manager himself from the list
+                    $query->where('id', '!=', $currentEmployee->id);
+                }
+
+                // Engineer filter: show only employees registered on projects they manage
+                $engineerVariants = Employee::variantsForArabic('مهندس');
+                if (in_array($currentEmployee->role, $engineerVariants)) {
+                    // Get projects managed by this engineer
+                    $managedProjectIds = \App\Models\Project::where('project_manager_id', $currentEmployee->id)
+                        ->pluck('id');
+
+                    if ($managedProjectIds->isNotEmpty()) {
+                        // Get all locations under these projects
+                        $projectLocationIds = \App\Models\Location::whereIn('project_id', $managedProjectIds)
+                            ->pluck('id');
+
+                        if ($projectLocationIds->isNotEmpty()) {
+                            // Show employees in these locations
+                            $query->whereIn('location_id', $projectLocationIds);
+                        } else {
+                            // If no locations in managed projects, show empty result
+                            $query->where('id', 0);
+                        }
+                    } else {
+                        // If engineer has no projects, show empty result
+                        $query->where('id', 0);
+                    }
+                }
+
+                // Manager filter: show all employees except managers and general managers
+                $managerVariants = Employee::variantsForArabic('مدير');
+                if (in_array($currentEmployee->role, $managerVariants)) {
+                    // Exclude managers and general managers
+                    $excludedRoles = array_merge(
+                        Employee::variantsForArabic('مدير'),
+                        Employee::variantsForArabic('مدير عام')
+                    );
+                    $query->whereNotIn('role', $excludedRoles);
+                }
+
+                // Project Manager filter: show all employees except managers and general managers
+                $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
+                if (in_array($currentEmployee->role, $projectManagerVariants)) {
+                    // Exclude managers and general managers
+                    $excludedRoles = array_merge(
+                        Employee::variantsForArabic('مدير'),
+                        Employee::variantsForArabic('مدير عام')
+                    );
+                    $query->whereNotIn('role', $excludedRoles);
+                }
+            }
+
+            $employees = $query->with(['attendances' => function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            }])
                 ->orderBy('name')
                 ->get();
 
@@ -697,7 +1031,7 @@ class EmployeeController extends Controller
 
             foreach ($employees as $employee) {
                 $attendance = $employee->attendances->first();
-                
+
                 // Add attendance status to employee for easy access
                 $employee->attendance_status = $attendance ? $attendance->status : 'absent';
                 $employee->check_in = $attendance ? $attendance->check_in : null;
@@ -723,7 +1057,7 @@ class EmployeeController extends Controller
                             $stats['leave']++;
                             break;
                     }
-                    
+
                     if ($attendance->overtime_hours > 0) {
                         $stats['total_overtime_hours'] += $attendance->overtime_hours;
                     }
@@ -733,13 +1067,12 @@ class EmployeeController extends Controller
             }
 
             return view('employees.daily_attendance_report', compact('employees', 'stats', 'selectedDate', 'date'));
-            
         } catch (\Exception $e) {
             \Log::error('Error in dailyAttendanceReport: ' . $e->getMessage(), [
                 'date' => $request->input('date'),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return redirect()->route('employees.attendance')->with('error', 'حدث خطأ أثناء تحميل التقرير اليومي: ' . $e->getMessage());
         }
     }
@@ -751,7 +1084,7 @@ class EmployeeController extends Controller
     {
         try {
             $date = $request->input('date', now()->toDateString());
-            
+
             // Validate date format
             try {
                 $selectedDate = \Carbon\Carbon::parse($date);
@@ -760,34 +1093,98 @@ class EmployeeController extends Controller
             }
 
             // Get all active employees with their attendance for the selected date
-            $employees = Employee::where('status', 'active')
-                ->with(['attendances' => function($query) use ($date) {
-                    $query->whereDate('date', $date);
-                }])
+            $query = Employee::where('status', 'active');
+
+            // Site manager filter: show only employees in same location
+            $currentUser = Auth::user();
+            if ($currentUser && $currentUser->employee) {
+                $currentEmployee = $currentUser->employee;
+
+                // Check if current user is a site manager (includes all variants)
+                $siteManagerRoles = ['مشرف موقع', 'supervisor', 'site_manager'];
+                if (in_array($currentEmployee->role, $siteManagerRoles)) {
+                    // Filter to show only employees in the same location
+                    if ($currentEmployee->location_id) {
+                        $query->where('location_id', $currentEmployee->location_id);
+                    }
+                    // Exclude the site manager himself from the list
+                    $query->where('id', '!=', $currentEmployee->id);
+                }
+
+                // Engineer filter: show only employees registered on projects they manage
+                $engineerVariants = Employee::variantsForArabic('مهندس');
+                if (in_array($currentEmployee->role, $engineerVariants)) {
+                    // Get projects managed by this engineer
+                    $managedProjectIds = \App\Models\Project::where('project_manager_id', $currentEmployee->id)
+                        ->pluck('id');
+
+                    if ($managedProjectIds->isNotEmpty()) {
+                        // Get all locations under these projects
+                        $projectLocationIds = \App\Models\Location::whereIn('project_id', $managedProjectIds)
+                            ->pluck('id');
+
+                        if ($projectLocationIds->isNotEmpty()) {
+                            // Show employees in these locations
+                            $query->whereIn('location_id', $projectLocationIds);
+                        } else {
+                            // If no locations in managed projects, show empty result
+                            $query->where('id', 0);
+                        }
+                    } else {
+                        // If engineer has no projects, show empty result
+                        $query->where('id', 0);
+                    }
+                }
+
+                // Manager filter: show all employees except managers and general managers
+                $managerVariants = Employee::variantsForArabic('مدير');
+                if (in_array($currentEmployee->role, $managerVariants)) {
+                    // Exclude managers and general managers
+                    $excludedRoles = array_merge(
+                        Employee::variantsForArabic('مدير'),
+                        Employee::variantsForArabic('مدير عام')
+                    );
+                    $query->whereNotIn('role', $excludedRoles);
+                }
+
+                // Project Manager filter: show all employees except managers and general managers
+                $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
+                if (in_array($currentEmployee->role, $projectManagerVariants)) {
+                    // Exclude managers and general managers
+                    $excludedRoles = array_merge(
+                        Employee::variantsForArabic('مدير'),
+                        Employee::variantsForArabic('مدير عام')
+                    );
+                    $query->whereNotIn('role', $excludedRoles);
+                }
+            }
+
+            $employees = $query->with(['attendances' => function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            }])
                 ->orderBy('name')
                 ->get();
 
-        foreach ($employees as $employee) {
-            $attendance = $employee->attendances->first();
-            
-            // Add attendance data to employee for easy access
-            $employee->attendance_status = $attendance ? $attendance->status : 'absent';
-            $employee->check_in = $attendance ? $attendance->check_in : '';
-            $employee->check_out = $attendance ? $attendance->check_out : '';
-            $employee->working_hours = $attendance ? $attendance->working_hours : 0;
-            $employee->late_minutes = $attendance ? $attendance->late_minutes : 0;
-            $employee->notes = $attendance ? $attendance->notes : '';
-            $employee->attendance_id = $attendance ? $attendance->id : null;
-        }
+            foreach ($employees as $employee) {
+                $attendance = $employee->attendances->first();
 
-        return view('employees.daily_attendance_edit', compact('employees', 'selectedDate', 'date'));
-        
+                // Add attendance data to employee for easy access
+                $employee->attendance_status = $attendance ? $attendance->status : 'absent';
+                $employee->check_in = $attendance ? $attendance->check_in : '';
+                $employee->check_out = $attendance ? $attendance->check_out : '';
+                $employee->working_hours = $attendance ? $attendance->working_hours : 0;
+                $employee->late_minutes = $attendance ? $attendance->late_minutes : 0;
+                $employee->notes = $attendance ? $attendance->notes : '';
+                $employee->attendance_id = $attendance ? $attendance->id : null;
+            }
+
+            return view('employees.daily_attendance_edit', compact('employees', 'selectedDate', 'date'));
         } catch (\Exception $e) {
             \Log::error('Error in dailyAttendanceEdit: ' . $e->getMessage(), [
                 'date' => $request->input('date'),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return redirect()->route('employees.attendance')->with('error', 'حدث خطأ أثناء تحميل صفحة التعديل: ' . $e->getMessage());
         }
     }
@@ -798,6 +1195,7 @@ class EmployeeController extends Controller
     public function dailyAttendanceUpdate(Request $request)
     {
         $date = $request->input('date');
+        $selectedDate = \Carbon\Carbon::parse($date);
         $attendanceData = $request->input('attendance', []);
 
         try {
@@ -829,7 +1227,7 @@ class EmployeeController extends Controller
                 if ($attendance->check_in && $attendance->check_out) {
                     $checkIn = \Carbon\Carbon::parse($date . ' ' . $attendance->check_in);
                     $checkOut = \Carbon\Carbon::parse($date . ' ' . $attendance->check_out);
-                    
+
                     if ($checkOut->greaterThan($checkIn)) {
                         $totalMinutes = $checkOut->diffInMinutes($checkIn);
                         // Subtract 1 hour for lunch break if working more than 6 hours
@@ -850,7 +1248,6 @@ class EmployeeController extends Controller
             }
 
             return redirect()->back()->with('success', 'تم تحديث بيانات الحضور بنجاح لتاريخ ' . $selectedDate->format('Y/m/d'));
-            
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'حدث خطأ أثناء تحديث بيانات الحضور: ' . $e->getMessage());
         }
@@ -1025,7 +1422,6 @@ class EmployeeController extends Controller
                     'isPdfDownload' => true,
                     'downloadFileName' => "employee-card-{$employee->id}.pdf"
                 ]);
-
         } catch (\Exception $e) {
             Log::error('Error generating employee PDF: ' . $e->getMessage());
             return redirect()->back()->with('error', 'حدث خطأ في إنشاء ملف PDF');
@@ -1078,7 +1474,6 @@ class EmployeeController extends Controller
             Log::info("تم إنشاء حساب مستخدم جديد للموظف: {$employee->name} - البريد الإلكتروني: {$userEmail}");
 
             return redirect()->back()->with('success', "تم إنشاء حساب مستخدم بنجاح. البريد الإلكتروني: {$userEmail} | كلمة المرور: {$userPassword}");
-
         } catch (\Exception $e) {
             Log::error("خطأ في إنشاء حساب المستخدم للموظف {$employee->name}: " . $e->getMessage());
             return redirect()->back()->with('error', 'حدث خطأ في إنشاء حساب المستخدم: ' . $e->getMessage());
@@ -1119,18 +1514,13 @@ class EmployeeController extends Controller
         ]);
 
         $manager = Employee::find($request->direct_manager_id);
-
-        // تطبيق قواعد التعيين حسب دور الموظف
-        if ($employee->role === 'عامل') {
-            // للعمال: يجب أن يكون المدير مشرف موقع
-            if ($manager->role !== 'مشرف موقع') {
-                return redirect()->back()->with('error', 'العامل يمكن أن يكون مديره المباشر مشرف موقع فقط');
-            }
-        } else {
-            // لغير العمال: يجب أن يكون المدير مسؤول رئيسي
-            if ($manager->role !== 'مسئول رئيسي') {
-                return redirect()->back()->with('error', 'هذا الموظف يمكن أن يكون مديره المباشر مسؤول رئيسي فقط');
-            }
+        // Determine required manager role from hierarchy
+        $requiredRole = Employee::MANAGER_CHAIN[$employee->role] ?? null;
+        if ($requiredRole === null) {
+            return redirect()->back()->with('error', 'هذا الدور في أعلى التسلسل ولا يمكن تعيين مدير له');
+        }
+        if ($manager->role !== $requiredRole) {
+            return redirect()->back()->with('error', "يجب أن يكون المدير المباشر ذو الدور: {$requiredRole}");
         }
 
         // التأكد من عدم إنشاء دورة في التبعية (الموظف لا يمكن أن يكون مدير لمديره)
@@ -1141,17 +1531,16 @@ class EmployeeController extends Controller
 
         $employee->update(['direct_manager_id' => $request->direct_manager_id]);
 
-        // إذا كان الموظف عامل، يتم تحديث موقع عمله ليصبح نفس موقع المدير المباشر
-        if ($employee->role === 'عامل' && $manager->location_id) {
+        // تحديث موقع الموظف ليصبح نفس موقع المدير المباشر (لجميع الموظفين)
+        if ($manager->location_id) {
             $employee->update([
                 'location_id' => $manager->location_id,
-
             ]);
         }
 
         // تسجيل التعيين في جدول تعيينات المدير
         $notes = $request->notes ?? 'تعيين مدير مباشر';
-        if ($employee->role === 'عامل' && $manager->location_id) {
+        if ($manager->location_id) {
             $locationName = $manager->location ? $manager->location->name : 'موقع المدير';
             $notes .= " - تم تحديث موقع العمل إلى: {$locationName}";
         }
@@ -1169,7 +1558,7 @@ class EmployeeController extends Controller
 
         // إعداد رسالة النجاح
         $successMessage = "تم تعيين {$managerName} كمدير مباشر بنجاح";
-        if ($employee->role === 'عامل' && $manager->location_id) {
+        if ($manager->location_id) {
             $locationName = $manager->location ? $manager->location->name : 'الموقع الجديد';
             $successMessage .= " وتم تحديث موقع العمل إلى {$locationName}";
         }
@@ -1265,7 +1654,6 @@ class EmployeeController extends Controller
             ]);
 
             return redirect()->back()->with('success', 'تم تغيير كلمة السر بنجاح');
-
         } catch (\Exception $e) {
             Log::error('Error changing employee password', [
                 'employee_id' => $employee->id,
@@ -1369,5 +1757,35 @@ class EmployeeController extends Controller
                 'message' => 'حدث خطأ أثناء تسجيل معاملة الرصيد'
             ]);
         }
+    }
+
+    /**
+     * تفعيل الموظف - للمديرين العامين فقط
+     */
+    public function activate(Employee $employee)
+    {
+        // التحقق من أن المستخدم مدير عام
+        if (!Auth::user() || !Auth::user()->isGeneralManager()) {
+            return redirect()->back()->with('error', 'غير مصرح لك بتفعيل الموظفين. هذه العملية مخصصة للمدير العام فقط.');
+        }
+
+        $employee->update(['status' => 'active']);
+
+        return redirect()->back()->with('success', 'تم تفعيل الموظف بنجاح');
+    }
+
+    /**
+     * إلغاء تفعيل الموظف - للمديرين العامين فقط
+     */
+    public function deactivate(Employee $employee)
+    {
+        // التحقق من أن المستخدم مدير عام
+        if (!Auth::user() || !Auth::user()->isGeneralManager()) {
+            return redirect()->back()->with('error', 'غير مصرح لك بإلغاء تفعيل الموظفين. هذه العملية مخصصة للمدير العام فقط.');
+        }
+
+        $employee->update(['status' => 'inactive']);
+
+        return redirect()->back()->with('success', 'تم إلغاء تفعيل الموظف بنجاح');
     }
 }

@@ -5,6 +5,51 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentHistoryController;
+use App\Http\Controllers\EquipmentMaintenanceController;
+// ...existing use statements...
+
+// Revenue Entities Management (جهات الإيرادات)
+Route::resource('settings/revenue-entities', App\Http\Controllers\RevenueEntityController::class)->names([
+    'index' => 'settings.revenue-entities.index',
+    'create' => 'settings.revenue-entities.create',
+    'store' => 'settings.revenue-entities.store',
+    'show' => 'settings.revenue-entities.show',
+    'edit' => 'settings.revenue-entities.edit',
+    'update' => 'settings.revenue-entities.update',
+    'destroy' => 'settings.revenue-entities.destroy',
+]);
+// Finance Module Routes
+Route::group(['prefix' => 'finance', 'as' => 'finance.'], function () {
+    // Main Finance Routes
+    Route::get('/', [App\Http\Controllers\FinanceController::class, 'index'])->name('index');
+    Route::get('/all-transactions', [App\Http\Controllers\FinanceController::class, 'allTransactions'])->name('all-transactions');
+    Route::get('/daily-report', [App\Http\Controllers\FinanceController::class, 'dailyReport'])->name('daily-report');
+
+    // Custody Routes
+    Route::group(['prefix' => 'custodies', 'as' => 'custodies.'], function () {
+        Route::post('/', [App\Http\Controllers\CustodyController::class, 'store'])->name('store');
+        Route::get('/{custody}', [App\Http\Controllers\CustodyController::class, 'show'])->name('show');
+        Route::patch('/{custody}/approve', [App\Http\Controllers\CustodyController::class, 'approve'])->name('approve');
+        Route::get('/{custody}/print', [App\Http\Controllers\CustodyController::class, 'print'])->name('print');
+    });
+
+    // Employee Financial Report
+    Route::get('/employee-report/{employee}', [App\Http\Controllers\FinanceController::class, 'employeeReport'])
+        ->name('employee-report');
+});
+
+// Revenue Vouchers Management
+Route::resource('revenue-vouchers', App\Http\Controllers\RevenueVoucherController::class);
+
+// Revenue Voucher Actions
+Route::patch('/revenue-vouchers/{revenue_voucher}/approve', [App\Http\Controllers\RevenueVoucherController::class, 'approve'])
+    ->name('revenue-vouchers.approve');
+Route::patch('/revenue-vouchers/{revenue_voucher}/mark-received', [App\Http\Controllers\RevenueVoucherController::class, 'markAsReceived'])
+    ->name('revenue-vouchers.mark-received');
+Route::get('/revenue-vouchers/{revenue_voucher}/print', [App\Http\Controllers\RevenueVoucherController::class, 'print'])
+    ->name('revenue-vouchers.print');
+
+use App\Http\Controllers\EquipmentFuelConsumptionController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\WarehouseController;
@@ -16,6 +61,7 @@ use App\Http\Controllers\ExternalTruckController;
 use App\Http\Controllers\InternalTruckController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\MaterialUnitController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MaterialController;
@@ -23,6 +69,8 @@ use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\CorrespondenceController;
 use App\Http\Controllers\MyTasksController;
 use App\Http\Controllers\SparePartReportController;
+use App\Http\Controllers\SparePartTypeController;
+use App\Http\Controllers\FuelManagementController;
 
 // Authentication Routes (Public)
 Route::middleware('guest')->group(function () {
@@ -46,11 +94,16 @@ Route::middleware('auth')->group(function () {
 });
 
 // Protected Routes (Require Authentication)
-Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(function () {
+Route::middleware(['auth', 'check.password.changed'])->group(function () {
 
     // Dashboard Routes
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     // Employee Management Routes
     Route::prefix('employees')->group(function () {
@@ -82,6 +135,10 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::post('/{employee}/balance/credit', [EmployeeController::class, 'addCredit'])->name('employees.balance.credit');
         Route::post('/{employee}/balance/debit', [EmployeeController::class, 'addDebit'])->name('employees.balance.debit');
 
+        // Employee Status Management Routes (Admin Only)
+        Route::patch('/{employee}/activate', [EmployeeController::class, 'activate'])->name('employees.activate');
+        Route::patch('/{employee}/deactivate', [EmployeeController::class, 'deactivate'])->name('employees.deactivate');
+
         // Employee Reports Routes
         Route::post('/{employee}/reports', [EmployeeReportController::class, 'store'])->name('employees.reports.store');
         Route::get('/{employee}/reports', [EmployeeReportController::class, 'index'])->name('employees.reports.index');
@@ -109,6 +166,29 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::post('/{equipment}/move', [EquipmentHistoryController::class, 'moveEquipment'])->name('equipment.move');
         Route::get('/{equipment}/driver-history', [EquipmentHistoryController::class, 'getDriverHistory'])->name('equipment.driver-history');
         Route::get('/{equipment}/movement-history', [EquipmentHistoryController::class, 'getMovementHistory'])->name('equipment.movement-history');
+        Route::post('/{equipment}/update-location', [EquipmentController::class, 'updateLocation'])->name('equipment.update-location');
+    });
+
+    // Equipment Maintenance Routes
+    Route::prefix('equipment-maintenance')->name('equipment-maintenance.')->group(function () {
+        Route::get('/', [EquipmentMaintenanceController::class, 'index'])->name('index');
+        Route::get('/create', [EquipmentMaintenanceController::class, 'create'])->name('create');
+        Route::post('/', [EquipmentMaintenanceController::class, 'store'])->name('store');
+        Route::get('/{equipmentMaintenance}', [EquipmentMaintenanceController::class, 'show'])->name('show');
+        Route::get('/{equipmentMaintenance}/edit', [EquipmentMaintenanceController::class, 'edit'])->name('edit');
+        Route::put('/{equipmentMaintenance}', [EquipmentMaintenanceController::class, 'update'])->name('update');
+        Route::delete('/{equipmentMaintenance}', [EquipmentMaintenanceController::class, 'destroy'])->name('destroy');
+        Route::patch('/{equipmentMaintenance}/complete', [EquipmentMaintenanceController::class, 'complete'])->name('complete');
+    });
+
+    // Equipment Fuel Consumption Routes
+    Route::prefix('equipment-fuel-consumption')->name('equipment-fuel-consumption.')->group(function () {
+        Route::post('/', [EquipmentFuelConsumptionController::class, 'store'])->name('store');
+        Route::delete('/{equipmentFuelConsumption}', [EquipmentFuelConsumptionController::class, 'destroy'])->name('destroy');
+        Route::get('/{equipment}/consumptions', [EquipmentFuelConsumptionController::class, 'getConsumptionsByEquipment'])->name('consumptions');
+        Route::get('/{equipment}/summary', [EquipmentFuelConsumptionController::class, 'getConsumptionSummary'])->name('summary');
+        Route::patch('/{fuelConsumption}/approve', [EquipmentFuelConsumptionController::class, 'approve'])->name('approve');
+        Route::patch('/{fuelConsumption}/reject', [EquipmentFuelConsumptionController::class, 'reject'])->name('reject');
     });
 
     // External Trucks Management Routes
@@ -164,6 +244,28 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::get('/{warehouse}/reports', [WarehouseController::class, 'reports'])->name('warehouses.reports');
     });
 
+    // Spare Part Types Management Routes
+    Route::prefix('spare-part-types')->group(function () {
+        Route::get('/', [SparePartTypeController::class, 'index'])->name('spare-part-types.index');
+        Route::get('/create', [SparePartTypeController::class, 'create'])->name('spare-part-types.create');
+        Route::post('/', [SparePartTypeController::class, 'store'])->name('spare-part-types.store');
+        Route::get('/{sparePartType}/edit', [SparePartTypeController::class, 'edit'])->name('spare-part-types.edit');
+        Route::put('/{sparePartType}', [SparePartTypeController::class, 'update'])->name('spare-part-types.update');
+        Route::delete('/{sparePartType}', [SparePartTypeController::class, 'destroy'])->name('spare-part-types.destroy');
+    });
+
+    // Damaged Parts Receipt Management Routes
+    Route::prefix('damaged-parts-receipts')->group(function () {
+        Route::get('/', [App\Http\Controllers\DamagedPartsReceiptController::class, 'index'])->name('damaged-parts-receipts.index');
+        Route::get('/create', [App\Http\Controllers\DamagedPartsReceiptController::class, 'create'])->name('damaged-parts-receipts.create');
+        Route::post('/', [App\Http\Controllers\DamagedPartsReceiptController::class, 'store'])->name('damaged-parts-receipts.store');
+        Route::get('/{damagedPartsReceipt}', [App\Http\Controllers\DamagedPartsReceiptController::class, 'show'])->name('damaged-parts-receipts.show');
+        Route::get('/{damagedPartsReceipt}/edit', [App\Http\Controllers\DamagedPartsReceiptController::class, 'edit'])->name('damaged-parts-receipts.edit');
+        Route::put('/{damagedPartsReceipt}', [App\Http\Controllers\DamagedPartsReceiptController::class, 'update'])->name('damaged-parts-receipts.update');
+        Route::delete('/{damagedPartsReceipt}', [App\Http\Controllers\DamagedPartsReceiptController::class, 'destroy'])->name('damaged-parts-receipts.destroy');
+        Route::patch('/{damagedPartsReceipt}/status', [App\Http\Controllers\DamagedPartsReceiptController::class, 'updateStatus'])->name('damaged-parts-receipts.update-status');
+    });
+
     // Document Management Routes
     Route::prefix('documents')->group(function () {
         Route::get('/', [DocumentController::class, 'index'])->name('documents.index');
@@ -188,15 +290,30 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::delete('/{transport}', [TransportController::class, 'destroy'])->name('transport.destroy');
     });
 
-    // Finance Management Routes
-    Route::prefix('finance')->group(function () {
-        Route::get('/', [FinanceController::class, 'index'])->name('finance.index');
-        Route::get('/create', [FinanceController::class, 'create'])->name('finance.create');
-        Route::post('/', [FinanceController::class, 'store'])->name('finance.store');
-        Route::get('/{finance}', [FinanceController::class, 'show'])->name('finance.show');
-        Route::get('/{finance}/edit', [FinanceController::class, 'edit'])->name('finance.edit');
-        Route::put('/{finance}', [FinanceController::class, 'update'])->name('finance.update');
-        Route::delete('/{finance}', [FinanceController::class, 'destroy'])->name('finance.destroy');
+
+
+    // Expense Voucher Management Routes
+    Route::prefix('expense-vouchers')->name('expense-vouchers.')->group(function () {
+        Route::get('/', [App\Http\Controllers\ExpenseVoucherController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\ExpenseVoucherController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\ExpenseVoucherController::class, 'store'])->name('store');
+        Route::get('/{expenseVoucher}', [App\Http\Controllers\ExpenseVoucherController::class, 'show'])->name('show');
+        Route::get('/{expenseVoucher}/edit', [App\Http\Controllers\ExpenseVoucherController::class, 'edit'])->name('edit');
+        Route::put('/{expenseVoucher}', [App\Http\Controllers\ExpenseVoucherController::class, 'update'])->name('update');
+        Route::delete('/{expenseVoucher}', [App\Http\Controllers\ExpenseVoucherController::class, 'destroy'])->name('destroy');
+        Route::patch('/{expenseVoucher}/approve', [App\Http\Controllers\ExpenseVoucherController::class, 'approve'])->name('approve');
+        Route::get('/{expenseVoucher}/print', [App\Http\Controllers\ExpenseVoucherController::class, 'print'])->name('print');
+    });
+
+    // Expense Entity Management Routes
+    Route::prefix('expense-entities')->name('expense-entities.')->group(function () {
+        Route::get('/', [App\Http\Controllers\ExpenseEntityController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\ExpenseEntityController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\ExpenseEntityController::class, 'store'])->name('store');
+        Route::get('/{expenseEntity}', [App\Http\Controllers\ExpenseEntityController::class, 'show'])->name('show');
+        Route::get('/{expenseEntity}/edit', [App\Http\Controllers\ExpenseEntityController::class, 'edit'])->name('edit');
+        Route::put('/{expenseEntity}', [App\Http\Controllers\ExpenseEntityController::class, 'update'])->name('update');
+        Route::delete('/{expenseEntity}', [App\Http\Controllers\ExpenseEntityController::class, 'destroy'])->name('destroy');
     });
 
     // Payroll Management Routes
@@ -233,13 +350,36 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         Route::get('/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
         Route::put('/{project}', [ProjectController::class, 'update'])->name('projects.update');
         Route::delete('/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+        Route::post('/{project}/images', [ProjectController::class, 'storeImages'])->name('projects.images.store');
         Route::delete('/images/{image}', [ProjectController::class, 'deleteImage'])->name('projects.images.delete');
 
         // Project Extension Route
         Route::post('/{project}/extend', [ProjectController::class, 'extendProject'])->name('projects.extend');
 
+        // Project Rental Routes
+        Route::post('/{project}/rental', [ProjectController::class, 'storeRental'])->name('projects.rental.store');
+        Route::put('/{project}/rental/{rental}', [ProjectController::class, 'updateRental'])->name('projects.rental.update');
+        Route::delete('/{project}/rental/{rental}', [ProjectController::class, 'destroyRental'])->name('projects.rental.destroy');
+
+        // Project Progress Routes
+        Route::post('/{project}/progress', [ProjectController::class, 'updateProgress'])->name('projects.updateProgress');
+
+        // Project Visit Routes
+        Route::post('/{project}/visit', [ProjectController::class, 'storeVisit'])->name('projects.visit.store');
+
+        // Project Loan Routes
+        Route::post('/{project}/loan', [ProjectController::class, 'storeLoan'])->name('projects.loan.store');
+        Route::put('/{project}/loan/{loan}', [ProjectController::class, 'updateLoan'])->name('projects.loan.update');
+        Route::delete('/{project}/loan/{loan}', [ProjectController::class, 'destroyLoan'])->name('projects.loan.destroy');
+
         // Project Extract Routes
         Route::get('/{project}/extract/create', [ProjectController::class, 'createExtract'])->name('projects.extract.create');
+        Route::post('/projects/{project}/items', [ProjectController::class, 'storeItems'])->name('projects.items.store');
+
+        // Test route for image upload
+        Route::get('/test-upload', function () {
+            return view('test-upload');
+        })->name('test.upload');
         Route::post('/{project}/extract/store', [ProjectController::class, 'storeExtract'])->name('projects.extract.store');
         Route::get('/{project}/extract/{extract}', [ProjectController::class, 'showExtract'])->name('projects.extract.show');
         Route::get('/{project}/extract/{extract}/edit', [ProjectController::class, 'editExtract'])->name('projects.extract.edit');
@@ -276,9 +416,40 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
         // Materials Management Routes
         Route::get('/materials', [SettingsController::class, 'materials'])->name('settings.materials');
         Route::get('/materials/content', [SettingsController::class, 'materialsContent'])->name('settings.materials.content');
+        Route::get('/materials/create', [MaterialController::class, 'create'])->name('settings.materials.create');
         Route::post('/materials', [MaterialController::class, 'store'])->name('settings.materials.store');
+        Route::get('/materials/{material}/edit', [MaterialController::class, 'edit'])->name('settings.materials.edit');
         Route::put('/materials/{material}', [MaterialController::class, 'update'])->name('settings.materials.update');
         Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])->name('settings.materials.destroy');
+
+        // Roles and Permissions Routes
+        Route::get('/roles-permissions', [SettingsController::class, 'rolesAndPermissions'])->name('settings.roles-permissions');
+        Route::get('/roles/{role}', [SettingsController::class, 'showRole'])->name('settings.roles.show');
+        Route::post('/roles', [SettingsController::class, 'storeRole'])->name('settings.roles.store');
+        Route::put('/roles/{role}', [SettingsController::class, 'updateRole'])->name('settings.roles.update');
+        Route::delete('/roles/{role}', [SettingsController::class, 'destroyRole'])->name('settings.roles.destroy');
+        Route::post('/permissions', [SettingsController::class, 'storePermission'])->name('settings.permissions.store');
+        Route::put('/users/{user}/roles', [SettingsController::class, 'updateUserRoles'])->name('settings.users.roles.update');
+
+        // Expense Categories Routes
+        Route::get('/expense-categories/content', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'content'])->name('settings.expense-categories.content');
+        Route::post('/expense-categories', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'store'])->name('settings.expense-categories.store');
+        Route::put('/expense-categories/{expenseCategory}', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'update'])->name('settings.expense-categories.update');
+        Route::patch('/expense-categories/{expenseCategory}/toggle-status', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'toggleStatus'])->name('settings.expense-categories.toggle-status');
+        Route::delete('/expense-categories/{expenseCategory}', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'destroy'])->name('settings.expense-categories.destroy');
+
+        // Revenue Types Routes
+        Route::get('/revenue-types/content', [App\Http\Controllers\Settings\RevenueTypeController::class, 'content'])->name('settings.revenue-types.content');
+        Route::post('/revenue-types', [App\Http\Controllers\Settings\RevenueTypeController::class, 'store'])->name('settings.revenue-types.store');
+        Route::put('/revenue-types/{revenueType}', [App\Http\Controllers\Settings\RevenueTypeController::class, 'update'])->name('settings.revenue-types.update');
+        Route::patch('/revenue-types/{revenueType}/toggle-status', [App\Http\Controllers\Settings\RevenueTypeController::class, 'toggleStatus'])->name('settings.revenue-types.toggle-status');
+        Route::delete('/revenue-types/{revenueType}', [App\Http\Controllers\Settings\RevenueTypeController::class, 'destroy'])->name('settings.revenue-types.destroy');
+
+        // Expense Entities Routes
+        Route::get('/expense-entities/content', [App\Http\Controllers\ExpenseEntityController::class, 'getContent'])->name('settings.expense-entities.content');
+
+        // Revenue Entities Routes
+        Route::get('/revenue-entities/content', [App\Http\Controllers\RevenueEntityController::class, 'getContent'])->name('settings.revenue-entities.content');
     });
 
     // Supplier Management Routes
@@ -326,4 +497,36 @@ Route::middleware(['auth', 'manager.only', 'check.password.changed'])->group(fun
             Route::get('/employees', [SparePartReportController::class, 'employees'])->name('employees');
         });
     });
+
+    // Fuel Management Routes
+    Route::prefix('fuel-management')->name('fuel-management.')->group(function () {
+        Route::get('/', [FuelManagementController::class, 'index'])->name('index');
+        Route::get('/driver', [FuelManagementController::class, 'driverIndex'])->name('driver');
+        Route::post('/equipment/{equipment}/add-fuel', [FuelManagementController::class, 'addFuel'])->name('add-fuel');
+        Route::get('/fuel-truck/{fuelTruck}/distributions', [FuelManagementController::class, 'showDistributions'])->name('distributions');
+        Route::post('/fuel-truck/{fuelTruck}/distribute', [FuelManagementController::class, 'distributeFuel'])->name('distribute');
+        Route::patch('/distribution/{distribution}/approve', [FuelManagementController::class, 'approveDistribution'])->name('approve-distribution');
+        Route::patch('/distribution/{distribution}/reject', [FuelManagementController::class, 'rejectDistribution'])->name('reject-distribution');
+    });
+
+    // Test Route for Spare Part Creation
+    Route::get('/test-spare-part-form', function () {
+        return view('test-spare-part-form');
+    })->name('test-spare-part-form');
+
+    // Test Route for Image Upload
+    Route::get('/test-image-upload', function () {
+        return view('test-image-upload');
+    })->name('test-image-upload');
+
+    // Simple Upload Test Route
+    Route::get('/simple-upload-test', function () {
+        $projects = \App\Models\Project::select('id', 'name')->take(5)->get();
+        return view('simple-upload-test', compact('projects'));
+    })->name('simple-upload-test');
+
+    // Test Image Viewer Route
+    Route::get('/test-image-viewer', function () {
+        return view('test-image-viewer');
+    })->name('test-image-viewer');
 }); // End of auth middleware group

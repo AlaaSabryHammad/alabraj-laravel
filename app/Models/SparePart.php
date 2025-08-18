@@ -61,7 +61,7 @@ class SparePart extends Model
     }
 
     // فحص إذا كان المخزون أقل من الحد الأدنى
-    public function isLowStockAttribute()
+    public function getIsLowStockAttribute()
     {
         return $this->total_stock <= $this->minimum_stock;
     }
@@ -110,14 +110,14 @@ class SparePart extends Model
     public function generateBarcode()
     {
         $timestamp = date('Ymd');
-        
+
         // استخدام microtime للحصول على رقم فريد
-        $microtime = (int)(microtime(true) * 1000);
+        $microtime = (int)(\microtime(true) * 1000);
         $lastDigits = $microtime % 10000; // آخر 4 أرقام
-        
-        // في حالة التطابق، إضافة رقم عشوائي
-        $randomSuffix = rand(100, 999);
-        
+
+        // في حالة التطابق، إضافة رقم عشوائي بناءً على الوقت
+        $randomSuffix = ($microtime % 900) + 100; // سيعطي رقم بين 100-999
+
         return "BC-{$this->id}-{$timestamp}-{$lastDigits}{$randomSuffix}";
     }
 
@@ -127,11 +127,11 @@ class SparePart extends Model
     public function generateSerialNumber()
     {
         $year = date('Y');
-        
+
         // استخدام microtime + الرقم التعريفي + رقم عشوائي للحصول على رقم فريد
-        $microtime = (int)(microtime(true) * 1000);
-        $uniqueNumber = ($microtime + $this->id + rand(1, 999)) % 1000000;
-        
+        $microtime = (int)(\microtime(true) * 1000);
+        $uniqueNumber = ($microtime + $this->id + (($microtime % 999) + 1)) % 1000000;
+
         return "SP-{$year}-" . str_pad($uniqueNumber, 6, '0', STR_PAD_LEFT);
     }
 
@@ -144,13 +144,18 @@ class SparePart extends Model
             $lastSparePart = self::orderBy('id', 'desc')->first();
             $nextNumber = $lastSparePart ? $lastSparePart->id + 1 : 1;
             $code = 'SP-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-            
+
             // إضافة microtime للتأكد من الفرادة في حالة الطلبات المتزامنة
             $microSuffix = (int)(microtime(true) * 1000) % 1000;
             $code .= '-' . str_pad($microSuffix, 3, '0', STR_PAD_LEFT);
-            
         } while (self::where('code', $code)->exists());
-        
+
         return $code;
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

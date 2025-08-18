@@ -11,6 +11,108 @@
             </div>
         @endif
 
+        <!-- Modal إضافة البنود -->
+        <div id="addItemsModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden" style="z-index: 1000;">
+            <div class="fixed inset-0 flex items-center justify-center p-4">
+                <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl" dir="rtl">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-900">إضافة بنود للمشروع</h3>
+                            <button type="button" onclick="closeAddItemsModal()" class="text-gray-400 hover:text-gray-500">
+                                <i class="ri-close-line text-2xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="addItemsForm" action="{{ route('projects.items.store', $project) }}" method="POST"
+                        class="p-6">
+                        @csrf
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">معدل الضريبة (%)</label>
+                            <input type="number" id="modal_tax_rate" name="tax_rate" value="15" step="0.1"
+                                min="0" max="100"
+                                class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div id="itemsContainer" class="space-y-4" style="max-height:45vh; overflow-y:auto;">
+                            <!-- نموذج البند الأول -->
+                            <div class="item-row space-y-4 pb-6 mb-6 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-medium text-gray-700">البند <span class="item-number">1</span></h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">اسم البند</label>
+                                        <input type="text" name="items[0][name]" required
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">وحدة القياس</label>
+                                        <select name="items[0][unit]" required
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">اختر وحدة القياس</option>
+                                            <option value="م3">م3</option>
+                                            <option value="م2">م2</option>
+                                            <option value="طن">طن</option>
+                                            <option value="لتر">لتر</option>
+                                            <option value="عدد">عدد</option>
+                                            <option value="م">م</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">الكمية</label>
+                                        <input type="number" name="items[0][quantity]" step="0.01" min="0"
+                                            required
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            oninput="calculateTotal(this)">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">السعر الإفرادي</label>
+                                        <input type="number" name="items[0][unit_price]" step="0.01" min="0"
+                                            required
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            oninput="calculateTotal(this)">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">السعر الإجمالي</label>
+                                    <input type="number" name="items[0][total_price]" readonly
+                                        class="w-full rounded-lg bg-gray-50 border-gray-300">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">التكلفة بالضريبة</label>
+                                    <input type="number" name="items[0][total_with_tax]" readonly
+                                        class="w-full rounded-lg bg-gray-50 border-gray-300">
+                                </div>
+                            </div><!-- /item-row -->
+                        </div>
+
+                        <div class="flex items-center gap-4 mb-6">
+                            <button type="button" id="addNewItemBtn"
+                                class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700">
+                                <i class="ri-add-line"></i>
+                                إضافة بند جديد
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+                            <button type="button" onclick="closeAddItemsModal()"
+                                class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                إلغاء
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                                <i class="ri-save-line"></i>
+                                حفظ البنود
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         @if (session('error'))
             <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                 <span class="block sm:inline">{{ session('error') }}</span>
@@ -131,7 +233,8 @@
                                         </td>
                                         <td class="px-4 py-3 border text-center">{{ number_format($item->unit_price, 2) }}
                                         </td>
-                                        <td class="px-4 py-3 border text-center">{{ number_format($item->total_price, 2) }}
+                                        <td class="px-4 py-3 border text-center">
+                                            {{ number_format($item->total_price, 2) }}
                                         </td>
                                         <td class="px-4 py-3 border text-center bg-gray-50">
                                             {{ number_format($previousQuantity, 2) }}</td>
@@ -141,8 +244,8 @@
                                             @php
                                                 $maxQuantity = max(0, $item->quantity - $previousQuantity);
                                             @endphp
-                                            <input type="number" step="0.01" min="0" max="{{ $maxQuantity }}"
-                                                value="" placeholder="أدخل الكمية"
+                                            <input type="number" step="0.01" min="0"
+                                                max="{{ $maxQuantity }}" value="" placeholder="أدخل الكمية"
                                                 class="w-full text-center border-0 bg-transparent focus:ring-2 focus:ring-blue-400 focus:bg-white rounded current-quantity"
                                                 data-unit-price="{{ $item->unit_price }}" data-row="{{ $index }}"
                                                 oninput="calculateCurrentValue(this)"
@@ -150,7 +253,6 @@
                                             @if ($maxQuantity <= 0)
                                                 <small class="text-red-500 block mt-1">تم استخراج كامل الكمية</small>
                                             @endif
-                                        </td>>>
                                         </td>
                                         <td class="px-4 py-3 border text-center bg-blue-50">
                                             <span class="current-value font-medium text-blue-600 text-lg"
@@ -354,6 +456,7 @@
                             <!-- Hidden inputs for extract data -->
                             <input type="hidden" id="extract_total" name="extract_total" value="0">
                             <input type="hidden" id="extract_items" name="extract_items" value="">
+                            <input type="hidden" id="extract_tax_rate" name="extract_tax_rate" value="15">
 
                             <!-- Action Buttons -->
                             <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
@@ -379,9 +482,14 @@
             </form>
         @else
             <div class="bg-white rounded-xl shadow-sm border p-6">
-                <div class="text-center text-gray-500">
-                    <i class="ri-file-list-3-line text-4xl mb-4"></i>
-                    <p>لا توجد بنود لهذا المشروع</p>
+                <div class="text-center">
+                    <i class="ri-file-list-3-line text-4xl mb-4 text-gray-400"></i>
+                    <p class="text-gray-500 mb-4">لا توجد بنود لهذا المشروع</p>
+                    <button type="button" onclick="openAddItemsModal()"
+                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+                        <i class="ri-add-line"></i>
+                        إضافة بنود للمشروع
+                    </button>
                 </div>
             </div>
         @endif
@@ -474,6 +582,7 @@
                 const quantity = parseFloat(input.value) || 0;
                 if (quantity > 0) {
                     const unitPrice = parseFloat(input.dataset.unitPrice);
+                    // لا توجد حقول total_with_tax في جدول المستخلص؛ نستخدم القيمة بدون ضريبة هنا
                     extractItems.push({
                         item_index: index,
                         quantity: quantity,
@@ -484,6 +593,12 @@
             });
 
             document.getElementById('extract_items').value = JSON.stringify(extractItems);
+            // also set tax rate field
+            const modalTaxRateEl = document.getElementById('modal_tax_rate');
+            if (modalTaxRateEl) {
+                const hiddenTaxInput = document.getElementById('extract_tax_rate');
+                if (hiddenTaxInput) hiddenTaxInput.value = modalTaxRateEl.value;
+            }
         }
 
         function updateProgressBars(currentExtract, projectBudget, previousPaid) {
@@ -600,59 +715,63 @@
             document.getElementById('file-info').classList.add('hidden');
         }
 
-        // Form submission handling
-        document.getElementById('extractForm').addEventListener('submit', function(e) {
-            const saveBtn = document.getElementById('saveExtractBtn');
-            const totalExtract = parseFloat(document.getElementById('extract_total').value) || 0;
-            const extractNumber = document.getElementById('extract_number').value.trim();
+        // Form submission handling (guarded)
+        const extractFormEl = document.getElementById('extractForm');
+        if (extractFormEl) {
+            extractFormEl.addEventListener('submit', function(e) {
+                const saveBtn = document.getElementById('saveExtractBtn');
+                const totalExtract = parseFloat(document.getElementById('extract_total').value) || 0;
+                const extractNumber = document.getElementById('extract_number').value.trim();
 
-            if (!extractNumber) {
-                e.preventDefault();
-                alert('يرجى إدخال رقم المستخلص');
-                document.getElementById('extract_number').focus();
-                return;
-            }
+                if (!extractNumber) {
+                    e.preventDefault();
+                    alert('يرجى إدخال رقم المستخلص');
+                    document.getElementById('extract_number').focus();
+                    return;
+                }
 
-            if (totalExtract <= 0) {
-                e.preventDefault();
-                alert('يرجى إدخال كميات المستخلص قبل الحفظ');
-                return;
-            }
+                if (totalExtract <= 0) {
+                    e.preventDefault();
+                    alert('يرجى إدخال كميات المستخلص قبل الحفظ');
+                    return;
+                }
 
-            // Show loading state
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="ri-loader-2-line animate-spin"></i> جاري الحفظ...';
-        });
+                // Show loading state
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="ri-loader-2-line animate-spin"></i> جاري الحفظ...';
+            });
+        }
 
-        // Drag and drop functionality
+        // Drag and drop functionality (guarded)
         const fileUploadArea = document.getElementById('file-upload-area');
+        if (fileUploadArea) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            fileUploadArea.addEventListener(eventName, preventDefaults, false);
-        });
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                fileUploadArea.classList.add('bg-blue-50', 'border-blue-300');
+            }
+
+            function unhighlight(e) {
+                fileUploadArea.classList.remove('bg-blue-50', 'border-blue-300');
+            }
+
+            fileUploadArea.addEventListener('drop', handleDrop, false);
         }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileUploadArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileUploadArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight(e) {
-            fileUploadArea.classList.add('bg-blue-50', 'border-blue-300');
-        }
-
-        function unhighlight(e) {
-            fileUploadArea.classList.remove('bg-blue-50', 'border-blue-300');
-        }
-
-        fileUploadArea.addEventListener('drop', handleDrop, false);
 
         function handleDrop(e) {
             const dt = e.dataTransfer;
@@ -710,6 +829,184 @@
         styleSheet.type = "text/css";
         styleSheet.innerText = printStyles;
         document.head.appendChild(styleSheet);
+
+        // Modal Functions
+        function openAddItemsModal() {
+            document.getElementById('addItemsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddItemsModal() {
+            document.getElementById('addItemsModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Items Management
+        function addNewItem() {
+            const container = document.getElementById('itemsContainer');
+            const newIndex = container.querySelectorAll('.item-row').length;
+
+            const itemTemplate = `
+                <div class="item-row space-y-4 pb-6 mb-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-medium text-gray-700">البند <span class="item-number">${newIndex + 1}</span></h4>
+                        <button type="button" onclick="removeItem(this)" class="text-red-500 hover:text-red-700">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">اسم البند</label>
+                            <input type="text" name="items[${newIndex}][name]" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">وحدة القياس</label>
+                            <select name="items[${newIndex}][unit]" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">اختر وحدة القياس</option>
+                                <option value="م3">م3</option>
+                                <option value="م2">م2</option>
+                                <option value="طن">طن</option>
+                                <option value="لتر">لتر</option>
+                                <option value="عدد">عدد</option>
+                                <option value="م">م</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">الكمية</label>
+                            <input type="number" name="items[${newIndex}][quantity]" step="0.01" min="0" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                oninput="calculateTotal(this)">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">السعر الإفرادي</label>
+                            <input type="number" name="items[${newIndex}][unit_price]" step="0.01" min="0" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                oninput="calculateTotal(this)">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">السعر الإجمالي</label>
+                        <input type="number" name="items[${newIndex}][total_price]" readonly
+                            class="w-full rounded-lg bg-gray-50 border-gray-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">التكلفة بالضريبة</label>
+                        <input type="number" name="items[${newIndex}][total_with_tax]" readonly
+                            class="w-full rounded-lg bg-gray-50 border-gray-300">
+                    </div>
+                </div>
+            `;
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = itemTemplate;
+            container.appendChild(tempDiv.firstElementChild);
+
+            // تحديث أرقام البنود
+            updateItemNumbers();
+        }
+
+        function removeItem(button) {
+            const itemRow = button.closest('.item-row');
+            itemRow.remove();
+            updateItemNumbers();
+        }
+
+        function updateItemNumbers() {
+            document.querySelectorAll('.item-number').forEach((span, index) => {
+                span.textContent = index + 1;
+            });
+        }
+
+        function calculateTotal(input) {
+            const row = input.closest('.item-row');
+            const quantity = parseFloat(row.querySelector('input[name$="[quantity]"]').value) || 0;
+            const unitPrice = parseFloat(row.querySelector('input[name$="[unit_price]"]').value) || 0;
+            const totalInput = row.querySelector('input[name$="[total_price]"]');
+            const totalWithTaxInput = row.querySelector('input[name$="[total_with_tax]"]');
+            const modalTaxRateEl = document.getElementById('modal_tax_rate');
+            const taxRate = modalTaxRateEl ? (parseFloat(modalTaxRateEl.value) || 0) : 0;
+            totalInput.value = (quantity * unitPrice).toFixed(2);
+
+            // Calculate total including tax
+            if (totalWithTaxInput) {
+                const subtotal = quantity * unitPrice;
+                const totalWithTax = subtotal + (subtotal * (taxRate / 100));
+                totalWithTaxInput.value = totalWithTax.toFixed(2);
+            }
+        }
+
+        // Recalculate all items when tax rate changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const taxRateInput = document.getElementById('modal_tax_rate');
+            if (taxRateInput) {
+                taxRateInput.addEventListener('input', function() {
+                    document.querySelectorAll('#itemsContainer .item-row').forEach(row => {
+                        const qtyInput = row.querySelector('input[name$="[quantity]"]');
+                        if (qtyInput) {
+                            calculateTotal(qtyInput);
+                        }
+                    });
+                });
+            }
+        });
+
+        // تحسين UX
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAddItemsModal();
+            }
+        });
+
+        // Ensure bindings after DOM loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const addBtn = document.getElementById('addNewItemBtn');
+            if (addBtn) {
+                addBtn.addEventListener('click', function() {
+                    addNewItem();
+                });
+            }
+
+            // Bind addItemsForm submission if form exists
+            const addItemsForm = document.getElementById('addItemsForm');
+            if (addItemsForm) {
+                addItemsForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML =
+                        '<i class="ri-loader-2-line animate-spin"></i> جاري الحفظ...';
+
+                    try {
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: new FormData(this),
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            // إغلاق Modal وتحديث الصفحة
+                            closeAddItemsModal();
+                            window.location.reload();
+                        } else {
+                            throw new Error(result.message || 'حدث خطأ أثناء حفظ البنود');
+                        }
+                    } catch (error) {
+                        alert(error.message);
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="ri-save-line"></i> حفظ البنود';
+                    }
+                });
+            }
+        });
     </script>
 @endsection
 

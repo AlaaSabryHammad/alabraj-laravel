@@ -7,7 +7,133 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
+    /**
+     * Hierarchical chain mapping: current role => required direct manager role
+     */
+    public const MANAGER_CHAIN = [
+        // Arabic roles
+        'عامل' => 'مشرف موقع',
+        'مشرف موقع' => 'مهندس',
+        'مهندس' => 'مدير مشاريع',
+        'مدير مشاريع' => 'مدير',
+        'مدير' => 'مدير عام',
+        'محاسب' => 'مدير مالي',
+        'مشغل معدة' => 'مشرف موقع',
+        'سائق تانك محروقات' => 'مدير',
+        'سائق شاحنة' => 'مدير',
+        'امين مستودع' => 'مدير',
+        'مدير ورشة' => 'مدير',
+
+        // English roles (matching database)
+        'worker' => 'site_manager',
+        'site_manager' => 'engineer',
+        'engineer' => 'project_manager',
+        'project_manager' => 'general_manager',
+        'general_manager' => null, // المدير العام في أعلى التسلسل
+        'financial_manager' => 'general_manager',
+        'hr_manager' => 'general_manager',
+        'operations_manager' => 'general_manager',
+        'manager' => 'general_manager',
+        'accountant' => 'financial_manager',
+        'equipment_operator' => 'site_manager',
+        'driver' => 'site_manager',
+        'security' => 'site_manager',
+        'warehouse_manager' => 'manager',
+        'workship_manager' => 'manager',
+        'fuel_manager' => 'manager',
+        'truck_driver' => 'site_manager',
+    ];
+
+    /**
+     * Translation map (both directions). Keys can be Arabic or English.
+     */
+    public const ROLE_TRANSLATIONS = [
+        'employee' => 'عامل',
+        'عامل' => 'عامل',
+        'supervisor' => 'مشرف موقع',
+        'مشرف موقع' => 'مشرف موقع',
+        'engineer' => 'مهندس',
+        'مهندس' => 'مهندس',
+        'project_manager' => 'مدير مشاريع',
+        'مدير مشاريع' => 'مدير مشاريع',
+        'manager' => 'مدير',
+        'مدير' => 'مدير',
+        'general_manager' => 'مدير عام',
+        'مدير عام' => 'مدير عام',
+        'accountant' => 'محاسب',
+        'محاسب' => 'محاسب',
+        'equipment_operator' => 'مشغل معدة',
+        'مشغل معدة' => 'مشغل معدة',
+        'fuel_tank_driver' => 'سائق تانك محروقات',
+        'سائق تانك محروقات' => 'سائق تانك محروقات',
+        'truck_driver' => 'سائق شاحنة',
+        'سائق شاحنة' => 'سائق شاحنة',
+        'store_keeper' => 'امين مستودع',
+        'امين مستودع' => 'امين مستودع',
+        'workshop_manager' => 'مدير ورشة',
+        'مدير ورشة' => 'مدير ورشة',
+        'admin' => 'إداري',
+        'إداري' => 'إداري',
+    ];
+
+    /** Normalize any stored role (Arabic or English) to displayed Arabic */
+    public static function roleToArabic(?string $role): ?string
+    {
+        if ($role === null) return null;
+        $trimmed = trim($role);
+        return self::ROLE_TRANSLATIONS[$trimmed] ?? $trimmed; // fallback to itself
+    }
+
+    /** Given an Arabic role, return all possible stored variants (Arabic + English keys). */
+    public static function variantsForArabic(string $arabic): array
+    {
+        $arabic = trim($arabic);
+        $variants = [];
+        foreach (self::ROLE_TRANSLATIONS as $key => $value) {
+            if ($value === $arabic) {
+                $variants[] = $key; // include original key (English or Arabic)
+            }
+        }
+        // Always include the arabic itself
+        if (!in_array($arabic, $variants, true)) {
+            $variants[] = $arabic;
+        }
+        // Unique & return
+        return array_values(array_unique($variants));
+    }
+
+    /** Build distinct Arabic roles list from employees table */
+    public static function distinctArabicRoles(): \Illuminate\Support\Collection
+    {
+        $raw = self::query()->select('role')->whereNotNull('role')->pluck('role');
+        return $raw->map(fn($r) => self::roleToArabic($r))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+    }
+
+    /**
+     * Get the required manager role for this employee (or null if top-level)
+     */
+    public function requiredManagerRole(): ?string
+    {
+        return self::MANAGER_CHAIN[$this->role] ?? null;
+    }
+    public function custodies()
+    {
+        return $this->hasMany(Custody::class);
+    }
+
+    public function expenseVouchers()
+    {
+        return $this->hasMany(ExpenseVoucher::class);
+    }
     use HasFactory;
+
+    protected $attributes = [
+        'status' => 'inactive',
+    ];
 
     protected $fillable = [
         'name',
@@ -24,7 +150,7 @@ class Employee extends Model
         'national_id',
         'national_id_expiry',
         'driving_license_issue_date',
-        'driving_license_expiry_date',
+        'driving_license_expiry',
         'address',
         'photo',
         'national_id_photo',
@@ -36,7 +162,6 @@ class Employee extends Model
         'work_permit_issue_date',
         'work_permit_expiry_date',
         'work_permit_photo',
-        'driving_license_issue_date',
         'driving_license_expiry',
         'driving_license_photo',
         'location_id',
@@ -80,6 +205,20 @@ class Employee extends Model
         'contract_end' => 'date',
         'additional_documents' => 'array'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Auto-generate employee number when creating a new employee
+        // static::creating(function ($employee) {
+        //     if (empty($employee->employee_number)) {
+        //         // Get the next ID that will be assigned
+        //         $nextId = Employee::max('id') + 1;
+        //         $employee->employee_number = str_pad($nextId, 3, '0', STR_PAD_LEFT);
+        //     }
+        // });
+    }
 
     // Helper method to check if a date field is expired
     public function isDateExpired($field)
@@ -205,5 +344,11 @@ class Employee extends Model
         $credits = $this->balances()->where('type', 'credit')->sum('amount');
         $debits = $this->balances()->where('type', 'debit')->sum('amount');
         return $credits - $debits;
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 }

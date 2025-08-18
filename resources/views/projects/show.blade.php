@@ -10,8 +10,16 @@
     <div class="p-6" dir="rtl">
         <!-- أزرار الإجراءات المختلفة -->
         <div class="mb-6 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            <!-- زر إضافة صور جديدة -->
+            <button onclick="openAddImagesModal()"
+                class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
+                <i class="ri-image-add-line text-base sm:text-lg"></i>
+                <span class="hidden sm:inline">إضافة صور جديدة</span>
+                <span class="sm:hidden">صور</span>
+            </button>
+
             <!-- زر تسجيل قرض -->
-            <button onclick="openLoanModal()" 
+            <button onclick="openLoanModal()"
                 class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
                 <i class="ri-money-dollar-box-line text-base sm:text-lg"></i>
                 <span class="hidden sm:inline">تسجيل قرض</span>
@@ -19,7 +27,7 @@
             </button>
 
             <!-- زر تمديد فترة المشروع -->
-            <button onclick="openExtendModal()" 
+            <button onclick="openExtendModal()"
                 class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
                 <i class="ri-calendar-line text-base sm:text-lg"></i>
                 <span class="hidden sm:inline">تمديد فترة المشروع</span>
@@ -27,7 +35,7 @@
             </button>
 
             <!-- زر تسجيل زيارة -->
-            <button onclick="openVisitModal()" 
+            <button onclick="openVisitModal()"
                 class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
                 <i class="ri-map-pin-line text-base sm:text-lg"></i>
                 <span class="hidden sm:inline">تسجيل زيارة</span>
@@ -35,7 +43,7 @@
             </button>
 
             <!-- زر تسجيل معدة مستأجرة -->
-            <button onclick="openRentalModal()" 
+            <button onclick="openRentalModal()"
                 class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 sm:px-4 rounded-lg font-medium flex items-center gap-1 sm:gap-2 shadow transition-colors text-sm sm:text-base">
                 <i class="ri-truck-line text-base sm:text-lg"></i>
                 <span class="hidden sm:inline">تسجيل معدة مستأجرة</span>
@@ -115,29 +123,32 @@
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-700">نسبة الإنجاز</span>
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-medium text-gray-900" id="progress-percentage">{{ number_format($project->progress) }}%</span>
-                            <button onclick="openProgressModal()" 
-                                    class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 transition-colors tooltip"
-                                    data-tooltip="تحديث نسبة الإنجاز">
+                            <span class="text-sm font-medium text-gray-900"
+                                id="progress-percentage">{{ number_format($project->progress) }}%</span>
+                            <button onclick="openProgressModal()"
+                                class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 transition-colors tooltip"
+                                data-tooltip="تحديث نسبة الإنجاز">
                                 <i class="ri-edit-line text-sm"></i>
                             </button>
                         </div>
                     </div>
                     <div class="relative">
                         <div class="w-full bg-gray-200 rounded-full h-3 cursor-pointer hover:bg-gray-300 transition-colors tooltip"
-                             onclick="openProgressModal()" 
-                             data-tooltip="انقر لتحديث نسبة الإنجاز ({{ $project->progress }}%)">
-                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 hover:from-blue-600 hover:to-blue-700 relative overflow-hidden" 
-                                 id="progress-bar"
-                                 style="width: {{ $project->progress }}%">
+                            onclick="openProgressModal()"
+                            data-tooltip="انقر لتحديث نسبة الإنجاز ({{ $project->progress }}%)">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 hover:from-blue-600 hover:to-blue-700 relative overflow-hidden"
+                                id="progress-bar" style="width: {{ $project->progress }}%">
                                 <!-- شعاع متحرك للتأثير البصري -->
-                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse">
+                                </div>
                             </div>
                         </div>
                         <!-- نسبة الإنجاز داخل الشريط إذا كانت النسبة كبيرة بما يكفي -->
-                        @if($project->progress > 15)
+                        @if ($project->progress > 15)
                             <div class="absolute top-0 left-2 h-3 flex items-center">
-                                <span class="text-xs font-medium text-white drop-shadow-sm">{{ number_format($project->progress) }}%</span>
+                                <span
+                                    class="text-xs font-medium text-white drop-shadow-sm">{{ number_format($project->progress) }}%</span>
                             </div>
                         @endif
                     </div>
@@ -148,15 +159,18 @@
                         </span>
                         <span>100%</span>
                     </div>
-                    
+
                     <!-- مؤشر بصري للحالة -->
                     <div class="flex items-center gap-2 mt-2">
-                        <div class="w-2 h-2 rounded-full {{ $project->progress < 25 ? 'bg-red-500' : ($project->progress < 50 ? 'bg-orange-500' : ($project->progress < 75 ? 'bg-yellow-500' : ($project->progress < 100 ? 'bg-blue-500' : 'bg-green-500'))) }}"></div>
+                        <div
+                            class="w-2 h-2 rounded-full {{ $project->progress < 25 ? 'bg-red-500' : ($project->progress < 50 ? 'bg-orange-500' : ($project->progress < 75 ? 'bg-yellow-500' : ($project->progress < 100 ? 'bg-blue-500' : 'bg-green-500'))) }}">
+                        </div>
                         <span class="text-xs text-gray-600">
                             {{ $project->progress == 0 ? 'لم يبدأ بعد' : ($project->progress == 100 ? 'تم الانتهاء' : 'قيد التنفيذ') }}
                         </span>
-                        @if($project->progress > 0 && $project->progress < 100)
-                            <span class="text-xs text-gray-500">• آخر تحديث: {{ $project->updated_at->diffForHumans() }}</span>
+                        @if ($project->progress > 0 && $project->progress < 100)
+                            <span class="text-xs text-gray-500">• آخر تحديث:
+                                {{ $project->updated_at->diffForHumans() }}</span>
                         @endif
                     </div>
                 </div>
@@ -187,7 +201,7 @@
                     </div>
                     <div>
                         <p class="text-gray-600 text-sm">الضمان البنكي</p>
-                        @if($project->bank_guarantee_amount)
+                        @if ($project->bank_guarantee_amount)
                             <p class="text-xl font-bold text-gray-900">{{ $project->formatted_bank_guarantee_amount }}</p>
                             <p class="text-gray-500 text-xs">{{ $project->bank_guarantee_type_name }}</p>
                         @else
@@ -561,7 +575,7 @@
                             <div class="space-y-4">
                                 @foreach ($project->locations as $location)
                                     <div class="location-card-modern cursor-pointer border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-lg transition-all duration-300"
-                                         data-location="{{ json_encode([
+                                        data-location="{{ json_encode([
                                             'id' => $location->id,
                                             'name' => $location->name,
                                             'type' => $location->type ?? 'موقع عام',
@@ -572,40 +586,43 @@
                                             'manager' => $location->manager ? $location->manager->name : null,
                                             'employees_count' => $location->employees->count(),
                                             'equipment_count' => $location->equipment->count(),
-                                            'employees' => $location->employees->map(function($emp) {
+                                            'employees' => $location->employees->map(function ($emp) {
                                                 return [
                                                     'name' => $emp->name,
                                                     'position' => $emp->position ?? 'موظف',
                                                     'phone' => $emp->phone,
-                                                    'email' => $emp->email
+                                                    'email' => $emp->email,
                                                 ];
                                             }),
-                                            'equipment' => $location->equipment->map(function($eq) {
+                                            'equipment' => $location->equipment->map(function ($eq) {
                                                 return [
                                                     'name' => $eq->name,
                                                     'type' => $eq->type,
                                                     'model' => $eq->model,
                                                     'status' => $eq->status,
-                                                    'serial_number' => $eq->serial_number
+                                                    'serial_number' => $eq->serial_number,
                                                 ];
-                                            })
-                                         ]) }}"
-                                         onclick="openLocationModal(this)">
+                                            }),
+                                        ]) }}"
+                                        onclick="openLocationModal(this)">
 
                                         <div class="p-6">
                                             <!-- Header Section -->
                                             <div class="flex items-center justify-between mb-4">
                                                 <div class="flex items-center gap-4">
                                                     <!-- Location Icon -->
-                                                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                                    <div
+                                                        class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                                                         <i class="ri-map-pin-line text-blue-600 text-xl"></i>
                                                     </div>
 
                                                     <!-- Location Info -->
                                                     <div>
                                                         <div class="flex items-center gap-2 mb-1">
-                                                            <h3 class="text-lg font-semibold text-gray-900">{{ $location->name }}</h3>
-                                                            <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-lg">
+                                                            <h3 class="text-lg font-semibold text-gray-900">
+                                                                {{ $location->name }}</h3>
+                                                            <span
+                                                                class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-lg">
                                                                 {{ $location->type ?? 'موقع عام' }}
                                                             </span>
                                                         </div>
@@ -633,25 +650,30 @@
                                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                                 <!-- Employees Count -->
                                                 <div class="bg-green-50 rounded-lg p-3 text-center">
-                                                    <div class="w-8 h-8 bg-green-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                                    <div
+                                                        class="w-8 h-8 bg-green-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                                         <i class="ri-group-line text-green-600"></i>
                                                     </div>
                                                     <p class="text-xs text-gray-600 mb-1">العمالة</p>
-                                                    <p class="text-lg font-bold text-gray-900">{{ $location->employees->count() }}</p>
+                                                    <p class="text-lg font-bold text-gray-900">
+                                                        {{ $location->employees->count() }}</p>
                                                 </div>
 
                                                 <!-- Equipment Count -->
                                                 <div class="bg-orange-50 rounded-lg p-3 text-center">
-                                                    <div class="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                                    <div
+                                                        class="w-8 h-8 bg-orange-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                                         <i class="ri-truck-line text-orange-600"></i>
                                                     </div>
                                                     <p class="text-xs text-gray-600 mb-1">المعدات</p>
-                                                    <p class="text-lg font-bold text-gray-900">{{ $location->equipment->count() }}</p>
+                                                    <p class="text-lg font-bold text-gray-900">
+                                                        {{ $location->equipment->count() }}</p>
                                                 </div>
 
                                                 <!-- Available Equipment -->
                                                 <div class="bg-blue-50 rounded-lg p-3 text-center">
-                                                    <div class="w-8 h-8 bg-blue-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                                    <div
+                                                        class="w-8 h-8 bg-blue-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                                         <i class="ri-check-line text-blue-600"></i>
                                                     </div>
                                                     <p class="text-xs text-gray-600 mb-1">متاح</p>
@@ -662,7 +684,8 @@
 
                                                 <!-- Manager Info -->
                                                 <div class="bg-purple-50 rounded-lg p-3 text-center">
-                                                    <div class="w-8 h-8 bg-purple-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                                    <div
+                                                        class="w-8 h-8 bg-purple-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                                         <i class="ri-user-star-line text-purple-600"></i>
                                                     </div>
                                                     <p class="text-xs text-gray-600 mb-1">المدير</p>
@@ -675,13 +698,15 @@
                                             <!-- Description -->
                                             @if ($location->description)
                                                 <div class="bg-gray-50 rounded-lg p-3 mb-4">
-                                                    <p class="text-sm text-gray-700">{{ Str::limit($location->description, 100) }}</p>
+                                                    <p class="text-sm text-gray-700">
+                                                        {{ Str::limit($location->description, 100) }}</p>
                                                 </div>
                                             @endif
 
                                             <!-- Action Button -->
                                             <div class="border-t border-gray-200 pt-4">
-                                                <div class="flex items-center justify-center text-blue-600 hover:text-blue-700 transition-colors">
+                                                <div
+                                                    class="flex items-center justify-center text-blue-600 hover:text-blue-700 transition-colors">
                                                     <i class="ri-eye-line ml-2"></i>
                                                     <span class="text-sm font-medium">عرض التفاصيل الكاملة</span>
                                                 </div>
@@ -704,8 +729,11 @@
     </div>
 
     <!-- Location Details Modal -->
-    <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4" onclick="closeLocationModal()">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
+    <div id="locationModal"
+        class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"
+        onclick="closeLocationModal()">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            onclick="event.stopPropagation()">
             <!-- Modal Header -->
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
                 <div class="flex items-center justify-between">
@@ -718,7 +746,8 @@
                             <p id="modalLocationAddress" class="text-blue-100 text-sm"></p>
                         </div>
                     </div>
-                    <button onclick="closeLocationModal()" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors">
+                    <button onclick="closeLocationModal()"
+                        class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors">
                         <i class="ri-close-line text-lg"></i>
                     </button>
                 </div>
@@ -737,28 +766,32 @@
                 <div class="p-6 bg-gray-50 border-b">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="bg-white rounded-xl p-4 text-center">
-                            <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <div
+                                class="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                 <i class="ri-group-line text-white text-xl"></i>
                             </div>
                             <p class="text-sm text-gray-600">إجمالي العمالة</p>
                             <p id="modalEmployeesCount" class="text-2xl font-bold text-gray-900">0</p>
                         </div>
                         <div class="bg-white rounded-xl p-4 text-center">
-                            <div class="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <div
+                                class="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                 <i class="ri-truck-line text-white text-xl"></i>
                             </div>
                             <p class="text-sm text-gray-600">إجمالي المعدات</p>
                             <p id="modalEquipmentCount" class="text-2xl font-bold text-gray-900">0</p>
                         </div>
                         <div class="bg-white rounded-xl p-4 text-center">
-                            <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <div
+                                class="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                 <i class="ri-checkbox-circle-line text-white text-xl"></i>
                             </div>
                             <p class="text-sm text-gray-600">معدات متاحة</p>
                             <p id="modalAvailableEquipment" class="text-2xl font-bold text-gray-900">0</p>
                         </div>
                         <div class="bg-white rounded-xl p-4 text-center">
-                            <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <div
+                                class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
                                 <i class="ri-tools-line text-white text-xl"></i>
                             </div>
                             <p class="text-sm text-gray-600">قيد الصيانة</p>
@@ -770,11 +803,13 @@
                 <!-- Tabs -->
                 <div class="border-b border-gray-200">
                     <nav class="flex" dir="rtl">
-                        <button onclick="switchTab('employees')" id="employeesTab" class="flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50">
+                        <button onclick="switchTab('employees')" id="employeesTab"
+                            class="flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50">
                             <i class="ri-group-line ml-2"></i>
                             العمالة
                         </button>
-                        <button onclick="switchTab('equipment')" id="equipmentTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700">
+                        <button onclick="switchTab('equipment')" id="equipmentTab"
+                            class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700">
                             <i class="ri-truck-line ml-2"></i>
                             المعدات
                         </button>
@@ -1014,14 +1049,15 @@
                                                     title="تعديل">
                                                     <i class="ri-edit-line"></i>
                                                 </a>
-                                                <form action="{{ route('projects.extract.destroy', [$project, $extract]) }}"
-                                                    method="POST"
-                                                    class="inline-block"
+                                                <form
+                                                    action="{{ route('projects.extract.destroy', [$project, $extract]) }}"
+                                                    method="POST" class="inline-block"
                                                     onsubmit="return confirm('هل أنت متأكد من حذف هذا المستخلص؟')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                        class="text-red-600 hover:text-red-800 p-1 rounded" title="حذف">
+                                                        class="text-red-600 hover:text-red-800 p-1 rounded"
+                                                        title="حذف">
                                                         <i class="ri-delete-bin-line"></i>
                                                     </button>
                                                 </form>
@@ -1130,32 +1166,31 @@
 
                 <div class="flex items-center gap-2">
                     <a href="{{ route('correspondences.create', ['type' => 'incoming', 'project_id' => $project->id]) }}"
-                       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
                         <i class="ri-inbox-line"></i>
                         مراسلة واردة
                     </a>
                     <a href="{{ route('correspondences.create', ['type' => 'outgoing', 'project_id' => $project->id]) }}"
-                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
                         <i class="ri-send-plane-line"></i>
                         مراسلة صادرة
                     </a>
                 </div>
             </div>
 
-            @if($correspondences && $correspondences->count() > 0)
+            @if ($correspondences && $correspondences->count() > 0)
                 <div class="space-y-4">
-                    @foreach($correspondences as $correspondence)
+                    @foreach ($correspondences as $correspondence)
                         <div class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                             <div class="flex items-start justify-between gap-4">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-3 mb-2">
-                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                                            @if($correspondence->type === 'incoming')
-                                                bg-green-100 text-green-800
+                                        <span
+                                            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                                            @if ($correspondence->type === 'incoming') bg-green-100 text-green-800
                                             @else
-                                                bg-blue-100 text-blue-800
-                                            @endif">
-                                            @if($correspondence->type === 'incoming')
+                                                bg-blue-100 text-blue-800 @endif">
+                                            @if ($correspondence->type === 'incoming')
                                                 <i class="ri-inbox-line"></i>
                                                 واردة
                                             @else
@@ -1164,17 +1199,16 @@
                                             @endif
                                         </span>
 
-                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                                            @if($correspondence->priority === 'urgent')
-                                                bg-red-100 text-red-800
+                                        <span
+                                            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                                            @if ($correspondence->priority === 'urgent') bg-red-100 text-red-800
                                             @elseif($correspondence->priority === 'high')
                                                 bg-orange-100 text-orange-800
                                             @elseif($correspondence->priority === 'medium')
                                                 bg-yellow-100 text-yellow-800
                                             @else
-                                                bg-green-100 text-green-800
-                                            @endif">
-                                            @if($correspondence->priority === 'urgent')
+                                                bg-green-100 text-green-800 @endif">
+                                            @if ($correspondence->priority === 'urgent')
                                                 <i class="ri-alarm-warning-line"></i>
                                                 عاجل
                                             @elseif($correspondence->priority === 'high')
@@ -1199,12 +1233,12 @@
                                     </h3>
 
                                     <div class="text-sm text-gray-600 mb-2">
-                                        @if($correspondence->type === 'incoming')
+                                        @if ($correspondence->type === 'incoming')
                                             <span class="flex items-center gap-1">
                                                 <i class="ri-building-line text-xs"></i>
                                                 من: {{ $correspondence->from_entity }}
                                             </span>
-                                            @if($correspondence->assignedEmployee)
+                                            @if ($correspondence->assignedEmployee)
                                                 <span class="flex items-center gap-1 mt-1">
                                                     <i class="ri-user-line text-xs"></i>
                                                     المسؤول: {{ $correspondence->assignedEmployee->name }}
@@ -1224,7 +1258,7 @@
                                             {{ $correspondence->correspondence_date->format('Y/m/d') }}
                                         </span>
 
-                                        @if($correspondence->file_path)
+                                        @if ($correspondence->file_path)
                                             <span class="flex items-center gap-1 text-blue-600">
                                                 <i class="ri-attachment-line"></i>
                                                 ملف مرفق
@@ -1240,15 +1274,14 @@
 
                                 <div class="flex items-center gap-2">
                                     <a href="{{ route('correspondences.show', $correspondence) }}"
-                                       class="text-blue-600 hover:text-blue-800 transition-colors"
-                                       title="عرض التفاصيل">
+                                        class="text-blue-600 hover:text-blue-800 transition-colors" title="عرض التفاصيل">
                                         <i class="ri-eye-line"></i>
                                     </a>
 
-                                    @if($correspondence->file_path)
+                                    @if ($correspondence->file_path)
                                         <a href="{{ route('correspondences.download', $correspondence) }}"
-                                           class="text-green-600 hover:text-green-800 transition-colors"
-                                           title="تحميل الملف">
+                                            class="text-green-600 hover:text-green-800 transition-colors"
+                                            title="تحميل الملف">
                                             <i class="ri-download-line"></i>
                                         </a>
                                     @endif
@@ -1260,7 +1293,7 @@
 
                 <div class="mt-4 pt-4 border-t border-gray-200 text-center">
                     <a href="{{ route('correspondences.index', ['project_id' => $project->id]) }}"
-                       class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                         عرض جميع المراسلات ({{ $correspondences->count() }})
                     </a>
                 </div>
@@ -1273,12 +1306,12 @@
                     <p class="text-gray-600 mb-4">لم يتم ربط أي مراسلات بهذا المشروع بعد</p>
                     <div class="flex items-center justify-center gap-2">
                         <a href="{{ route('correspondences.create', ['type' => 'incoming', 'project_id' => $project->id]) }}"
-                           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
                             <i class="ri-inbox-line"></i>
                             إنشاء مراسلة واردة
                         </a>
                         <a href="{{ route('correspondences.create', ['type' => 'outgoing', 'project_id' => $project->id]) }}"
-                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
                             <i class="ri-send-plane-line"></i>
                             إنشاء مراسلة صادرة
                         </a>
@@ -1290,10 +1323,12 @@
 
     <!-- قسم العمالة في المشروع -->
     @php
-        $projectEmployees = $project->locations->flatMap(function ($location) {
-            return $location->employees;
-        })->unique('id');
-        
+        $projectEmployees = $project->locations
+            ->flatMap(function ($location) {
+                return $location->employees;
+            })
+            ->unique('id');
+
         $employeesByDepartment = $projectEmployees->groupBy('department');
         $employeesByStatus = $projectEmployees->groupBy('status');
         $activeEmployees = $projectEmployees->where('status', 'active');
@@ -1368,7 +1403,8 @@
                 <div class="flex items-center gap-4 mb-6">
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-medium text-gray-700">فلترة حسب:</label>
-                        <select id="employeeFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <select id="employeeFilter"
+                            class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
                             <option value="all">جميع الموظفين</option>
                             <option value="active">النشطين فقط</option>
                             <option value="inactive">غير النشطين</option>
@@ -1376,14 +1412,16 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-medium text-gray-700">القسم:</label>
-                        <select id="departmentFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <select id="departmentFilter"
+                            class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500">
                             <option value="all">جميع الأقسام</option>
-                            @foreach($employeesByDepartment as $department => $employees)
+                            @foreach ($employeesByDepartment as $department => $employees)
                                 <option value="{{ $department }}">{{ $department ?? 'غير محدد' }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <button onclick="exportEmployeesData()" class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <button onclick="exportEmployeesData()"
+                        class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition-colors flex items-center gap-2">
                         <i class="ri-download-line"></i>
                         تصدير البيانات
                     </button>
@@ -1395,28 +1433,41 @@
                         <table class="min-w-full" id="employeesTable">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموظف</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">القسم</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">الوظيفة</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">الموقع</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                    <th
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        الموظف</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        الحالة</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                        القسم</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                        الوظيفة</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                                        الموقع</th>
+                                    <th
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($projectEmployees as $employee)
-                                    <tr class="hover:bg-gray-50 transition-colors employee-row" 
+                                @foreach ($projectEmployees as $employee)
+                                    <tr class="hover:bg-gray-50 transition-colors employee-row"
                                         data-status="{{ $employee->status ?? 'active' }}"
                                         data-department="{{ $employee->department ?? '' }}">
                                         <td class="px-4 py-4">
                                             <div class="flex items-center">
                                                 <div class="flex-shrink-0 h-10 w-10">
-                                                    @if($employee->photo)
-                                                        <img class="h-10 w-10 rounded-full object-cover border-2 border-gray-200" 
-                                                             src="{{ Storage::url($employee->photo) }}" 
-                                                             alt="{{ $employee->name }}">
+                                                    @if ($employee->photo)
+                                                        <img class="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
+                                                            src="{{ Storage::url($employee->photo) }}"
+                                                            alt="{{ $employee->name }}">
                                                     @else
-                                                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
+                                                        <div
+                                                            class="h-10 w-10 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
                                                             <span class="text-white font-bold text-sm">
                                                                 {{ substr($employee->name, 0, 1) }}
                                                             </span>
@@ -1424,11 +1475,12 @@
                                                     @endif
                                                 </div>
                                                 <div class="mr-3">
-                                                    <div class="text-sm font-bold text-gray-900">{{ $employee->name }}</div>
+                                                    <div class="text-sm font-bold text-gray-900">{{ $employee->name }}
+                                                    </div>
                                                     <div class="text-xs text-gray-500 sm:hidden">
                                                         {{ $employee->department ?? 'غير محدد' }}
                                                     </div>
-                                                    @if($employee->phone)
+                                                    @if ($employee->phone)
                                                         <div class="text-xs text-gray-400 md:hidden">
                                                             <i class="ri-phone-line text-xs"></i>
                                                             {{ $employee->phone }}
@@ -1438,14 +1490,16 @@
                                             </div>
                                         </td>
                                         <td class="px-3 py-4 whitespace-nowrap">
-                                            @if(($employee->status ?? 'active') === 'active')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            @if (($employee->status ?? 'active') === 'active')
+                                                <span
+                                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                     <i class="ri-checkbox-circle-line ml-1"></i>
                                                     <span class="hidden sm:inline">نشط</span>
                                                     <span class="sm:hidden">✓</span>
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <span
+                                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                     <i class="ri-close-circle-line ml-1"></i>
                                                     <span class="hidden sm:inline">غير نشط</span>
                                                     <span class="sm:hidden">✗</span>
@@ -1453,7 +1507,8 @@
                                             @endif
                                         </td>
                                         <td class="px-3 py-4 whitespace-nowrap hidden sm:table-cell">
-                                            <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-800">
+                                            <span
+                                                class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-800">
                                                 <i class="ri-building-line ml-1"></i>
                                                 {{ $employee->department ?? 'غير محدد' }}
                                             </span>
@@ -1472,51 +1527,57 @@
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex items-center gap-1 justify-center">
-                                                <button onclick="showEmployeeDetails({{ $employee->id }})" 
-                                                        class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition-colors"
-                                                        title="عرض التفاصيل">
+                                                <button onclick="showEmployeeDetails({{ $employee->id }})"
+                                                    class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition-colors"
+                                                    title="عرض التفاصيل">
                                                     <i class="ri-eye-line text-sm"></i>
                                                 </button>
-                                                
+
                                                 @can('update', $employee)
-                                                    <a href="{{ route('employees.edit', $employee->id) }}" 
-                                                       class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors"
-                                                       title="تعديل">
+                                                    <a href="{{ route('employees.edit', $employee->id) }}"
+                                                        class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors"
+                                                        title="تعديل">
                                                         <i class="ri-edit-line text-sm"></i>
                                                     </a>
                                                 @endcan
 
-                                                <a href="{{ route('employees.show', $employee->id) }}" 
-                                                   class="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 p-2 rounded-lg transition-colors"
-                                                   title="الملف الشخصي">
+                                                <a href="{{ route('employees.show', $employee->id) }}"
+                                                    class="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 p-2 rounded-lg transition-colors"
+                                                    title="الملف الشخصي">
                                                     <i class="ri-user-line text-sm"></i>
                                                 </a>
 
-                                                @if($employee->status === 'active')
-                                                    <button onclick="sendNotification({{ $employee->id }})" 
-                                                            class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-2 rounded-lg transition-colors"
-                                                            title="إرسال إشعار">
+                                                @if ($employee->status === 'active')
+                                                    <button onclick="sendNotification({{ $employee->id }})"
+                                                        class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-2 rounded-lg transition-colors"
+                                                        title="إرسال إشعار">
                                                         <i class="ri-notification-line text-sm"></i>
                                                     </button>
                                                 @endif
 
                                                 <div class="relative">
-                                                    <button onclick="toggleEmployeeMenu({{ $employee->id }})" 
-                                                            class="text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 p-2 rounded-lg transition-colors"
-                                                            title="المزيد">
+                                                    <button onclick="toggleEmployeeMenu({{ $employee->id }})"
+                                                        class="text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 p-2 rounded-lg transition-colors"
+                                                        title="المزيد">
                                                         <i class="ri-more-2-line text-sm"></i>
                                                     </button>
-                                                    <div id="employeeMenu{{ $employee->id }}" class="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border z-10 hidden">
+                                                    <div id="employeeMenu{{ $employee->id }}"
+                                                        class="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border z-10 hidden">
                                                         <div class="py-1">
-                                                            <a href="#" onclick="generateEmployeeReport({{ $employee->id }})" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <a href="#"
+                                                                onclick="generateEmployeeReport({{ $employee->id }})"
+                                                                class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                                 <i class="ri-file-text-line"></i>
                                                                 تقرير الموظف
                                                             </a>
-                                                            <a href="#" onclick="viewAttendance({{ $employee->id }})" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <a href="#"
+                                                                onclick="viewAttendance({{ $employee->id }})"
+                                                                class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                                 <i class="ri-calendar-check-line"></i>
                                                                 سجل الحضور
                                                             </a>
-                                                            <a href="#" onclick="viewPayroll({{ $employee->id }})" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <a href="#" onclick="viewPayroll({{ $employee->id }})"
+                                                                class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                                 <i class="ri-wallet-line"></i>
                                                                 كشف الراتب
                                                             </a>
@@ -1536,24 +1597,23 @@
                 @can('create', \App\Models\Employee::class)
                     <div class="mt-6 flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <a href="{{ route('employees.create') }}?project_id={{ $project->id }}" 
-                               class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                            <a href="{{ route('employees.create') }}?project_id={{ $project->id }}"
+                                class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
                                 <i class="ri-user-add-line"></i>
                                 إضافة موظف جديد
                             </a>
-                            <button onclick="bulkAssignToProject()" 
-                                    class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                            <button onclick="bulkAssignToProject()"
+                                class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                                 <i class="ri-group-add-line"></i>
                                 تعيين موظفين للمشروع
                             </button>
                         </div>
-                        
+
                         <div class="text-sm text-gray-500">
                             عرض {{ $projectEmployees->count() }} من {{ $projectEmployees->count() }} موظف
                         </div>
                     </div>
                 @endcan
-
             @else
                 <!-- رسالة عدم وجود موظفين -->
                 <div class="text-center py-12">
@@ -1562,16 +1622,16 @@
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد عمالة مسجلة</h3>
                     <p class="text-gray-600 mb-6">لم يتم تسجيل أي عمالة في هذا المشروع حتى الآن</p>
-                    
+
                     @can('create', \App\Models\Employee::class)
                         <div class="flex items-center justify-center gap-4">
-                            <a href="{{ route('employees.create') }}?project_id={{ $project->id }}" 
-                               class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                            <a href="{{ route('employees.create') }}?project_id={{ $project->id }}"
+                                class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
                                 <i class="ri-user-add-line"></i>
                                 إضافة أول موظف للمشروع
                             </a>
-                            <button onclick="bulkAssignToProject()" 
-                                    class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                            <button onclick="bulkAssignToProject()"
+                                class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                                 <i class="ri-group-add-line"></i>
                                 تعيين موظفين موجودين
                             </button>
@@ -1595,45 +1655,63 @@
                         {{ $project->equipment->count() }} معدة
                     </span>
                 </h2>
-                
+
                 <div class="bg-gray-50 rounded-lg overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المعدة</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">النوع</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">الموقع</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">المسؤول</th>
-                                    <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">التسجيل</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                    <th
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        المعدة</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        الحالة</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                        النوع</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                        الموقع</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                                        المسؤول</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
+                                        التسجيل</th>
+                                    <th
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($project->equipment as $equipment)
+                                @foreach ($project->equipment as $equipment)
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-4 py-4">
                                             <div class="flex items-center">
                                                 <div class="flex-shrink-0 h-10 w-10">
-                                                    <div class="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                                    <div
+                                                        class="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center">
                                                         <i class="ri-tools-fill text-indigo-600"></i>
                                                     </div>
                                                 </div>
                                                 <div class="mr-3">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $equipment->name }}</div>
+                                                    <div class="text-sm font-medium text-gray-900">{{ $equipment->name }}
+                                                    </div>
                                                     <div class="text-xs text-gray-500 sm:hidden">
                                                         {{ $equipment->type ?? 'غير محدد' }}
                                                     </div>
-                                                    @if($equipment->serial_number)
-                                                        <div class="text-xs text-gray-500 md:hidden">{{ $equipment->serial_number }}</div>
+                                                    @if ($equipment->serial_number)
+                                                        <div class="text-xs text-gray-500 md:hidden">
+                                                            {{ $equipment->serial_number }}</div>
                                                     @endif
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-3 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                                @if($equipment->status === 'active') bg-green-100 text-green-800
+                                            <span
+                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                @if ($equipment->status === 'active') bg-green-100 text-green-800
                                                 @elseif($equipment->status === 'maintenance') bg-yellow-100 text-yellow-800
                                                 @elseif($equipment->status === 'inactive') bg-red-100 text-red-800
                                                 @else bg-gray-100 text-gray-800 @endif">
@@ -1641,22 +1719,26 @@
                                                     @case('active')
                                                         <span class="hidden sm:inline">نشط</span>
                                                         <span class="sm:hidden">✓</span>
-                                                        @break
+                                                    @break
+
                                                     @case('maintenance')
                                                         <span class="hidden sm:inline">صيانة</span>
                                                         <span class="sm:hidden">⚠</span>
-                                                        @break
+                                                    @break
+
                                                     @case('inactive')
                                                         <span class="hidden sm:inline">غير نشط</span>
                                                         <span class="sm:hidden">✗</span>
-                                                        @break
+                                                    @break
+
                                                     @default
                                                         غير محدد
                                                 @endswitch
                                             </span>
                                         </td>
                                         <td class="px-3 py-4 whitespace-nowrap hidden sm:table-cell">
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <span
+                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                 {{ $equipment->type ?? 'غير محدد' }}
                                             </span>
                                         </td>
@@ -1673,7 +1755,7 @@
                                         <td class="px-3 py-4 whitespace-nowrap hidden xl:table-cell">
                                             <div class="text-xs text-gray-900">
                                                 {{ $equipment->user ? $equipment->user->name : 'غير محدد' }}
-                                                @if($equipment->created_at)
+                                                @if ($equipment->created_at)
                                                     <div class="text-xs text-gray-500">
                                                         {{ $equipment->created_at->format('d/m/Y') }}
                                                     </div>
@@ -1682,23 +1764,23 @@
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex items-center gap-1">
-                                                <a href="{{ route('equipment.show', $equipment->id) }}" 
-                                                   class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
-                                                   title="عرض تفاصيل المعدة">
+                                                <a href="{{ route('equipment.show', $equipment->id) }}"
+                                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
+                                                    title="عرض تفاصيل المعدة">
                                                     <i class="ri-eye-line"></i>
                                                 </a>
                                                 @can('update', $equipment)
-                                                    <a href="{{ route('equipment.edit', $equipment->id) }}" 
-                                                       class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors"
-                                                       title="تعديل المعدة">
+                                                    <a href="{{ route('equipment.edit', $equipment->id) }}"
+                                                        class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors"
+                                                        title="تعديل المعدة">
                                                         <i class="ri-edit-line"></i>
                                                     </a>
                                                 @endcan
-                                                @if($equipment->movementHistory && $equipment->movementHistory->count() > 0)
-                                                    <button type="button" 
-                                                            onclick="showEquipmentHistory({{ $equipment->id }})"
-                                                            class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition-colors"
-                                                            title="تاريخ التحركات">
+                                                @if ($equipment->movementHistory && $equipment->movementHistory->count() > 0)
+                                                    <button type="button"
+                                                        onclick="showEquipmentHistory({{ $equipment->id }})"
+                                                        class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition-colors"
+                                                        title="تاريخ التحركات">
                                                         <i class="ri-history-line"></i>
                                                     </button>
                                                 @endif
@@ -1710,7 +1792,7 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <!-- ملخص المعدات -->
                 <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-green-50 rounded-lg p-4 text-center">
@@ -1742,8 +1824,8 @@
                 <!-- إضافة معدة جديدة -->
                 @can('create', \App\Models\Equipment::class)
                     <div class="mt-6 text-center">
-                        <a href="{{ route('equipment.create') }}?project_id={{ $project->id }}" 
-                           class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                        <a href="{{ route('equipment.create') }}?project_id={{ $project->id }}"
+                            class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
                             <i class="ri-add-line"></i>
                             إضافة معدة جديدة للمشروع
                         </a>
@@ -1761,17 +1843,17 @@
                     </div>
                     معدات المشروع
                 </h2>
-                
+
                 <div class="text-center py-12">
                     <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                         <i class="ri-tools-line text-4xl text-gray-400"></i>
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد معدات مسجلة</h3>
                     <p class="text-gray-600 mb-6">لم يتم تسجيل أي معدات في هذا المشروع حتى الآن</p>
-                    
+
                     @can('create', \App\Models\Equipment::class)
-                        <a href="{{ route('equipment.create') }}?project_id={{ $project->id }}" 
-                           class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                        <a href="{{ route('equipment.create') }}?project_id={{ $project->id }}"
+                            class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
                             <i class="ri-add-line"></i>
                             إضافة أول معدة للمشروع
                         </a>
@@ -1782,11 +1864,12 @@
     @endif
 
     <!-- قسم تمديدات المشروع -->
-    @if($project->extensions && $project->extensions->count() > 0)
+    @if ($project->extensions && $project->extensions->count() > 0)
         <div class="p-6" dir="rtl">
             <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
                         <i class="ri-calendar-2-line text-white text-xl"></i>
                     </div>
                     <div>
@@ -1794,134 +1877,71 @@
                         <p class="text-gray-600">إجمالي {{ $project->extensions->count() }} تمديد مسجل</p>
                     </div>
                 </div>
-                
+
                 <div class="grid gap-4">
                     @foreach ($project->extensions->sortByDesc('created_at') as $extension)
-                    <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    تمديد فترة
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-lg font-bold text-amber-600 mb-1">
-                                    من {{ \Carbon\Carbon::parse($extension->old_end_date)->format('Y-m-d') }}
+                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
+                                        تمديد فترة
+                                    </span>
                                 </div>
-                                <div class="text-lg font-bold text-green-600">
-                                    إلى {{ \Carbon\Carbon::parse($extension->new_end_date)->format('Y-m-d') }}
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-amber-600 mb-1">
+                                        من {{ \Carbon\Carbon::parse($extension->old_end_date)->format('Y-m-d') }}
+                                    </div>
+                                    <div class="text-lg font-bold text-green-600">
+                                        إلى {{ \Carbon\Carbon::parse($extension->new_end_date)->format('Y-m-d') }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <span class="text-gray-500 block">المدة الإضافية</span>
-                                <span class="font-medium text-gray-800">
-                                    {{ \Carbon\Carbon::parse($extension->old_end_date)->diffInDays(\Carbon\Carbon::parse($extension->new_end_date)) }} يوم
-                                </span>
+
+                            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500 block">المدة الإضافية</span>
+                                    <span class="font-medium text-gray-800">
+                                        {{ \Carbon\Carbon::parse($extension->old_end_date)->diffInDays(\Carbon\Carbon::parse($extension->new_end_date)) }}
+                                        يوم
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">تاريخ التمديد</span>
+                                    <span
+                                        class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($extension->created_at)->format('Y-m-d') }}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-gray-500 block">تاريخ التمديد</span>
-                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($extension->created_at)->format('Y-m-d') }}</span>
+
+                            @if ($extension->reason)
+                                <div class="mt-3 pt-3 border-t border-amber-200">
+                                    <span class="text-gray-500 text-sm block">سبب التمديد</span>
+                                    <p class="text-gray-700 text-sm mt-1">{{ $extension->reason }}</p>
+                                </div>
+                            @endif
+
+                            <div class="mt-3 pt-3 border-t border-amber-200 text-xs text-gray-500">
+                                تم التسجيل بواسطة {{ $extension->extendedBy->name ?? 'غير محدد' }} في
+                                {{ \Carbon\Carbon::parse($extension->created_at)->format('Y-m-d H:i') }}
                             </div>
                         </div>
-                        
-                        @if($extension->reason)
-                        <div class="mt-3 pt-3 border-t border-amber-200">
-                            <span class="text-gray-500 text-sm block">سبب التمديد</span>
-                            <p class="text-gray-700 text-sm mt-1">{{ $extension->reason }}</p>
-                        </div>
-                        @endif
-                        
-                        <div class="mt-3 pt-3 border-t border-amber-200 text-xs text-gray-500">
-                            تم التسجيل بواسطة {{ $extension->extendedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($extension->created_at)->format('Y-m-d H:i') }}
-                        </div>
-                    </div>
                     @endforeach
                 </div>
             </div>
         </div>
     @endif
 
-    <!-- قسم زيارات المشروع -->
-    @if($project->visits && $project->visits->count() > 0)
-        <div class="p-6" dir="rtl">
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                        <i class="ri-map-pin-line text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-800">زيارات المشروع</h2>
-                        <p class="text-gray-600">إجمالي {{ $project->visits->count() }} زيارة مسجلة</p>
-                    </div>
-                </div>
-                
-                <div class="grid gap-4">
-                    @foreach ($project->visits->sortByDesc('visit_date') as $visit)
-                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2">
-                                @php
-                                    $visitTypeLabels = [
-                                        'inspection' => 'زيارة تفقدية',
-                                        'maintenance' => 'زيارة صيانة',
-                                        'meeting' => 'اجتماع',
-                                        'delivery' => 'استلام',
-                                        'other' => 'أخرى'
-                                    ];
-                                @endphp
-                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ $visitTypeLabels[$visit->visit_type] ?? $visit->visit_type }}
-                                </span>
-                            </div>
-                            <div class="text-lg font-bold text-green-600">
-                                {{ \Carbon\Carbon::parse($visit->visit_date)->format('Y-m-d') }}
-                            </div>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <span class="text-gray-500 block">الزائر</span>
-                                <span class="font-medium text-gray-800">{{ $visit->visitor_name ?? ($visit->visitor->name ?? 'غير محدد') }}</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-500 block">المدة</span>
-                                <span class="font-medium text-gray-800">{{ $visit->duration_hours ?? 'غير محدد' }} ساعة</span>
-                            </div>
-                        </div>
-                        
-                        @if($visit->purpose)
-                        <div class="mt-3 pt-3 border-t border-green-200">
-                            <span class="text-gray-500 text-sm block">الغرض من الزيارة</span>
-                            <p class="text-gray-700 text-sm mt-1">{{ $visit->purpose }}</p>
-                        </div>
-                        @endif
-                        
-                        @if($visit->notes)
-                        <div class="mt-3 pt-3 border-t border-green-200">
-                            <span class="text-gray-500 text-sm block">ملاحظات</span>
-                            <p class="text-gray-700 text-sm mt-1">{{ $visit->notes }}</p>
-                        </div>
-                        @endif
-                        
-                        <div class="mt-3 pt-3 border-t border-green-200 text-xs text-gray-500">
-                            تم التسجيل بواسطة {{ $visit->recordedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($visit->created_at)->format('Y-m-d H:i') }}
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
+    <!-- قسم زيارات المشروع (تم نقله إلى أسفل الصفحة كسجل زيارات) -->
+    @php
+        /* القسم القديم أزيل لصالح سجل في أسفل الصفحة */
+    @endphp
 
     <!-- قسم المعدات المستأجرة -->
-    @if($project->rentalEquipment && $project->rentalEquipment->count() > 0)
+    @if ($project->rentalEquipment && $project->rentalEquipment->count() > 0)
         <div class="p-6" dir="rtl">
             <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
                         <i class="ri-truck-line text-white text-xl"></i>
                     </div>
                     <div>
@@ -1929,92 +1949,98 @@
                         <p class="text-gray-600">إجمالي {{ $project->rentalEquipment->count() }} معدة مستأجرة</p>
                     </div>
                 </div>
-                
+
                 <div class="grid gap-4">
                     @foreach ($project->rentalEquipment->sortByDesc('rental_start_date') as $equipment)
-                    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2">
-                                @php
-                                    $equipmentTypeLabels = [
-                                        'excavator' => 'حفار',
-                                        'crane' => 'رافعة',
-                                        'truck' => 'شاحنة',
-                                        'bulldozer' => 'بلدوزر',
-                                        'loader' => 'لودر',
-                                        'other' => 'أخرى'
-                                    ];
-                                @endphp
-                                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ $equipmentTypeLabels[$equipment->equipment_type] ?? $equipment->equipment_type }}
-                                </span>
-                                @if($equipment->rental_end_date && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($equipment->rental_end_date)))
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">منتهية</span>
-                                @else
-                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">نشطة</span>
-                                @endif
+                        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-2">
+                                    @php
+                                        $equipmentTypeLabels = [
+                                            'excavator' => 'حفار',
+                                            'crane' => 'رافعة',
+                                            'truck' => 'شاحنة',
+                                            'bulldozer' => 'بلدوزر',
+                                            'loader' => 'لودر',
+                                            'other' => 'أخرى',
+                                        ];
+                                    @endphp
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                        {{ $equipmentTypeLabels[$equipment->equipment_type] ?? $equipment->equipment_type }}
+                                    </span>
+                                    @if ($equipment->rental_end_date && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($equipment->rental_end_date)))
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">منتهية</span>
+                                    @else
+                                        <span
+                                            class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">نشطة</span>
+                                    @endif
+                                </div>
+                                <div class="text-right">
+                                    @if ($equipment->daily_rate)
+                                        <div class="text-lg font-bold text-purple-600">
+                                            {{ number_format($equipment->daily_rate, 2) }} ر.س/يوم
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="text-right">
-                                @if($equipment->daily_rate)
-                                    <div class="text-lg font-bold text-purple-600">
-                                        {{ number_format($equipment->daily_rate, 2) }} ر.س/يوم
+
+                            <div class="mb-3">
+                                <h4 class="font-medium text-gray-800 text-lg">{{ $equipment->equipment_name }}</h4>
+                                <p class="text-sm text-gray-600">شركة التأجير: {{ $equipment->rental_company }}</p>
+                            </div>
+
+                            <div class="grid md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500 block">تاريخ البداية</span>
+                                    <span
+                                        class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($equipment->rental_start_date)->format('Y-m-d') }}</span>
+                                </div>
+                                @if ($equipment->rental_end_date)
+                                    <div>
+                                        <span class="text-gray-500 block">تاريخ الانتهاء</span>
+                                        <span
+                                            class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($equipment->rental_end_date)->format('Y-m-d') }}</span>
+                                    </div>
+                                @endif
+                                @if ($equipment->rental_start_date && $equipment->rental_end_date)
+                                    <div>
+                                        <span class="text-gray-500 block">المدة الإجمالية</span>
+                                        <span class="font-medium text-gray-800">
+                                            {{ \Carbon\Carbon::parse($equipment->rental_start_date)->diffInDays(\Carbon\Carbon::parse($equipment->rental_end_date)) }}
+                                            يوم
+                                        </span>
                                     </div>
                                 @endif
                             </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h4 class="font-medium text-gray-800 text-lg">{{ $equipment->equipment_name }}</h4>
-                            <p class="text-sm text-gray-600">شركة التأجير: {{ $equipment->rental_company }}</p>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                                <span class="text-gray-500 block">تاريخ البداية</span>
-                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($equipment->rental_start_date)->format('Y-m-d') }}</span>
-                            </div>
-                            @if($equipment->rental_end_date)
-                            <div>
-                                <span class="text-gray-500 block">تاريخ الانتهاء</span>
-                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($equipment->rental_end_date)->format('Y-m-d') }}</span>
-                            </div>
+
+                            @if ($equipment->notes)
+                                <div class="mt-3 pt-3 border-t border-purple-200">
+                                    <span class="text-gray-500 text-sm block">ملاحظات</span>
+                                    <p class="text-gray-700 text-sm mt-1">{{ $equipment->notes }}</p>
+                                </div>
                             @endif
-                            @if($equipment->rental_start_date && $equipment->rental_end_date)
-                            <div>
-                                <span class="text-gray-500 block">المدة الإجمالية</span>
-                                <span class="font-medium text-gray-800">
-                                    {{ \Carbon\Carbon::parse($equipment->rental_start_date)->diffInDays(\Carbon\Carbon::parse($equipment->rental_end_date)) }} يوم
-                                </span>
+
+                            <div class="mt-3 pt-3 border-t border-purple-200 text-xs text-gray-500">
+                                تم التسجيل بواسطة {{ $equipment->recordedBy->name ?? 'غير محدد' }} في
+                                {{ \Carbon\Carbon::parse($equipment->created_at)->format('Y-m-d H:i') }}
                             </div>
-                            @endif
                         </div>
-                        
-                        @if($equipment->notes)
-                        <div class="mt-3 pt-3 border-t border-purple-200">
-                            <span class="text-gray-500 text-sm block">ملاحظات</span>
-                            <p class="text-gray-700 text-sm mt-1">{{ $equipment->notes }}</p>
-                        </div>
-                        @endif
-                        
-                        <div class="mt-3 pt-3 border-t border-purple-200 text-xs text-gray-500">
-                            تم التسجيل بواسطة {{ $equipment->recordedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($equipment->created_at)->format('Y-m-d H:i') }}
-                        </div>
-                    </div>
                     @endforeach
                 </div>
-                
+
                 <!-- إحصائيات المعدات -->
                 <div class="mt-6 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                         <div>
-                            <div class="text-2xl font-bold text-purple-600">{{ $project->rentalEquipment->count() }}</div>
+                            <div class="text-2xl font-bold text-purple-600">{{ $project->rentalEquipment->count() }}
+                            </div>
                             <div class="text-gray-600 text-sm">إجمالي المعدات</div>
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-purple-600">
-                                {{ $project->rentalEquipment->where(function($item) { 
-                                    return !$item->rental_end_date || \Carbon\Carbon::now()->lt(\Carbon\Carbon::parse($item->rental_end_date)); 
-                                })->count() }}
+                                {{ $project->rentalEquipment->where(function ($item) {
+                                        return !$item->rental_end_date || \Carbon\Carbon::now()->lt(\Carbon\Carbon::parse($item->rental_end_date));
+                                    })->count() }}
                             </div>
                             <div class="text-gray-600 text-sm">معدات نشطة</div>
                         </div>
@@ -2030,12 +2056,126 @@
         </div>
     @endif
 
+    <!-- سجل الزيارات (في آخر الصفحة) -->
+    <div class="p-6" dir="rtl">
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-map-pin-line text-green-600"></i>
+                    </div>
+                    سجل زيارات المشروع
+                    @if ($project->visits && $project->visits->count() > 0)
+                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                            {{ $project->visits->count() }} زيارة
+                        </span>
+                    @endif
+                </h2>
+                <button onclick="openVisitModal()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i class="ri-add-line"></i>
+                    تسجيل زيارة
+                </button>
+            </div>
+
+            @if ($project->visits && $project->visits->count() > 0)
+                <div class="overflow-x-auto bg-gray-50 rounded-lg p-4">
+                    <table class="w-full text-sm text-right border">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-3 py-2 border">#</th>
+                                <th class="px-3 py-2 border">التاريخ</th>
+                                <th class="px-3 py-2 border">الوقت</th>
+                                <th class="px-3 py-2 border">الزائر</th>
+                                <th class="px-3 py-2 border">النوع</th>
+                                <th class="px-3 py-2 border">الملاحظات</th>
+                                <th class="px-3 py-2 border">المُسجل</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $typeLabels = [
+                                    'inspection' => 'جولة تفتيش',
+                                    'meeting' => 'اجتماع',
+                                    'supervision' => 'إشراف',
+                                    'coordination' => 'تنسيق',
+                                    'maintenance' => 'صيانة',
+                                    'delivery' => 'استلام',
+                                    'other' => 'أخرى',
+                                ];
+                            @endphp
+                            @foreach ($project->visits->sortByDesc(function ($v) {
+            return $v->visit_date . ' ' . ($v->visit_time ?? '');
+        }) as $index => $visit)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-2 border text-center font-medium">{{ $index + 1 }}</td>
+                                    <td class="px-3 py-2 border text-gray-700">
+                                        {{ $visit->visit_date ? \Carbon\Carbon::parse($visit->visit_date)->format('Y/m/d') : '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 border text-center">
+                                        {{ $visit->visit_time ? \Carbon\Carbon::parse($visit->visit_time)->format('H:i') : '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 border">
+                                        {{ $visit->visitor_name ?? ($visit->visitor->name ?? 'غير محدد') }}</td>
+                                    <td class="px-3 py-2 border text-center">
+                                        <span
+                                            class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                            {{ $typeLabels[$visit->visit_type] ?? $visit->visit_type }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-2 border text-gray-700">
+                                        @if ($visit->visit_notes)
+                                            {{ Str::limit($visit->visit_notes, 40) }}
+                                            @if (Str::length($visit->visit_notes) > 40)
+                                                <span title="{{ $visit->visit_notes }}"
+                                                    class="text-blue-600 cursor-help text-xs">المزيد</span>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400">لا يوجد</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 border text-center text-xs text-gray-600">
+                                        {{ $visit->recordedBy->name ?? 'غير محدد' }}
+                                        <div class="text-[10px] text-gray-400 mt-1">
+                                            {{ $visit->created_at ? $visit->created_at->format('Y/m/d H:i') : '' }}
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-100 font-medium">
+                            <tr>
+                                <td colspan="7" class="px-3 py-2 border text-left text-xs text-gray-500">
+                                    آخر تحديث للسجل: {{ now()->format('Y/m/d H:i') }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-10">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="ri-map-pin-line text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد زيارات مسجلة</h3>
+                    <p class="text-gray-600 mb-4">يمكنك البدء بتسجيل أول زيارة لهذا المشروع الآن</p>
+                    <button onclick="openVisitModal()"
+                        class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm">
+                        <i class="ri-add-line"></i>
+                        تسجيل أول زيارة
+                    </button>
+                </div>
+            @endif
+        </div>
+    </div>
+
     <!-- القروض المسجلة -->
-    @if($project->loans && $project->loans->count() > 0)
+    @if ($project->loans && $project->loans->count() > 0)
         <div class="p-6" dir="rtl">
             <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
                         <i class="ri-money-dollar-circle-line text-white text-xl"></i>
                     </div>
                     <div>
@@ -2043,61 +2183,66 @@
                         <p class="text-gray-600">إجمالي {{ $project->loans->count() }} قرض مسجل</p>
                     </div>
                 </div>
-                
+
                 <div class="grid gap-4">
                     @foreach ($project->loans->sortByDesc('loan_date') as $loan)
-                    <div class="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-4 border border-red-200">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ $loan->loan_source_name }}
-                                </span>
-                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ $loan->loan_purpose_name }}
-                                </span>
+                        <div class="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-4 border border-red-200">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                                        {{ $loan->loan_source_name }}
+                                    </span>
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                        {{ $loan->loan_purpose_name }}
+                                    </span>
+                                </div>
+                                <div class="text-lg font-bold text-red-600">
+                                    {{ $loan->formatted_loan_amount }} ر.س
+                                </div>
                             </div>
-                            <div class="text-lg font-bold text-red-600">
-                                {{ $loan->formatted_loan_amount }} ر.س
+
+                            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500 block">الجهة المقرضة</span>
+                                    <span class="font-medium text-gray-800">{{ $loan->lender_name }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">تاريخ القرض</span>
+                                    <span
+                                        class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($loan->loan_date)->format('Y-m-d') }}</span>
+                                </div>
+                                @if ($loan->due_date)
+                                    <div>
+                                        <span class="text-gray-500 block">تاريخ الاستحقاق</span>
+                                        <span
+                                            class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($loan->due_date)->format('Y-m-d') }}</span>
+                                    </div>
+                                @endif
+                                @if ($loan->interest_rate)
+                                    <div>
+                                        <span class="text-gray-500 block">معدل الفائدة</span>
+                                        <span class="font-medium text-gray-800">{{ $loan->interest_rate }}%
+                                            ({{ $loan->interest_type == 'fixed' ? 'ثابت' : 'متغير' }})
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                            <div>
-                                <span class="text-gray-500 block">الجهة المقرضة</span>
-                                <span class="font-medium text-gray-800">{{ $loan->lender_name }}</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-500 block">تاريخ القرض</span>
-                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($loan->loan_date)->format('Y-m-d') }}</span>
-                            </div>
-                            @if($loan->due_date)
-                            <div>
-                                <span class="text-gray-500 block">تاريخ الاستحقاق</span>
-                                <span class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($loan->due_date)->format('Y-m-d') }}</span>
-                            </div>
+
+                            @if ($loan->notes)
+                                <div class="mt-3 pt-3 border-t border-red-200">
+                                    <span class="text-gray-500 text-sm block">ملاحظات</span>
+                                    <p class="text-gray-700 text-sm mt-1">{{ $loan->notes }}</p>
+                                </div>
                             @endif
-                            @if($loan->interest_rate)
-                            <div>
-                                <span class="text-gray-500 block">معدل الفائدة</span>
-                                <span class="font-medium text-gray-800">{{ $loan->interest_rate }}% ({{ $loan->interest_type == 'fixed' ? 'ثابت' : 'متغير' }})</span>
+
+                            <div class="mt-3 pt-3 border-t border-red-200 text-xs text-gray-500">
+                                تم التسجيل بواسطة {{ $loan->recordedBy->name ?? 'غير محدد' }} في
+                                {{ \Carbon\Carbon::parse($loan->created_at)->format('Y-m-d H:i') }}
                             </div>
-                            @endif
                         </div>
-                        
-                        @if($loan->notes)
-                        <div class="mt-3 pt-3 border-t border-red-200">
-                            <span class="text-gray-500 text-sm block">ملاحظات</span>
-                            <p class="text-gray-700 text-sm mt-1">{{ $loan->notes }}</p>
-                        </div>
-                        @endif
-                        
-                        <div class="mt-3 pt-3 border-t border-red-200 text-xs text-gray-500">
-                            تم التسجيل بواسطة {{ $loan->recordedBy->name ?? 'غير محدد' }} في {{ \Carbon\Carbon::parse($loan->created_at)->format('Y-m-d H:i') }}
-                        </div>
-                    </div>
                     @endforeach
                 </div>
-                
+
                 <!-- إحصائيات القروض -->
                 <div class="mt-6 p-4 bg-gradient-to-r from-red-100 to-pink-100 rounded-lg">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -2106,11 +2251,13 @@
                             <div class="text-gray-600 text-sm">إجمالي القروض</div>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-red-600">{{ number_format($project->loans->sum('loan_amount'), 2) }}</div>
+                            <div class="text-2xl font-bold text-red-600">
+                                {{ number_format($project->loans->sum('loan_amount'), 2) }}</div>
                             <div class="text-gray-600 text-sm">إجمالي المبالغ (ر.س)</div>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-red-600">{{ $project->loans->where('status', 'active')->count() }}</div>
+                            <div class="text-2xl font-bold text-red-600">
+                                {{ $project->loans->where('status', 'active')->count() }}</div>
                             <div class="text-gray-600 text-sm">القروض النشطة</div>
                         </div>
                     </div>
@@ -2134,18 +2281,20 @@
                         @foreach ($project->projectImages as $image)
                             <div class="relative group">
                                 <img src="{{ asset('storage/' . $image->image_path) }}"
-                                    alt="{{ $image->name ?? 'صورة المشروع' }}"
-                                    class="w-full h-40 object-cover rounded-lg cursor-pointer hover:shadow-lg transition-all hover:scale-105"
-                                    onclick="showImageModal('{{ asset('storage/' . $image->image_path) }}', '{{ $image->name ?? 'صورة المشروع' }}')">
+                                    alt="{{ $image->alt_text ?? 'صورة المشروع' }}"
+                                    class="w-full h-40 object-cover rounded-lg cursor-pointer hover:shadow-lg transition-all hover:scale-105 project-image"
+                                    onclick="showImageModal('{{ asset('storage/' . $image->image_path) }}', '{{ $image->alt_text ?? 'صورة المشروع' }}')"
+                                    loading="lazy"
+                                    onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjOTk5IiBmaWxsLW9wYWNpdHk9IjAuNSIvPgo8L3N2Zz4K'; this.alt='صورة غير متاحة';">
                                 <div
                                     class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-lg transition-all flex items-center justify-center">
                                     <i
                                         class="ri-eye-line text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                 </div>
-                                @if ($image->name)
+                                @if ($image->alt_text)
                                     <div
                                         class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 rounded-b-lg">
-                                        <p class="text-xs text-center truncate">{{ $image->name }}</p>
+                                        <p class="text-xs text-center truncate">{{ $image->alt_text }}</p>
                                     </div>
                                 @endif
                             </div>
@@ -2166,17 +2315,19 @@
 
 
     <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4">
-        <div class="relative max-w-4xl max-h-full">
-            <img id="modalImage" src="" alt="" class="max-w-full max-h-full object-contain rounded-lg">
-            <div class="absolute top-4 right-4">
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[9999] items-center justify-center p-4"
+        style="display: none;">
+        <div class="relative max-w-4xl max-h-full flex items-center justify-center">
+            <img id="modalImage" src="" alt=""
+                class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+            <div class="absolute top-4 right-4 z-10">
                 <button onclick="closeImageModal()"
-                    class="bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-2 transition-all">
+                    class="bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-2 transition-all shadow-lg">
                     <i class="ri-close-line text-xl"></i>
                 </button>
             </div>
             <div id="modalImageTitle"
-                class="absolute bottom-4 left-4 right-4 bg-black bg-opacity-50 text-white p-3 rounded-lg text-center">
+                class="absolute bottom-4 left-4 right-4 bg-black bg-opacity-70 text-white p-3 rounded-lg text-center z-10">
             </div>
         </div>
     </div>
@@ -2184,39 +2335,147 @@
     <script>
         // Image modal functions
         function showImageModal(imageSrc, imageTitle) {
+            console.log('🔍 Opening image modal:', imageSrc, imageTitle);
+
             const modal = document.getElementById('imageModal');
             const modalImage = document.getElementById('modalImage');
             const modalTitle = document.getElementById('modalImageTitle');
 
+            console.log('📋 Modal elements check:', {
+                modal: !!modal,
+                modalImage: !!modalImage,
+                modalTitle: !!modalTitle,
+                modalId: modal ? modal.id : 'not found',
+                modalClasses: modal ? modal.className : 'not found'
+            });
+
+            if (!modal || !modalImage || !modalTitle) {
+                console.error('❌ Modal elements not found');
+                alert('خطأ: عناصر النافذة المنبثقة غير موجودة');
+                return;
+            }
+
+            console.log('🖼️ Setting image source:', imageSrc);
             modalImage.src = imageSrc;
             modalImage.alt = imageTitle;
             modalTitle.textContent = imageTitle;
+
+            console.log('👁️ Showing modal...');
+            // Show modal with multiple methods to ensure visibility
             modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
 
             // Prevent body scroll
             document.body.style.overflow = 'hidden';
+
+            console.log('✅ Modal should be visible now');
+
+            // Double check modal visibility
+            setTimeout(() => {
+                console.log('🔍 Modal visibility check:', {
+                    display: modal.style.display,
+                    visibility: modal.style.visibility,
+                    opacity: modal.style.opacity,
+                    hasHiddenClass: modal.classList.contains('hidden')
+                });
+            }, 100);
         }
 
         function closeImageModal() {
+            console.log('❌ Closing image modal');
+
             const modal = document.getElementById('imageModal');
-            modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                console.log('🔒 Modal hidden');
+            }
 
             // Restore body scroll
             document.body.style.overflow = 'auto';
+            console.log('📜 Body scroll restored');
         }
 
         // Close modal when clicking outside the image
-        document.getElementById('imageModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeImageModal();
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM loaded, initializing image modal system...');
+
+            const modal = document.getElementById('imageModal');
+            if (modal) {
+                console.log('✅ Modal element found:', modal.id);
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        console.log('👆 Clicked outside modal, closing...');
+                        closeImageModal();
+                    }
+                });
+                console.log('✅ Outside click listener added');
+            } else {
+                console.error('❌ Modal element not found during DOM load');
             }
+
+            // Test all project images
+            const projectImages = document.querySelectorAll('.project-image');
+            console.log('🖼️ Found project images:', projectImages.length);
+
+            projectImages.forEach((img, index) => {
+                console.log(`Image ${index + 1}:`, img.src);
+
+                // Add additional click listener for debugging
+                img.addEventListener('click', function(e) {
+                    console.log('📸 Image clicked (event listener):', this.src);
+                    e.preventDefault(); // Prevent any default behavior
+                });
+
+                img.addEventListener('load', function() {
+                    console.log('✅ Image loaded successfully:', this.src);
+                });
+
+                img.addEventListener('error', function() {
+                    console.error('❌ Image failed to load:', this.src);
+                });
+            });
+
+            // Test modal elements availability
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalImageTitle');
+
+            console.log('📋 Modal system status:', {
+                modal: !!modal,
+                modalImage: !!modalImage,
+                modalTitle: !!modalTitle,
+                projectImages: projectImages.length
+            });
         });
 
         // Close modal with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                console.log('⌨️ Escape key pressed, closing modal...');
                 closeImageModal();
             }
+        });
+
+        // Test image loading and add click debugging
+        document.addEventListener('DOMContentLoaded', function() {
+            // Remove old debugging code and add test function
+            window.testImageModal = function() {
+                console.log('🧪 Manual test triggered');
+                const firstImage = document.querySelector('.project-image');
+                if (firstImage) {
+                    const imageSrc = firstImage.src;
+                    const imageAlt = firstImage.alt || 'اختبار النافذة المنبثقة';
+                    showImageModal(imageSrc, imageAlt);
+                } else {
+                    console.error('❌ No project images found for testing');
+                }
+            };
+
+            console.log('🎯 Image modal system initialized. Use testImageModal() to test manually.');
         });
 
         function exportProject() {
@@ -2249,7 +2508,8 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "project_{{ $project->id }}_{{ $project->name }}_detailed.json");
+            downloadAnchorNode.setAttribute("download",
+                "project_{{ $project->id }}_{{ $project->name }}_detailed.json");
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
@@ -2375,10 +2635,12 @@
             const equipmentTab = document.getElementById('equipmentTab');
 
             if (tabName === 'employees') {
-                employeesTab.className = 'flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50';
+                employeesTab.className =
+                    'flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50';
                 equipmentTab.className = 'flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700';
             } else {
-                equipmentTab.className = 'flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50';
+                equipmentTab.className =
+                    'flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50';
                 employeesTab.className = 'flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700';
             }
 
@@ -2420,17 +2682,17 @@
                         </div>
                         <div class="text-right">
                             ${employee.phone ? `
-                                <p class="text-sm text-gray-600 flex items-center gap-1">
-                                    <i class="ri-phone-line text-xs"></i>
-                                    ${employee.phone}
-                                </p>
-                            ` : ''}
+                                                            <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                                <i class="ri-phone-line text-xs"></i>
+                                                                ${employee.phone}
+                                                            </p>
+                                                        ` : ''}
                             ${employee.email ? `
-                                <p class="text-sm text-gray-600 flex items-center gap-1">
-                                    <i class="ri-mail-line text-xs"></i>
-                                    ${employee.email}
-                                </p>
-                            ` : ''}
+                                                            <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                                <i class="ri-mail-line text-xs"></i>
+                                                                ${employee.email}
+                                                            </p>
+                                                        ` : ''}
                         </div>
                     </div>
                 </div>
@@ -2453,7 +2715,7 @@
                 let statusText = 'غير محدد';
                 let cardGradient = 'from-gray-50 to-gray-100 border-gray-100';
 
-                switch(eq.status) {
+                switch (eq.status) {
                     case 'available':
                         statusClass = 'bg-green-100 text-green-800';
                         statusText = 'متاح';
@@ -2530,9 +2792,9 @@
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
-            
+
             // تحميل تاريخ التحركات عبر AJAX
             fetch(`/equipment/${equipmentId}/history`)
                 .then(response => response.json())
@@ -2542,29 +2804,29 @@
                         historyHtml = `
                             <div class="space-y-3 max-h-96 overflow-y-auto">
                                 ${data.map(movement => `
-                                    <div class="border-r-4 border-indigo-500 pr-4 py-3 bg-gray-50 rounded-lg">
-                                        <div class="flex justify-between items-start">
-                                            <div class="flex-1">
-                                                <p class="text-sm font-medium text-gray-900 mb-1">
-                                                    <i class="ri-arrow-left-right-line text-indigo-600 ml-1"></i>
-                                                    انتقلت من: ${movement.from_location || 'غير محدد'}
-                                                </p>
-                                                <p class="text-sm text-gray-600 mb-1">
-                                                    <i class="ri-map-pin-line text-green-600 ml-1"></i>
-                                                    إلى: ${movement.to_location || 'غير محدد'}
-                                                </p>
-                                                <p class="text-xs text-gray-500">
-                                                    <i class="ri-user-line text-blue-600 ml-1"></i>
-                                                    بواسطة: ${movement.moved_by || 'غير محدد'}
-                                                </p>
-                                            </div>
-                                            <div class="text-left">
-                                                <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                                                    ${new Date(movement.moved_at).toLocaleDateString('ar-SA')}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        ${movement.notes ? `
+                                                                <div class="border-r-4 border-indigo-500 pr-4 py-3 bg-gray-50 rounded-lg">
+                                                                    <div class="flex justify-between items-start">
+                                                                        <div class="flex-1">
+                                                                            <p class="text-sm font-medium text-gray-900 mb-1">
+                                                                                <i class="ri-arrow-left-right-line text-indigo-600 ml-1"></i>
+                                                                                انتقلت من: ${movement.from_location || 'غير محدد'}
+                                                                            </p>
+                                                                            <p class="text-sm text-gray-600 mb-1">
+                                                                                <i class="ri-map-pin-line text-green-600 ml-1"></i>
+                                                                                إلى: ${movement.to_location || 'غير محدد'}
+                                                                            </p>
+                                                                            <p class="text-xs text-gray-500">
+                                                                                <i class="ri-user-line text-blue-600 ml-1"></i>
+                                                                                بواسطة: ${movement.moved_by || 'غير محدد'}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div class="text-left">
+                                                                            <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                                                                                ${new Date(movement.moved_at).toLocaleDateString('ar-SA')}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                    ${movement.notes ? `
                                             <div class="mt-2 pt-2 border-t border-gray-200">
                                                 <p class="text-sm text-gray-600">
                                                     <i class="ri-file-text-line text-orange-600 ml-1"></i>
@@ -2572,8 +2834,8 @@
                                                 </p>
                                             </div>
                                         ` : ''}
-                                    </div>
-                                `).join('')}
+                                                                </div>
+                                                            `).join('')}
                             </div>
                         `;
                     } else {
@@ -2587,7 +2849,7 @@
                             </div>
                         `;
                     }
-                    
+
                     document.getElementById('equipment-history-content').innerHTML = historyHtml;
                 })
                 .catch(error => {
@@ -2619,11 +2881,11 @@
             // فلترة الموظفين
             const employeeFilter = document.getElementById('employeeFilter');
             const departmentFilter = document.getElementById('departmentFilter');
-            
+
             if (employeeFilter) {
                 employeeFilter.addEventListener('change', filterEmployees);
             }
-            
+
             if (departmentFilter) {
                 departmentFilter.addEventListener('change', filterEmployees);
             }
@@ -2634,23 +2896,23 @@
             const statusFilter = document.getElementById('employeeFilter')?.value || 'all';
             const departmentFilter = document.getElementById('departmentFilter')?.value || 'all';
             const rows = document.querySelectorAll('.employee-row');
-            
+
             rows.forEach(row => {
                 const status = row.getAttribute('data-status');
                 const department = row.getAttribute('data-department');
-                
+
                 let showRow = true;
-                
+
                 // فلترة حسب الحالة
                 if (statusFilter !== 'all' && status !== statusFilter) {
                     showRow = false;
                 }
-                
+
                 // فلترة حسب القسم
                 if (departmentFilter !== 'all' && department !== departmentFilter) {
                     showRow = false;
                 }
-                
+
                 row.style.display = showRow ? '' : 'none';
             });
         }
@@ -2660,14 +2922,14 @@
             const table = document.getElementById('employeesTable');
             const rows = table.querySelectorAll('tbody .employee-row');
             const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
-            
+
             if (visibleRows.length === 0) {
                 alert('لا توجد بيانات لتصديرها');
                 return;
             }
-            
+
             let csvContent = 'الموظف,الحالة,القسم,الوظيفة,الموقع,تاريخ التعيين,الراتب\n';
-            
+
             visibleRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
                 const name = cells[0].querySelector('.font-bold').textContent.trim();
@@ -2677,11 +2939,14 @@
                 const location = cells[4].textContent.trim();
                 const hireDate = cells[5].textContent.trim();
                 const salary = cells[6].textContent.trim();
-                
-                csvContent += `"${name}","${status}","${department}","${position}","${location}","${hireDate}","${salary}"\n`;
+
+                csvContent +=
+                    `"${name}","${status}","${department}","${position}","${location}","${hireDate}","${salary}"\n`;
             });
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+            const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `employees_project_${new Date().getTime()}.csv`;
@@ -2716,9 +2981,9 @@
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
-            
+
             // تحميل تفاصيل الموظف عبر AJAX
             fetch(`/employees/${employeeId}/details`)
                 .then(response => response.json())
@@ -2745,13 +3010,13 @@
                             </div>
                         </div>
                         ${data.notes ? `
-                            <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
-                                <h4 class="font-medium text-gray-900 mb-2">ملاحظات</h4>
-                                <p class="text-sm text-gray-700">${data.notes}</p>
-                            </div>
-                        ` : ''}
+                                                        <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
+                                                            <h4 class="font-medium text-gray-900 mb-2">ملاحظات</h4>
+                                                            <p class="text-sm text-gray-700">${data.notes}</p>
+                                                        </div>
+                                                    ` : ''}
                     `;
-                    
+
                     document.getElementById('employee-details-content').innerHTML = detailsHtml;
                 })
                 .catch(error => {
@@ -2775,7 +3040,7 @@
                     menu.classList.add('hidden');
                 }
             });
-            
+
             // تبديل القائمة المحددة
             const menu = document.getElementById(`employeeMenu${employeeId}`);
             menu.classList.toggle('hidden');
@@ -2796,28 +3061,29 @@
             if (message && message.trim()) {
                 // إرسال الإشعار عبر AJAX
                 fetch('/employees/send-notification', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        employee_id: employeeId,
-                        message: message.trim()
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                                'content')
+                        },
+                        body: JSON.stringify({
+                            employee_id: employeeId,
+                            message: message.trim()
+                        })
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('تم إرسال الإشعار بنجاح');
-                    } else {
-                        alert('فشل في إرسال الإشعار');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('حدث خطأ في إرسال الإشعار');
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('تم إرسال الإشعار بنجاح');
+                        } else {
+                            alert('فشل في إرسال الإشعار');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('حدث خطأ في إرسال الإشعار');
+                    });
             }
         }
 
@@ -2884,6 +3150,7 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -2894,6 +3161,7 @@
                 opacity: 0;
                 transform: translateY(30px) scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -2910,6 +3178,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -2979,7 +3248,7 @@
                 padding: 0.5rem 0.25rem !important;
                 font-size: 0.75rem;
             }
-            
+
             .hidden-mobile {
                 display: none !important;
             }
@@ -3044,9 +3313,17 @@
 
         /* Progressive color change animation */
         @keyframes progressUpdate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .progress-animate {
@@ -3110,29 +3387,31 @@
                     <div class="p-6 space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء الحالي</label>
-                            <input type="text" value="{{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') : 'غير محدد' }}" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                            <input type="text"
+                                value="{{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') : 'غير محدد' }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء الجديد <span class="text-red-500">*</span></label>
-                            <input type="date" name="new_end_date" id="new_end_date" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500" 
-                                   required min="{{ now()->format('Y-m-d') }}">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء الجديد <span
+                                    class="text-red-500">*</span></label>
+                            <input type="date" name="new_end_date" id="new_end_date"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+                                required min="{{ now()->format('Y-m-d') }}">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">سبب التمديد <span class="text-red-500">*</span></label>
-                            <textarea name="extension_reason" rows="3" 
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500" 
-                                      placeholder="اكتب سبب التمديد..." required></textarea>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">سبب التمديد <span
+                                    class="text-red-500">*</span></label>
+                            <textarea name="extension_reason" rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+                                placeholder="اكتب سبب التمديد..." required></textarea>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
-                        <button type="button" onclick="closeExtendModal()" 
-                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <button type="button" onclick="closeExtendModal()"
+                            class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                             إلغاء
                         </button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700">
+                        <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700">
                             حفظ التمديد
                         </button>
                     </div>
@@ -3153,27 +3432,31 @@
                     <div class="p-6 space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الزيارة <span class="text-red-500">*</span></label>
-                                <input type="date" name="visit_date" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
-                                       value="{{ now()->format('Y-m-d') }}" required>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الزيارة <span
+                                        class="text-red-500">*</span></label>
+                                <input type="date" name="visit_date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                    value="{{ now()->format('Y-m-d') }}" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">وقت الزيارة</label>
-                                <input type="time" name="visit_time" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
-                                       value="{{ now()->format('H:i') }}">
+                                <input type="time" name="visit_time"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                    value="{{ now()->format('H:i') }}">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">الزائر <span class="text-red-500">*</span></label>
-                            <input type="text" name="visitor_name" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
-                                   placeholder="أدخل اسم الزائر" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">الزائر <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="visitor_name"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                placeholder="أدخل اسم الزائر" required>
+                            <input type="hidden" name="visitor_employee_id" id="visitor_employee_id">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">نوع الزيارة</label>
-                            <select name="visit_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+                            <select name="visit_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
                                 <option value="inspection">جولة تفتيش</option>
                                 <option value="meeting">اجتماع</option>
                                 <option value="supervision">إشراف</option>
@@ -3181,20 +3464,35 @@
                                 <option value="other">أخرى</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">تفاصيل الزيارة <span class="text-red-500">*</span></label>
-                            <textarea name="visit_notes" rows="4" 
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" 
-                                      placeholder="اكتب تفاصيل الزيارة والملاحظات..." required></textarea>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">المدة (ساعات)</label>
+                                <input type="number" step="0.25" min="0" max="24"
+                                    name="duration_hours"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                    placeholder="مثال: 1.5">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">الغرض</label>
+                                <input type="text" name="purpose"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                    placeholder="الغرض من الزيارة">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تفاصيل الزيارة <span
+                                    class="text-red-500">*</span></label>
+                            <textarea name="visit_notes" rows="4"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                                placeholder="اكتب تفاصيل الزيارة والملاحظات..." required></textarea>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
-                        <button type="button" onclick="closeVisitModal()" 
-                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <button type="button" onclick="closeVisitModal()"
+                            class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                             إلغاء
                         </button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
                             حفظ الزيارة
                         </button>
                     </div>
@@ -3210,12 +3508,16 @@
                 <div class="bg-purple-600 text-white px-6 py-4 rounded-t-lg">
                     <h3 class="text-lg font-semibold">تسجيل معدة مستأجرة</h3>
                 </div>
-                <form id="rentalForm" method="POST" action="{{ route('projects.rental.store', $project) }}">
+                <form id="rentalForm" method="POST"
+                    action="{{ route('projects.rental.store', ['project' => $project]) }}">
                     @csrf
                     <div class="p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع المعدة <span class="text-red-500">*</span></label>
-                            <select name="equipment_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع المعدة <span
+                                    class="text-red-500">*</span></label>
+                            <select name="equipment_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                                required>
                                 <option value="">اختر نوع المعدة</option>
                                 <option value="excavator">حفار</option>
                                 <option value="bulldozer">جرافة</option>
@@ -3228,40 +3530,44 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم/رقم المعدة <span class="text-red-500">*</span></label>
-                            <input type="text" name="equipment_name" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
-                                   placeholder="مثال: حفار كوماتسو PC200" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم/رقم المعدة <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="equipment_name"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="مثال: حفار كوماتسو PC200" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">المورد/الشركة المؤجرة <span class="text-red-500">*</span></label>
-                            <input type="text" name="rental_company" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
-                                   placeholder="اسم الشركة أو المورد" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">المورد/الشركة المؤجرة <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="rental_company"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="اسم الشركة أو المورد" required>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ بداية الإيجار <span class="text-red-500">*</span></label>
-                                <input type="date" name="rental_start_date" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
-                                       value="{{ now()->format('Y-m-d') }}" required>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ بداية الإيجار <span
+                                        class="text-red-500">*</span></label>
+                                <input type="date" name="rental_start_date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                                    value="{{ now()->format('Y-m-d') }}" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ نهاية الإيجار</label>
-                                <input type="date" name="rental_end_date" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                                <input type="date" name="rental_end_date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">تكلفة الإيجار (يومي)</label>
-                                <input type="number" name="daily_rate" step="0.01" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
-                                       placeholder="0.00">
+                                <input type="number" name="daily_rate" step="0.01"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                                    placeholder="0.00">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">العملة</label>
-                                <select name="currency" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                                <select name="currency"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
                                     <option value="SAR">ريال سعودي</option>
                                     <option value="USD">دولار أمريكي</option>
                                     <option value="EUR">يورو</option>
@@ -3270,18 +3576,18 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
-                            <textarea name="notes" rows="3" 
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500" 
-                                      placeholder="أي ملاحظات إضافية..."></textarea>
+                            <textarea name="notes" rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="أي ملاحظات إضافية..."></textarea>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
-                        <button type="button" onclick="closeRentalModal()" 
-                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <button type="button" onclick="closeRentalModal()"
+                            class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                             إلغاء
                         </button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                        <button type="submit"
+                            class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
                             حفظ المعدة
                         </button>
                     </div>
@@ -3301,14 +3607,18 @@
                     @csrf
                     <div class="p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ القرض (ر.س) <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ القرض (ر.س) <span
+                                    class="text-red-500">*</span></label>
                             <input type="number" name="loan_amount" step="0.01" min="0"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
-                                   placeholder="0.00" required>
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                                placeholder="0.00" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">مصدر القرض <span class="text-red-500">*</span></label>
-                            <select name="loan_source" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">مصدر القرض <span
+                                    class="text-red-500">*</span></label>
+                            <select name="loan_source"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                                required>
                                 <option value="">اختر مصدر القرض</option>
                                 <option value="bank">بنك</option>
                                 <option value="company">شركة</option>
@@ -3318,34 +3628,38 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم الجهة المقرضة <span class="text-red-500">*</span></label>
-                            <input type="text" name="lender_name" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
-                                   placeholder="مثال: البنك الأهلي السعودي" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم الجهة المقرضة <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="lender_name"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                                placeholder="مثال: البنك الأهلي السعودي" required>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ القرض <span class="text-red-500">*</span></label>
-                                <input type="date" name="loan_date" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
-                                       value="{{ now()->format('Y-m-d') }}" required>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ القرض <span
+                                        class="text-red-500">*</span></label>
+                                <input type="date" name="loan_date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                                    value="{{ now()->format('Y-m-d') }}" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الاستحقاق</label>
-                                <input type="date" name="due_date" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
+                                <input type="date" name="due_date"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">معدل الفائدة (%)</label>
-                                <input type="number" name="interest_rate" step="0.01" min="0" max="100"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
-                                       placeholder="0.00">
+                                <input type="number" name="interest_rate" step="0.01" min="0"
+                                    max="100"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                                    placeholder="0.00">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">نوع الفائدة</label>
-                                <select name="interest_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
+                                <select name="interest_type"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
                                     <option value="">بدون فائدة</option>
                                     <option value="fixed">ثابتة</option>
                                     <option value="variable">متغيرة</option>
@@ -3353,8 +3667,11 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">الغرض من القرض <span class="text-red-500">*</span></label>
-                            <select name="loan_purpose" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">الغرض من القرض <span
+                                    class="text-red-500">*</span></label>
+                            <select name="loan_purpose"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                                required>
                                 <option value="">اختر الغرض</option>
                                 <option value="equipment">شراء معدات</option>
                                 <option value="materials">شراء مواد</option>
@@ -3366,18 +3683,17 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
-                            <textarea name="notes" rows="3" 
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" 
-                                      placeholder="أي ملاحظات إضافية عن القرض..."></textarea>
+                            <textarea name="notes" rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                                placeholder="أي ملاحظات إضافية عن القرض..."></textarea>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
-                        <button type="button" onclick="closeLoanModal()" 
-                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <button type="button" onclick="closeLoanModal()"
+                            class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                             إلغاء
                         </button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
                             حفظ القرض
                         </button>
                     </div>
@@ -3401,23 +3717,22 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">النسبة الحالية</label>
                             <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                 <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $project->progress }}%"></div>
+                                    <div class="bg-blue-600 h-2 rounded-full"
+                                        style="width: {{ $project->progress }}%"></div>
                                 </div>
-                                <span class="text-sm font-medium text-gray-900 min-w-max">{{ number_format($project->progress) }}%</span>
+                                <span
+                                    class="text-sm font-medium text-gray-900 min-w-max">{{ number_format($project->progress) }}%</span>
                             </div>
                         </div>
-                        
+
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">النسبة الجديدة <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">النسبة الجديدة <span
+                                    class="text-red-500">*</span></label>
                             <div class="relative">
-                                <input type="range" 
-                                       name="progress" 
-                                       id="progressSlider"
-                                       min="0" 
-                                       max="100" 
-                                       value="{{ $project->progress }}"
-                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                                       oninput="updateProgressPreview(this.value)">
+                                <input type="range" name="progress" id="progressSlider" min="0"
+                                    max="100" value="{{ $project->progress }}"
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                                    oninput="updateProgressPreview(this.value)">
                                 <div class="flex justify-between text-xs text-gray-500 mt-1">
                                     <span>0%</span>
                                     <span>25%</span>
@@ -3427,7 +3742,8 @@
                                 </div>
                             </div>
                             <div class="mt-2 text-center">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" id="progressPreview">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                    id="progressPreview">
                                     {{ number_format($project->progress) }}%
                                 </span>
                             </div>
@@ -3435,9 +3751,9 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">تفاصيل التحديث</label>
-                            <textarea name="update_notes" rows="3" 
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
-                                      placeholder="اكتب تفاصيل التقدم المحرز أو الأعمال المكتملة..."></textarea>
+                            <textarea name="update_notes" rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="اكتب تفاصيل التقدم المحرز أو الأعمال المكتملة..."></textarea>
                         </div>
 
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -3455,12 +3771,11 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-6 py-3 rounded-b-lg flex justify-end gap-3">
-                        <button type="button" onclick="closeProgressModal()" 
-                                class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <button type="button" onclick="closeProgressModal()"
+                            class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                             إلغاء
                         </button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                             تحديث النسبة
                         </button>
                     </div>
@@ -3506,30 +3821,30 @@
         // وظائف مودال تحديث نسبة الإنجاز
         function openProgressModal() {
             document.getElementById('progressModal').classList.remove('hidden');
-            
+
             // تأثير صوتي خفيف (اختياري - يمكن إزالته)
             try {
                 // إنشاء تأثير صوتي بسيط
                 const audio = new AudioContext();
                 const oscillator = audio.createOscillator();
                 const gainNode = audio.createGain();
-                
+
                 oscillator.connect(gainNode);
                 gainNode.connect(audio.destination);
-                
+
                 oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
-                
+
                 gainNode.gain.setValueAtTime(0, audio.currentTime);
                 gainNode.gain.linearRampToValueAtTime(0.1, audio.currentTime + 0.01);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.1);
-                
+
                 oscillator.start(audio.currentTime);
                 oscillator.stop(audio.currentTime + 0.1);
             } catch (e) {
                 // تجاهل الأخطاء الصوتية
             }
-            
+
             // تركيز على شريط التمرير
             setTimeout(() => {
                 const slider = document.getElementById('progressSlider');
@@ -3542,13 +3857,13 @@
         function updateProgressPreview(value) {
             const preview = document.getElementById('progressPreview');
             const percentage = parseInt(value);
-            
+
             // تحديث النص
             preview.textContent = percentage + '%';
-            
+
             // تحديث الألوان بناءً على النسبة
             preview.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ';
-            
+
             if (percentage < 25) {
                 preview.className += 'bg-red-100 text-red-800';
             } else if (percentage < 50) {
@@ -3560,7 +3875,7 @@
             } else {
                 preview.className += 'bg-green-100 text-green-800';
             }
-            
+
             // تحديث شريط التقدم في المعاينة
             const previewBar = document.querySelector('#progressModal .bg-blue-600');
             if (previewBar) {
@@ -3574,12 +3889,12 @@
             // تحديث شريط التقدم الرئيسي في الوقت الفعلي (معاينة فقط)
             const mainProgressBar = document.getElementById('progress-bar');
             const mainProgressPercentage = document.getElementById('progress-percentage');
-            
+
             if (mainProgressBar && mainProgressPercentage) {
                 // إضافة تأثير بصري
                 mainProgressBar.style.width = percentage + '%';
                 mainProgressPercentage.textContent = percentage + '%';
-                
+
                 // تحديث لون الشريط الرئيسي
                 mainProgressBar.className = 'h-3 rounded-full transition-all duration-500 ';
                 if (percentage < 25) {
@@ -3593,12 +3908,12 @@
                 } else {
                     mainProgressBar.className += 'bg-gradient-to-r from-green-500 to-green-600';
                 }
-                
+
                 // تحديث نص الحالة
                 const statusTexts = document.querySelectorAll('.text-center');
                 statusTexts.forEach(element => {
-                    if (element.textContent.includes('بداية المشروع') || 
-                        element.textContent.includes('في التطوير') || 
+                    if (element.textContent.includes('بداية المشروع') ||
+                        element.textContent.includes('في التطوير') ||
                         element.textContent.includes('قرب الانتهاء')) {
                         if (percentage < 25) {
                             element.textContent = 'بداية المشروع';
@@ -3619,24 +3934,25 @@
         // إعادة تعيين الشريط الرئيسي عند إغلاق المودال
         function closeProgressModal() {
             document.getElementById('progressModal').classList.add('hidden');
-            
+
             // إعادة الشريط الرئيسي لحالته الأصلية
             const mainProgressBar = document.getElementById('progress-bar');
             const mainProgressPercentage = document.getElementById('progress-percentage');
-            
+
             if (mainProgressBar && mainProgressPercentage) {
                 const originalProgress = {{ $project->progress }};
                 mainProgressBar.style.width = originalProgress + '%';
                 mainProgressPercentage.textContent = originalProgress + '%';
-                
+
                 // إعادة اللون الأصلي
-                mainProgressBar.className = 'bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 hover:from-blue-600 hover:to-blue-700';
-                
+                mainProgressBar.className =
+                    'bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 hover:from-blue-600 hover:to-blue-700';
+
                 // إعادة نص الحالة الأصلي
                 const statusTexts = document.querySelectorAll('.text-center');
                 statusTexts.forEach(element => {
-                    if (element.textContent.includes('بداية المشروع') || 
-                        element.textContent.includes('في التطوير') || 
+                    if (element.textContent.includes('بداية المشروع') ||
+                        element.textContent.includes('في التطوير') ||
                         element.textContent.includes('قرب الانتهاء') ||
                         element.textContent.includes('في مرحلة مبكرة') ||
                         element.textContent.includes('مكتمل!')) {
@@ -3672,30 +3988,30 @@
                 slider.addEventListener('input', function(e) {
                     updateProgressPreview(e.target.value);
                 });
-                
+
                 // تأثير عند بداية التحريك
                 slider.addEventListener('mousedown', function() {
                     this.style.transform = 'scale(1.02)';
                 });
-                
+
                 // إزالة التأثير عند الانتهاء
                 slider.addEventListener('mouseup', function() {
                     this.style.transform = 'scale(1)';
                 });
             }
-            
+
             // إضافة تأثيرات للشريط الرئيسي
             const mainProgressBar = document.getElementById('progress-bar');
             if (mainProgressBar) {
                 mainProgressBar.addEventListener('mouseover', function() {
                     this.style.transform = 'scaleY(1.1)';
                 });
-                
+
                 mainProgressBar.addEventListener('mouseout', function() {
                     this.style.transform = 'scaleY(1)';
                 });
             }
-            
+
             // إضافة تأثير نبضة للأزرار التفاعلية
             const editButtons = document.querySelectorAll('[onclick*="openProgressModal"]');
             editButtons.forEach(button => {
@@ -3708,4 +4024,318 @@
             });
         });
     </script>
+
+    <!-- Add Images Modal -->
+    <div id="addImagesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+        onclick="closeAddImagesModal()">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+            onclick="event.stopPropagation()" dir="rtl">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-cyan-600 flex items-center justify-center">
+                        <i class="ri-image-add-line text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">إضافة صور جديدة للمشروع</h3>
+                        <p class="text-gray-600 text-sm">{{ $project->name }}</p>
+                    </div>
+                </div>
+                <button onclick="closeAddImagesModal()"
+                    class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                    <i class="ri-close-line text-gray-600"></i>
+                </button>
+            </div>
+
+            <!-- Upload Form -->
+            <form id="uploadImagesForm" action="{{ route('projects.images.store', $project) }}" method="POST"
+                enctype="multipart/form-data">
+                @csrf
+
+                <!-- File Upload Area -->
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center mb-6 hover:border-cyan-400 transition-colors"
+                    id="uploadArea">
+                    <input type="file" id="imageFiles" name="images[]" multiple accept="image/*" class="hidden"
+                        onchange="handleFileSelect(this)">
+
+                    <div id="uploadPrompt">
+                        <div class="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="ri-image-add-line text-cyan-600 text-2xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-2">اختر الصور للرفع</h4>
+                        <p class="text-gray-600 mb-4">يمكنك اختيار عدة صور في نفس الوقت</p>
+                        <button type="button" onclick="document.getElementById('imageFiles').click()"
+                            class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                            <i class="ri-upload-2-line ml-2"></i>
+                            اختيار الصور
+                        </button>
+                        <p class="text-sm text-gray-500 mt-3">الأنواع المدعومة: JPG, JPEG, PNG, GIF (حد أقصى 5 ميجابايت
+                            لكل صورة)</p>
+                    </div>
+
+                    <!-- Preview Area -->
+                    <div id="imagePreview" class="hidden">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">معاينة الصور</h4>
+                        <div id="previewGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4"></div>
+                        <button type="button" onclick="clearSelection()"
+                            class="text-red-600 hover:text-red-700 font-medium">
+                            <i class="ri-delete-bin-line ml-1"></i>
+                            مسح التحديد
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Additional Options -->
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label for="imageDescription" class="block text-sm font-semibold text-gray-700 mb-2">
+                            وصف الصور (اختياري)
+                        </label>
+                        <textarea id="imageDescription" name="description" rows="3"
+                            class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all duration-200"
+                            placeholder="أضف وصفاً للصور أو تفاصيل حول ما تُظهره..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-between">
+                    <button type="button" onclick="closeAddImagesModal()"
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-medium transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit" id="uploadButton"
+                        class="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        <i class="ri-upload-2-line ml-2"></i>
+                        رفع الصور
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Add Images Modal Functions
+        function openAddImagesModal() {
+            document.getElementById('addImagesModal').classList.remove('hidden');
+            document.getElementById('addImagesModal').classList.add('flex');
+        }
+
+        function closeAddImagesModal() {
+            document.getElementById('addImagesModal').classList.add('hidden');
+            document.getElementById('addImagesModal').classList.remove('flex');
+            // Reset form
+            document.getElementById('uploadImagesForm').reset();
+            clearSelection();
+        }
+
+        function handleFileSelect(input) {
+            const files = input.files;
+            const previewArea = document.getElementById('imagePreview');
+            const uploadPrompt = document.getElementById('uploadPrompt');
+            const previewGrid = document.getElementById('previewGrid');
+            const uploadButton = document.getElementById('uploadButton');
+
+            if (files.length > 0) {
+                uploadPrompt.classList.add('hidden');
+                previewArea.classList.remove('hidden');
+                previewGrid.innerHTML = '';
+
+                Array.from(files).forEach((file, index) => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const div = document.createElement('div');
+                            div.className = 'relative group';
+                            div.innerHTML = `
+                                <img src="${e.target.result}" class="w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-cyan-400 transition-colors">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all duration-200 flex items-center justify-center">
+                                    <button type="button" onclick="removeImage(${index})" 
+                                            class="w-8 h-8 bg-red-600 text-white rounded-full items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden">
+                                        <i class="ri-close-line text-sm"></i>
+                                    </button>
+                                </div>
+                                <div class="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                                    ${file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name}
+                                </div>
+                            `;
+                            previewGrid.appendChild(div);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                uploadButton.disabled = false;
+            } else {
+                clearSelection();
+            }
+        }
+
+        function clearSelection() {
+            document.getElementById('imageFiles').value = '';
+            document.getElementById('uploadPrompt').classList.remove('hidden');
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('uploadButton').disabled = true;
+        }
+
+        // Handle form submission
+        document.getElementById('uploadImagesForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const uploadButton = document.getElementById('uploadButton');
+            const formData = new FormData(this);
+
+            // Update button state
+            uploadButton.innerHTML = '<i class="ri-loader-4-line ml-2 animate-spin"></i>جاري الرفع...';
+            uploadButton.disabled = true;
+
+            // Send AJAX request with proper headers for JSON response
+            fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content'),
+                        'X-Requested-With': 'XMLHttpRequest', // This tells Laravel it's an AJAX request
+                        'Accept': 'application/json' // This requests JSON response
+                    }
+                })
+                .then(response => {
+                    console.log('Response received:', response);
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+
+                    // Check if response is ok
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    // Check content type
+                    const contentType = response.headers.get('content-type');
+                    console.log('Content type:', contentType);
+
+                    if (!contentType || !contentType.includes('application/json')) {
+                        return response.text().then(text => {
+                            console.error('Server returned HTML instead of JSON:', text);
+                            throw new Error('Server returned HTML instead of JSON. Check server logs.');
+                        });
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showNotification('تم رفع الصور بنجاح!', 'success');
+
+                        // Close modal and refresh page
+                        closeAddImagesModal();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(data.message || 'حدث خطأ في رفع الصور');
+                    }
+                })
+                .catch(error => {
+                    console.error('Upload Error:', error);
+
+                    // More specific error handling
+                    let errorMessage = 'حدث خطأ في رفع الصور';
+
+                    if (error.message.includes('JSON')) {
+                        errorMessage = 'خطأ في الاستجابة من الخادم. يرجى المحاولة مرة أخرى.';
+                    } else if (error.message.includes('HTTP error')) {
+                        errorMessage = 'خطأ في الاتصال بالخادم. تحقق من الاتصال بالإنترنت.';
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
+
+                    showNotification(errorMessage, 'error');
+
+                    // Reset button
+                    uploadButton.innerHTML = '<i class="ri-upload-2-line ml-2"></i>رفع الصور';
+                    uploadButton.disabled = false;
+                });
+        });
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white transition-all duration-300 transform translate-x-full ${
+                type === 'success' ? 'bg-green-600' : 
+                type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="ri-${type === 'success' ? 'check' : type === 'error' ? 'error-warning' : 'information'}-line"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Animate out and remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        /* Image Modal Styles */
+        #imageModal {
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        #imageModal.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #imageModal:not(.hidden) {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #modalImage {
+            max-width: 90vw;
+            max-height: 90vh;
+            transition: transform 0.3s ease;
+        }
+
+        #modalImage:hover {
+            transform: scale(1.02);
+        }
+
+        /* Ensure modal is above everything */
+        #imageModal {
+            z-index: 99999 !important;
+        }
+
+        /* Smooth hover effects for images */
+        .project-image {
+            transition: all 0.3s ease;
+        }
+
+        .project-image:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Loading animation for images */
+        .project-image.loading {
+            opacity: 0.5;
+            filter: blur(2px);
+        }
+    </style>
 @endsection

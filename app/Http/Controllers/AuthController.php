@@ -33,16 +33,16 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
 
-            // التحقق من أن المستخدم له دور "مستخدم رئيسي" فقط
-            if ($user->role !== 'manager') {
-                Auth::logout();
+            // التحقق من حالة الموظف - منع تسجيل الدخول للموظفين غير النشطين
+            $employee = $user->employee;
+            if ($employee && $employee->status === 'inactive') {
+                Auth::logout(); // تسجيل خروج فوري
                 return back()->withErrors([
-                    'email' => 'عذراً، يُسمح بالدخول للمستخدمين الرئيسيين فقط.',
+                    'email' => 'حسابك غير نشط. يرجى التواصل مع الإدارة لتفعيل حسابك.',
                 ])->onlyInput('email');
             }
 
             // التحقق من إذا كانت كلمة المرور هي رقم الهوية (لم يتم تغييرها)
-            $employee = $user->employee;
             if ($employee && Hash::check($employee->national_id, $user->password)) {
                 // كلمة المرور لم يتم تغييرها، إجبار المستخدم على تغييرها
                 $request->session()->regenerate();

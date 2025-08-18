@@ -464,6 +464,142 @@
                 </div>
             </div>
         </div>
+
+        <!-- قسم استلامات قطع الغيار التالفة -->
+        <div class="bg-white rounded-xl shadow-sm border mt-6">
+            <div class="flex items-center justify-between p-6 border-b">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-file-damage-line text-xl text-red-600"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">استلامات قطع الغيار التالفة</h2>
+                        <p class="text-sm text-gray-600">{{ $damagedPartsReceipts->total() }} استلام</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{{ route('damaged-parts-receipts.create') }}" 
+                       class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                        <i class="ri-add-line"></i>
+                        إضافة استلام جديد
+                    </a>
+                </div>
+            </div>
+
+            <div class="p-6">
+                @if($damagedPartsReceipts->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 rounded-tr-lg">رقم الاستلام</th>
+                                    <th scope="col" class="px-6 py-3">تاريخ الاستلام</th>
+                                    <th scope="col" class="px-6 py-3">المشروع</th>
+                                    <th scope="col" class="px-6 py-3">قطعة الغيار</th>
+                                    <th scope="col" class="px-6 py-3">الكمية</th>
+                                    <th scope="col" class="px-6 py-3">حالة التلف</th>
+                                    <th scope="col" class="px-6 py-3">حالة المعالجة</th>
+                                    <th scope="col" class="px-6 py-3">مُستلمة بواسطة</th>
+                                    <th scope="col" class="px-6 py-3 rounded-tl-lg">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($damagedPartsReceipts as $receipt)
+                                    <tr class="bg-white border-b hover:bg-gray-50">
+                                        <td class="px-6 py-4 font-medium text-gray-900">
+                                            {{ $receipt->receipt_number }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $receipt->receipt_date->format('Y-m-d') }}
+                                            <br>
+                                            <span class="text-xs text-gray-500">{{ $receipt->receipt_time }}</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $receipt->project->name ?? 'غير محدد' }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                {{ $receipt->sparePart->name ?? 'غير محدد' }}
+                                                @if($receipt->sparePart)
+                                                    <br>
+                                                    <span class="text-xs text-gray-500">{{ $receipt->sparePart->code }}</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span class="font-semibold text-red-600">{{ $receipt->quantity_received }}</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                                                {{ $receipt->damage_condition_text }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                $statusColors = [
+                                                    'received' => 'bg-blue-100 text-blue-800',
+                                                    'under_evaluation' => 'bg-yellow-100 text-yellow-800',
+                                                    'approved_repair' => 'bg-green-100 text-green-800',
+                                                    'approved_replace' => 'bg-purple-100 text-purple-800',
+                                                    'disposed' => 'bg-gray-100 text-gray-800',
+                                                    'returned_fixed' => 'bg-emerald-100 text-emerald-800',
+                                                ];
+                                                $colorClass = $statusColors[$receipt->processing_status] ?? 'bg-gray-100 text-gray-800';
+                                            @endphp
+                                            <span class="px-2 py-1 text-xs rounded-full {{ $colorClass }}">
+                                                {{ $receipt->processing_status_text }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $receipt->receivedByEmployee->name ?? 'غير محدد' }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <a href="{{ route('damaged-parts-receipts.show', $receipt) }}" 
+                                                   class="text-blue-600 hover:text-blue-900" title="عرض التفاصيل">
+                                                    <i class="ri-eye-line text-lg"></i>
+                                                </a>
+                                                <a href="{{ route('damaged-parts-receipts.edit', $receipt) }}" 
+                                                   class="text-green-600 hover:text-green-900" title="تعديل">
+                                                    <i class="ri-edit-line text-lg"></i>
+                                                </a>
+                                                <form action="{{ route('damaged-parts-receipts.destroy', $receipt) }}" 
+                                                      method="POST" class="inline" 
+                                                      onsubmit="return confirm('هل أنت متأكد من حذف هذا الاستلام؟')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900" title="حذف">
+                                                        <i class="ri-delete-bin-line text-lg"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if($damagedPartsReceipts->hasPages())
+                        <div class="mt-6">
+                            {{ $damagedPartsReceipts->links() }}
+                        </div>
+                    @endif
+                @else
+                    <div class="text-center py-8">
+                        <i class="ri-file-damage-line text-4xl text-gray-400 mb-3"></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد استلامات قطع غيار تالفة</h3>
+                        <p class="text-gray-600 mb-4">لم يتم تسجيل أي استلامات لقطع غيار تالفة في هذا المستودع بعد</p>
+                        <a href="{{ route('damaged-parts-receipts.create') }}" 
+                           class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="ri-add-line"></i>
+                            إضافة أول استلام
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 
     <script>
@@ -542,6 +678,7 @@
 
         // دالة فتح modal نوع الاستلام
         function openReceiveModal() {
+            console.log('openReceiveModal called'); // Debug log
             const modalHTML = `
                 <div id="receiveTypeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl">
@@ -583,7 +720,9 @@
                 </div>
             `;
 
+            console.log('Adding modal to DOM'); // Debug log
             document.body.insertAdjacentHTML('beforeend', modalHTML);
+            console.log('Modal added successfully'); // Debug log
         }
 
         function closeReceiveModal() {

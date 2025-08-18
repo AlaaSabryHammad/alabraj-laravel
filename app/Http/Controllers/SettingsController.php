@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\EquipmentType;
 use App\Models\LocationType;
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\User;
+use Exception;
 
 class SettingsController extends Controller
 {
@@ -34,12 +38,18 @@ class SettingsController extends Controller
             'expects_json' => $request->expectsJson(),
             'content_type' => $request->header('Content-Type'),
             'accept' => $request->header('Accept'),
+            'x_requested_with' => $request->header('X-Requested-With'),
+            'all_headers' => $request->headers->all(),
             'user_id' => Auth::id(),
             'data' => $request->all()
         ]);
 
         // Force JSON response for AJAX requests
-        $isAjax = $request->ajax() || $request->wantsJson() || $request->header('Content-Type') === 'application/json';
+        $isAjax = $request->ajax() || 
+                  $request->wantsJson() || 
+                  $request->expectsJson() ||
+                  $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+                  $request->header('Content-Type') === 'application/json';
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:equipment_types',
@@ -65,9 +75,14 @@ class SettingsController extends Controller
                 'is_active' => $request->boolean('is_active', true)
             ]);
 
-            Log::info('Equipment type created successfully', ['id' => $equipmentType->id]);
+            Log::info('Equipment type created successfully', [
+                'id' => $equipmentType->id,
+                'is_ajax' => $isAjax,
+                'will_return_json' => $isAjax ? 'yes' : 'no'
+            ]);
 
             if ($isAjax) {
+                Log::info('Returning JSON response for equipment type creation');
                 return response()->json([
                     'success' => true,
                     'message' => 'تم إضافة نوع المعدة بنجاح',
@@ -75,9 +90,9 @@ class SettingsController extends Controller
                 ]);
             }
 
+            Log::info('Returning redirect response for equipment type creation');
             return redirect()->route('settings.equipment-types')
                 ->with('success', 'تم إضافة نوع المعدة بنجاح');
-
         } catch (\Exception $e) {
             Log::error('Error creating equipment type', ['error' => $e->getMessage()]);
             if ($isAjax) {
@@ -102,7 +117,11 @@ class SettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            if ($request->expectsJson()) {
+            $isAjax = $request->ajax() || 
+                      $request->wantsJson() || 
+                      $request->expectsJson() ||
+                      $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
                 return response()->json([
                     'success' => false,
                     'errors' => $validator->errors()
@@ -117,7 +136,11 @@ class SettingsController extends Controller
             'is_active' => $request->boolean('is_active', false)
         ]);
 
-        if ($request->expectsJson()) {
+        $isAjax = $request->ajax() || 
+                  $request->wantsJson() || 
+                  $request->expectsJson() ||
+                  $request->header('X-Requested-With') === 'XMLHttpRequest';
+        if ($isAjax) {
             return response()->json([
                 'success' => true,
                 'message' => 'تم تحديث نوع المعدة بنجاح'
@@ -131,7 +154,11 @@ class SettingsController extends Controller
     {
         // Check if equipment type is used
         if ($equipmentType->equipment()->count() > 0) {
-            if (request()->expectsJson()) {
+            $isAjax = request()->ajax() || 
+                      request()->wantsJson() || 
+                      request()->expectsJson() ||
+                      request()->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
                 return response()->json([
                     'success' => false,
                     'message' => 'لا يمكن حذف هذا النوع لأنه مرتبط بمعدات موجودة'
@@ -142,7 +169,11 @@ class SettingsController extends Controller
 
         $equipmentType->delete();
 
-        if (request()->expectsJson()) {
+        $isAjax = request()->ajax() || 
+                  request()->wantsJson() || 
+                  request()->expectsJson() ||
+                  request()->header('X-Requested-With') === 'XMLHttpRequest';
+        if ($isAjax) {
             return response()->json([
                 'success' => true,
                 'message' => 'تم حذف نوع المعدة بنجاح'
@@ -167,7 +198,11 @@ class SettingsController extends Controller
             'data' => $request->all()
         ]);
 
-        $isAjax = $request->ajax() || $request->wantsJson() || $request->header('Content-Type') === 'application/json';
+        $isAjax = $request->ajax() || 
+                  $request->wantsJson() || 
+                  $request->expectsJson() ||
+                  $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+                  $request->header('Content-Type') === 'application/json';
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:location_types',
@@ -233,7 +268,11 @@ class SettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            if ($request->expectsJson()) {
+            $isAjax = $request->ajax() || 
+                      $request->wantsJson() || 
+                      $request->expectsJson() ||
+                      $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
                 return response()->json([
                     'success' => false,
                     'errors' => $validator->errors()
@@ -250,7 +289,11 @@ class SettingsController extends Controller
             'is_active' => $request->boolean('is_active', false)
         ]);
 
-        if ($request->expectsJson()) {
+        $isAjax = $request->ajax() || 
+                  $request->wantsJson() || 
+                  $request->expectsJson() ||
+                  $request->header('X-Requested-With') === 'XMLHttpRequest';
+        if ($isAjax) {
             return response()->json([
                 'success' => true,
                 'message' => 'تم تحديث نوع الموقع بنجاح'
@@ -264,7 +307,11 @@ class SettingsController extends Controller
     {
         // Check if location type is used
         if ($locationType->locations()->count() > 0) {
-            if (request()->expectsJson()) {
+            $isAjax = request()->ajax() || 
+                      request()->wantsJson() || 
+                      request()->expectsJson() ||
+                      request()->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
                 return response()->json([
                     'success' => false,
                     'message' => 'لا يمكن حذف هذا النوع لأنه مرتبط بمواقع موجودة'
@@ -275,7 +322,11 @@ class SettingsController extends Controller
 
         $locationType->delete();
 
-        if (request()->expectsJson()) {
+        $isAjax = request()->ajax() || 
+                  request()->wantsJson() || 
+                  request()->expectsJson() ||
+                  request()->header('X-Requested-With') === 'XMLHttpRequest';
+        if ($isAjax) {
             return response()->json([
                 'success' => true,
                 'message' => 'تم حذف نوع الموقع بنجاح'
@@ -315,11 +366,14 @@ class SettingsController extends Controller
         }
 
         $materials = $query->latest()->paginate(10);
+        
+        // Get all materials for statistics
+        $allMaterials = \App\Models\Material::all();
 
         // Preserve filters in pagination links
         $materials->appends($request->only(['search', 'unit']));
 
-        return view('settings.materials', compact('materials'));
+        return view('settings.materials', compact('materials', 'allMaterials'));
     }
 
     public function materialsContent(Request $request)
@@ -343,5 +397,283 @@ class SettingsController extends Controller
         $materials->appends($request->only(['search', 'unit']));
 
         return view('settings.partials.materials-content', compact('materials'));
+    }
+
+    // Roles and Permissions Management
+    public function rolesAndPermissions()
+    {
+        $roles = Role::with('permissions')->withCount('users')->orderBy('name')->get();
+        $permissions = Permission::getByCategory();
+        $users = User::with('roles')->orderBy('name')->get();
+
+        return view('settings.roles-permissions', compact('roles', 'permissions', 'users'));
+    }
+
+    public function getRole(Role $role)
+    {
+        return response()->json($role);
+    }
+
+    public function storeRole(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:roles',
+            'display_name' => 'required|string|max:255',
+            'category' => 'required|string|max:100',
+            'description' => 'nullable|string|max:500',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string',
+            'is_active' => 'boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $role = Role::create([
+                'name' => $request->name,
+                'display_name' => $request->display_name,
+                'description' => $request->description,
+                'is_active' => $request->boolean('is_active', true)
+            ]);
+
+            // ربط الصلاحيات بالدور باستخدام جدول الربط
+            if ($request->has('permissions') && is_array($request->permissions)) {
+                foreach ($request->permissions as $permissionName) {
+                    $permission = \App\Models\Permission::where('name', $permissionName)->first();
+                    if ($permission) {
+                        \DB::table('role_permissions')->insert([
+                            'role_id' => $role->id,
+                            'permission_id' => $permission->id,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إنشاء الدور بنجاح',
+                'role' => $role
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating role', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء إنشاء الدور'
+            ], 500);
+        }
+    }
+
+    public function showRole(Role $role)
+    {
+        try {
+            // جلب الصلاحيات من جدول الربط
+            $permissions = $role->permissions()->pluck('name')->toArray();
+
+            return response()->json([
+                'success' => true,
+                'id' => $role->id,
+                'name' => $role->name,
+                'display_name' => $role->display_name,
+                'description' => $role->description,
+                'permissions' => $permissions,
+                'is_active' => $role->is_active,
+                'created_at' => $role->created_at,
+                'updated_at' => $role->updated_at,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error fetching role data', [
+                'role_id' => $role->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء جلب بيانات الدور'
+            ], 500);
+        }
+    }
+
+    public function updateRole(Request $request, Role $role)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'display_name' => 'required|string|max:255',
+            'category' => 'required|string|max:100',
+            'description' => 'nullable|string|max:500',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string',
+            'is_active' => 'boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $role->update([
+                'name' => $request->name,
+                'display_name' => $request->display_name,
+                'description' => $request->description,
+                'is_active' => $request->boolean('is_active', true)
+            ]);
+
+            // حذف الصلاحيات القديمة
+            \DB::table('role_permissions')->where('role_id', $role->id)->delete();
+
+            // ربط الصلاحيات الجديدة
+            if ($request->has('permissions') && is_array($request->permissions)) {
+                foreach ($request->permissions as $permissionName) {
+                    $permission = \App\Models\Permission::where('name', $permissionName)->first();
+                    if ($permission) {
+                        \DB::table('role_permissions')->insert([
+                            'role_id' => $role->id,
+                            'permission_id' => $permission->id,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث الدور بنجاح',
+                'role' => $role
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating role', [
+                'error' => $e->getMessage(),
+                'role_id' => $role->id,
+                'data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء تحديث الدور'
+            ], 500);
+        }
+    }
+
+    public function destroyRole(Role $role)
+    {
+        try {
+            // Check if role has users
+            if ($role->users()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكن حذف الدور لأنه مرتبط بمستخدمين'
+                ], 422);
+            }
+
+            $role->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حذف الدور بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting role', [
+                'error' => $e->getMessage(),
+                'role_id' => $role->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء حذف الدور'
+            ], 500);
+        }
+    }
+
+    public function storePermission(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:permissions',
+            'display_name' => 'required|string|max:255',
+            'category' => 'required|string|max:100',
+            'description' => 'nullable|string|max:500',
+            'is_active' => 'boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $permission = Permission::create([
+                'name' => $request->name,
+                'display_name' => $request->display_name,
+                'category' => $request->category,
+                'description' => $request->description,
+                'is_active' => $request->boolean('is_active', true)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إنشاء الصلاحية بنجاح',
+                'permission' => $permission
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating permission', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء إنشاء الصلاحية'
+            ], 500);
+        }
+    }
+
+    public function updateUserRoles(Request $request, User $user)
+    {
+        $validator = Validator::make($request->all(), [
+            'roles' => 'required|array',
+            'roles.*' => 'integer|exists:roles,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user->roles()->sync($request->roles);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث أدوار المستخدم بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating user roles', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+                'data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء تحديث أدوار المستخدم'
+            ], 500);
+        }
     }
 }

@@ -21,31 +21,148 @@ class UserSeeder extends Seeder
 
         // الأسماء العربية للرجال والنساء
         $maleFirstNames = [
-            'أحمد', 'محمد', 'عبدالله', 'عبدالرحمن', 'عبدالعزيز', 'سعد', 'فهد', 'خالد', 'عمر', 'علي',
-            'حسن', 'حسين', 'يوسف', 'إبراهيم', 'عثمان', 'طارق', 'ماجد', 'سلطان', 'بندر', 'تركي',
-            'فيصل', 'نواف', 'سلمان', 'عبدالمجيد', 'عبدالكريم', 'زياد', 'وليد', 'رامي', 'عادل', 'صالح',
-            'مشعل', 'نايف', 'عبدالمحسن', 'عبدالناصر', 'محمود', 'حمد', 'راشد', 'سعود', 'عبدالحكيم', 'جمال'
+            'أحمد',
+            'محمد',
+            'عبدالله',
+            'عبدالرحمن',
+            'عبدالعزيز',
+            'سعد',
+            'فهد',
+            'خالد',
+            'عمر',
+            'علي',
+            'حسن',
+            'حسين',
+            'يوسف',
+            'إبراهيم',
+            'عثمان',
+            'طارق',
+            'ماجد',
+            'سلطان',
+            'بندر',
+            'تركي',
+            'فيصل',
+            'نواف',
+            'سلمان',
+            'عبدالمجيد',
+            'عبدالكريم',
+            'زياد',
+            'وليد',
+            'رامي',
+            'عادل',
+            'صالح',
+            'مشعل',
+            'نايف',
+            'عبدالمحسن',
+            'عبدالناصر',
+            'محمود',
+            'حمد',
+            'راشد',
+            'سعود',
+            'عبدالحكيم',
+            'جمال'
         ];
 
         $femaleFirstNames = [
-            'فاطمة', 'عائشة', 'خديجة', 'زينب', 'مريم', 'سارة', 'نورا', 'هند', 'لمى', 'ريم',
-            'دانا', 'جنى', 'لينا', 'سلمى', 'أمل', 'نوف', 'غدير', 'شهد', 'رند', 'لجين',
-            'جود', 'رهف', 'تالا', 'ليان', 'روان', 'أسماء', 'منى', 'سهى', 'وفاء', 'نادية',
-            'سمية', 'حنان', 'إيمان', 'خولة', 'بشرى', 'نوال', 'سعاد', 'عبير', 'نهى', 'آمال'
+            'فاطمة',
+            'عائشة',
+            'خديجة',
+            'زينب',
+            'مريم',
+            'سارة',
+            'نورا',
+            'هند',
+            'لمى',
+            'ريم',
+            'دانا',
+            'جنى',
+            'لينا',
+            'سلمى',
+            'أمل',
+            'نوف',
+            'غدير',
+            'شهد',
+            'رند',
+            'لجين',
+            'جود',
+            'رهف',
+            'تالا',
+            'ليان',
+            'روان',
+            'أسماء',
+            'منى',
+            'سهى',
+            'وفاء',
+            'نادية',
+            'سمية',
+            'حنان',
+            'إيمان',
+            'خولة',
+            'بشرى',
+            'نوال',
+            'سعاد',
+            'عبير',
+            'نهى',
+            'آمال'
         ];
 
         $lastNames = [
-            'العتيبي', 'الحربي', 'الغامدي', 'الزهراني', 'الدوسري', 'القحطاني', 'الشمري', 'المطيري',
-            'العنزي', 'الرشيدي', 'السبيعي', 'الخالدي', 'الفهد', 'النعيمي', 'الصقر', 'الشهري',
-            'الثقفي', 'البقمي', 'الأحمدي', 'المالكي', 'العامري', 'الجهني', 'الحارثي', 'البلوي',
-            'العسيري', 'الفيفي', 'الكعبي', 'السلمي', 'الطيار', 'الشيباني', 'الناصر', 'العبدلي',
-            'الوهيبي', 'البريكي', 'الخثعمي', 'الظاهري', 'المري', 'السويدي', 'الهاجري', 'الكندي'
+            'العتيبي',
+            'الحربي',
+            'الغامدي',
+            'الزهراني',
+            'الدوسري',
+            'القحطاني',
+            'الشمري',
+            'المطيري',
+            'العنزي',
+            'الرشيدي',
+            'السبيعي',
+            'الخالدي',
+            'الفهد',
+            'النعيمي',
+            'الصقر',
+            'الشهري',
+            'الثقفي',
+            'البقمي',
+            'الأحمدي',
+            'المالكي',
+            'العامري',
+            'الجهني',
+            'الحارثي',
+            'البلوي',
+            'العسيري',
+            'الفيفي',
+            'الكعبي',
+            'السلمي',
+            'الطيار',
+            'الشيباني',
+            'الناصر',
+            'العبدلي',
+            'الوهيبي',
+            'البريكي',
+            'الخثعمي',
+            'الظاهري',
+            'المري',
+            'السويدي',
+            'الهاجري',
+            'الكندي'
         ];
 
         $roles = ['admin', 'manager', 'employee', 'finance', 'supervisor', 'engineer', 'accountant', 'hr'];
         $departments = [
-            'الإدارة العامة', 'الهندسة', 'المحاسبة', 'الموارد البشرية', 'المشاريع', 'المالية',
-            'الأمن والسلامة', 'الصيانة', 'المشتريات', 'الجودة', 'التسويق', 'تكنولوجيا المعلومات'
+            'الإدارة العامة',
+            'الهندسة',
+            'المحاسبة',
+            'الموارد البشرية',
+            'المشاريع',
+            'المالية',
+            'الأمن والسلامة',
+            'الصيانة',
+            'المشتريات',
+            'الجودة',
+            'التسويق',
+            'تكنولوجيا المعلومات'
         ];
 
         // بيانات إضافية للموظفين
@@ -70,47 +187,104 @@ class UserSeeder extends Seeder
         // Create Admin User
         $adminName = 'مدير النظام';
         $adminAvatar = $avatarGenerator->generateSimpleAvatar($adminName);
-        $adminUser = User::create([
-            'name' => $adminName,
-            'email' => 'admin@abraj.com',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-            'avatar' => $adminAvatar,
-            'email_verified_at' => now(),
-        ]);
 
-        // إنشاء سجل الموظف للمدير
-        Employee::create([
-            'user_id' => $adminUser->id,
-            'name' => $adminName,
-            'email' => 'admin@abraj.com',
-            'phone' => $faker->phoneNumber,
-            'department' => 'الإدارة العامة',
-            'position' => $positions['admin'],
-            'role' => 'admin',
-            'salary' => $faker->numberBetween(15000, 25000),
-            'hire_date' => $faker->dateTimeBetween('-5 years', '-1 year'),
-            'contract_start' => $faker->dateTimeBetween('-5 years', '-1 year'),
-            'contract_end' => $faker->dateTimeBetween('+1 year', '+3 years'),
-            'birth_date' => $faker->dateTimeBetween('-60 years', '-30 years'),
-            'nationality' => 'سعودي',
-            'marital_status' => $faker->randomElement($maritalStatuses),
-            'children_count' => $faker->numberBetween(0, 5),
-            'religion' => 'مسلم',
-            'sponsorship_status' => 'مواطن',
-            'category' => 'إداري',
-            'national_id' => '1' . $faker->numerify('#########'),
-            'national_id_expiry' => $faker->dateTimeBetween('+1 year', '+10 years'),
-            'address' => $faker->address,
-            'photo' => $adminAvatar,
-            'bank_name' => $faker->randomElement(['البنك الأهلي', 'الراجحي', 'ساب', 'البنك العربي']),
-            'bank_account_number' => $faker->numerify('##############'),
-            'iban' => 'SA' . $faker->numerify('####################'),
-            'emergency_contact_name' => $faker->name,
-            'emergency_contact_phone' => $faker->phoneNumber,
-            'emergency_contact_relationship' => $faker->randomElement(['زوج/زوجة', 'أب', 'أم', 'أخ', 'أخت']),
-            'rating' => $faker->randomFloat(2, 3.5, 5.0),
-        ]);
+        // تحقق من عدم وجود المستخدم مسبقاً
+        $adminUser = User::where('email', 'admin@abraj.com')->first();
+        if (!$adminUser) {
+            $adminUser = User::create([
+                'name' => $adminName,
+                'email' => 'admin@abraj.com',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+                'avatar' => $adminAvatar,
+                'email_verified_at' => now(),
+            ]);
+
+            // إنشاء سجل الموظف للمدير
+            Employee::create([
+                'user_id' => $adminUser->id,
+                'name' => $adminName,
+                'email' => 'admin@abraj.com',
+                'phone' => $faker->phoneNumber,
+                'department' => 'الإدارة العامة',
+                'position' => $positions['admin'],
+                'role' => 'admin',
+                'salary' => $faker->numberBetween(15000, 25000),
+                'hire_date' => $faker->dateTimeBetween('-5 years', '-1 year'),
+                'contract_start' => $faker->dateTimeBetween('-5 years', '-1 year'),
+                'contract_end' => $faker->dateTimeBetween('+1 year', '+3 years'),
+                'birth_date' => $faker->dateTimeBetween('-60 years', '-30 years'),
+                'nationality' => 'سعودي',
+                'marital_status' => $faker->randomElement($maritalStatuses),
+                'children_count' => $faker->numberBetween(0, 5),
+                'religion' => 'مسلم',
+                'sponsorship_status' => 'مواطن',
+                'category' => 'إداري',
+                'national_id' => '1' . $faker->numerify('#########'),
+                'national_id_expiry' => $faker->dateTimeBetween('+1 year', '+10 years'),
+                'address' => $faker->address,
+                'photo' => $adminAvatar,
+                'bank_name' => $faker->randomElement(['البنك الأهلي', 'الراجحي', 'ساب', 'البنك العربي']),
+                'bank_account_number' => $faker->numerify('##############'),
+                'iban' => 'SA' . $faker->numerify('####################'),
+                'emergency_contact_name' => $faker->name,
+                'emergency_contact_phone' => $faker->phoneNumber,
+                'emergency_contact_relationship' => $faker->randomElement(['زوج/زوجة', 'أب', 'أم', 'أخ', 'أخت']),
+                'rating' => $faker->randomFloat(2, 3.5, 5.0),
+            ]);
+        }
+
+        // Create Second Admin User
+        $admin2Name = 'فيصل عبدالعزيز الرشيد';
+        $admin2Avatar = $avatarGenerator->generateSimpleAvatar($admin2Name);
+
+        // تحقق من عدم وجود المستخدم مسبقاً
+        $admin2User = User::where('email', 'admin123@abraj.com')->first();
+        if (!$admin2User) {
+            $admin2User = User::create([
+                'name' => $admin2Name,
+                'email' => 'admin123@abraj.com',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+                'avatar' => $admin2Avatar,
+                'email_verified_at' => now(),
+            ]);
+
+            // إنشاء سجل الموظف للمدير الثاني
+            Employee::create([
+                'user_id' => $admin2User->id,
+                'name' => $admin2Name,
+                'email' => 'admin123@abraj.com',
+                'phone' => $faker->phoneNumber,
+                'department' => 'الإدارة العامة',
+                'position' => $positions['admin'],
+                'role' => 'admin',
+                'salary' => $faker->numberBetween(16000, 26000),
+                'hire_date' => $faker->dateTimeBetween('-4 years', '-6 months'),
+                'contract_start' => $faker->dateTimeBetween('-4 years', '-6 months'),
+                'contract_end' => $faker->dateTimeBetween('+1 year', '+3 years'),
+                'birth_date' => $faker->dateTimeBetween('-55 years', '-32 years'),
+                'nationality' => 'سعودي',
+                'marital_status' => $faker->randomElement($maritalStatuses),
+                'children_count' => $faker->numberBetween(1, 4),
+                'religion' => 'مسلم',
+                'sponsorship_status' => 'مواطن',
+                'category' => 'إداري',
+                'national_id' => '1' . $faker->numerify('#########'),
+                'national_id_expiry' => $faker->dateTimeBetween('+1 year', '+10 years'),
+                'address' => $faker->address,
+                'photo' => $admin2Avatar,
+                'bank_name' => $faker->randomElement(['البنك الأهلي', 'الراجحي', 'ساب', 'البنك العربي']),
+                'bank_account_number' => $faker->numerify('##############'),
+                'iban' => 'SA' . $faker->numerify('####################'),
+                'emergency_contact_name' => $faker->name,
+                'emergency_contact_phone' => $faker->phoneNumber,
+                'emergency_contact_relationship' => $faker->randomElement(['زوج/زوجة', 'أب', 'أم', 'أخ', 'أخت']),
+                'rating' => $faker->randomFloat(2, 3.5, 5.0),
+            ]);
+        }
+
+        // إنشاء المستخدمين العاديين
 
         // Create Regular User
         $userName = 'أحمد محمد العتيبي';
@@ -342,7 +516,7 @@ class UserSeeder extends Seeder
                 'hr' => [5500, 8500],
                 'employee' => [4000, 7000],
             ];
-            
+
             $salaryRange = $salaryRanges[$role] ?? [4000, 6000];
             $salary = $faker->numberBetween($salaryRange[0], $salaryRange[1]);
 
@@ -387,16 +561,17 @@ class UserSeeder extends Seeder
      */
     private function getWeightedRandomRole($weights)
     {
+        $faker = Faker::create();
         $totalWeight = array_sum($weights);
-        $random = rand(1, $totalWeight);
-        
+        $random = $faker->numberBetween(1, $totalWeight);
+
         foreach ($weights as $role => $weight) {
             $random -= $weight;
             if ($random <= 0) {
                 return $role;
             }
         }
-        
+
         return 'employee'; // افتراضي
     }
 }

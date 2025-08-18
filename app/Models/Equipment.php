@@ -121,6 +121,11 @@ class Equipment extends Model
         return $this->belongsTo(Location::class, 'location_id');
     }
 
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
+    }
+
     public function equipmentType()
     {
         return $this->belongsTo(EquipmentType::class, 'type_id');
@@ -158,5 +163,35 @@ class Equipment extends Model
     public function internalTruck()
     {
         return $this->belongsTo(InternalTruck::class, 'truck_id');
+    }
+
+    // علاقة مع استهلاك المحروقات
+    public function fuelConsumptions()
+    {
+        return $this->hasMany(EquipmentFuelConsumption::class);
+    }
+
+    // علاقة مع الصيانة
+    public function maintenances()
+    {
+        return $this->hasMany(EquipmentMaintenance::class);
+    }
+
+    // علاقة مع سيارة المحروقات (إذا كانت المعدة من نوع تانكر)
+    public function fuelTruck()
+    {
+        return $this->hasOne(FuelTruck::class);
+    }
+
+    // علاقة مع توزيعات المحروقات (كمعدة مستقبلة)
+    public function receivedFuelDistributions()
+    {
+        return $this->hasMany(FuelDistribution::class, 'target_equipment_id');
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->whereIn('status', ['available', 'in_use', 'maintenance']);
     }
 }

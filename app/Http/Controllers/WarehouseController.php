@@ -10,6 +10,7 @@ use App\Models\WarehouseInventory;
 use App\Models\SparePartTransaction;
 use App\Models\Equipment;
 use App\Models\Employee;
+use App\Models\DamagedPartsReceipt;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -101,7 +102,20 @@ class WarehouseController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials'));
+        // الحصول على استلامات قطع الغيار التالفة للمستودع
+        $damagedPartsReceipts = DamagedPartsReceipt::with([
+                'project',
+                'equipment', 
+                'sparePart',
+                'receivedByEmployee',
+                'sentByEmployee'
+            ])
+            ->where('warehouse_id', $warehouse->id)
+            ->orderBy('receipt_date', 'desc')
+            ->orderBy('receipt_time', 'desc')
+            ->paginate(10);
+
+        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts'));
     }
 
     /**

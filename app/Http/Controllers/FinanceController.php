@@ -4,107 +4,512 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Finance;
+use App\Models\Custody;
+use App\Models\Employee;
+use App\Models\ExpenseVoucher;
+use App\Models\RevenueVoucher;
 use Carbon\Carbon;
+
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class FinanceController extends Controller
 {
     /**
+     * Show detailed financial report for an employee
+     */
+    public function employeeReport(Employee $employee)
+    {
+        $custodies = $employee->custodies()
+            ->with(['type', 'approver'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $expenseVouchers = $employee->expenseVouchers()
+            ->with(['approver'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalCustody = $custodies->sum('amount');
+        $totalExpenses = $expenseVouchers->sum('amount');
+        $balance = $totalCustody - $totalExpenses;
+
+        return view('finance.employee-report', compact(
+            'employee',
+            'custodies',
+            'expenseVouchers',
+            'totalCustody',
+            'totalExpenses',
+            'balance'
+        ));
+    }
+    /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $finances = Finance::latest()->paginate(10);
+        // Get all transactions
+        $revenueVouchers = RevenueVoucher::with(['revenueEntity'])
+            ->get()
+            ->map(function ($voucher) {
+                return [
+                    'id' => $voucher->id,
+                    'type' => 'revenue_voucher',
+                    'type_label' => 'سند قبض',
+                    'type_color' => 'green',
+                    'description' => $voucher->description,
+                    'amount' => $voucher->amount,
+                    'formatted_amount' => $voucher->formatted_amount,
+                    'transaction_date' => $voucher->voucher_date,
+                    'payment_method' => $voucher->payment_method_text,
+                    'status' => $voucher->status,
+                    'status_label' => $voucher->status_text,
+                    'status_color' => $voucher->status_color,
+                    'reference_number' => $voucher->voucher_number,
+                    'created_at' => $voucher->created_at
+                ];
+            });
 
-        // Calculate summary statistics
-        $totalIncome = Finance::where('type', 'income')->sum('amount');
-        $totalExpense = Finance::where('type', 'expense')->sum('amount');
+        $expenseVouchers = ExpenseVoucher::with(['expenseCategory', 'employee'])
+            ->get()
+            ->map(function ($voucher) {
+                return [
+                    'id' => $voucher->id,
+                    'type' => 'expense_voucher',
+                    'type_label' => 'سند صرف',
+                    'type_color' => 'red',
+                    'description' => $voucher->description,
+                    'amount' => $voucher->amount,
+                    'formatted_amount' => $voucher->formatted_amount,
+                    'transaction_date' => $voucher->voucher_date,
+                    'payment_method' => $voucher->payment_method_text,
+                    'status' => $voucher->status,
+                    'status_label' => $voucher->status_text,
+                    'status_color' => $voucher->status_color,
+                    'reference_number' => $voucher->voucher_number,
+                    'created_at' => $voucher->created_at
+                ];
+            });
+
+        $custodies = Custody::with('employee')
+            ->get()
+            ->map(function ($custody) {
+                return [
+                    'id' => $custody->id,
+                    'type' => 'custody',
+                    'type_label' => 'عهدة',
+                    'type_color' => 'blue',
+                    'description' => 'عهدة للموظف: ' . ($custody->employee->name ?? 'غير محدد'),
+                    'amount' => $custody->amount,
+                    'formatted_amount' => number_format($custody->amount, 2) . ' ر.س',
+                    'transaction_date' => $custody->disbursement_date,
+                    'payment_method' => $custody->receipt_method_text,
+                    'status' => $custody->status ?? 'disbursed',
+                    'status_label' => $custody->status_text ?? 'تم الصرف',
+                    'status_color' => 'blue',
+                    'reference_number' => 'C-' . str_pad($custody->id, 6, '0', STR_PAD_LEFT),
+                    'created_at' => $custody->created_at
+                ];
+            });
+
+        $transactions = $revenueVouchers
+            ->concat($expenseVouchers)
+            ->concat($custodies)
+            ->sortByDesc('created_at')
+            ->values();
+
+        $perPage = 15;
+        $currentPage = $request->get('page', 1);
+        $currentPageItems = $transactions->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $finances = new LengthAwarePaginator($currentPageItems, $transactions->count(), $perPage, $currentPage, [
+            'path' => $request->url(),
+            'query' => $request->query(),
+        ]);
+
+        // Calculate statistics
+        $totalIncome = RevenueVoucher::where('status', '!=', 'cancelled')->sum('amount');
+        $totalExpense = ExpenseVoucher::where('status', '!=', 'cancelled')->sum('amount') +
+            Custody::where('status', '!=', 'cancelled')->sum('amount');
         $netProfit = $totalIncome - $totalExpense;
-        $monthlyIncome = Finance::where('type', 'income')
-            ->whereMonth('transaction_date', Carbon::now()->month)
+        $monthlyIncome = RevenueVoucher::where('status', '!=', 'cancelled')
+            ->whereMonth('voucher_date', Carbon::now()->month)
             ->sum('amount');
 
-        return view('finance.index', compact('finances', 'totalIncome', 'totalExpense', 'netProfit', 'monthlyIncome'));
+        // Get all active employees for custody form
+        $employees = Employee::active()->orderBy('name')->get();
+
+        // Get employee balances for active custodies
+        $employeeBalances = Employee::whereHas('custodies', function ($query) {
+            $query->where('status', 'active');
+        })
+            ->with(['custodies' => function ($query) {
+                $query->where('status', 'active');
+            }, 'expenseVouchers' => function ($query) {
+                $query->where('status', 'approved');
+            }])
+            ->get()
+            ->map(function ($employee) {
+                $totalCustodies = $employee->custodies->sum('amount');
+                $totalExpenses = $employee->expenseVouchers->sum('amount');
+
+                return [
+                    'employee' => $employee,
+                    'total_custodies' => $totalCustodies,
+                    'total_expenses' => $totalExpenses,
+                    'current_balance' => $totalCustodies - $totalExpenses,
+                    'last_custody' => $employee->custodies->sortByDesc('created_at')->first(),
+                    'custodies_count' => $employee->custodies->count()
+                ];
+            })
+            ->sortByDesc('current_balance')
+            ->values();
+
+        return view('finance.index', compact('finances', 'totalIncome', 'totalExpense', 'netProfit', 'monthlyIncome', 'employees', 'employeeBalances'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Display all financial transactions
      */
-    public function create()
+    public function allTransactions(Request $request)
     {
-        return view('finance.create');
+        $fromDate = $request->get('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate = $request->get('to_date', now()->format('Y-m-d'));
+        $type = $request->get('type', 'all');
+
+        // Get revenue vouchers
+        $revenueVouchers = RevenueVoucher::with(['revenueEntity', 'project', 'location'])
+            ->when($fromDate, function ($query) use ($fromDate) {
+                return $query->whereDate('voucher_date', '>=', $fromDate);
+            })
+            ->when($toDate, function ($query) use ($toDate) {
+                return $query->whereDate('voucher_date', '<=', $toDate);
+            })
+            ->when($type != 'all', function ($query) use ($type) {
+                return $type == 'revenue' ? $query : $query->whereRaw('1 = 0');
+            })
+            ->get()
+            ->map(function ($voucher) {
+                return [
+                    'id' => $voucher->id,
+                    'type' => 'revenue_voucher',
+                    'type_text' => 'سند قبض',
+                    'voucher_number' => $voucher->voucher_number,
+                    'date' => $voucher->voucher_date,
+                    'amount' => $voucher->amount,
+                    'description' => $voucher->description,
+                    'payment_method' => $voucher->payment_method_text,
+                    'status' => $voucher->status,
+                    'status_text' => $voucher->status_text,
+                    'status_color' => $voucher->status_color,
+                    'entity' => $voucher->revenueEntity->name ?? 'غير محدد',
+                    'project' => $voucher->project->name ?? 'غير محدد',
+                    'notes' => $voucher->notes,
+                    'is_income' => true,
+                    'created_at' => $voucher->created_at
+                ];
+            });
+
+        // Get expense vouchers
+        $expenseVouchers = ExpenseVoucher::with(['expenseCategory', 'employee', 'expenseEntity', 'project', 'location'])
+            ->when($fromDate, function ($query) use ($fromDate) {
+                return $query->whereDate('voucher_date', '>=', $fromDate);
+            })
+            ->when($toDate, function ($query) use ($toDate) {
+                return $query->whereDate('voucher_date', '<=', $toDate);
+            })
+            ->when($type != 'all', function ($query) use ($type) {
+                return $type == 'expense' ? $query : $query->whereRaw('1 = 0');
+            })
+            ->get()
+            ->map(function ($voucher) {
+                return [
+                    'id' => $voucher->id,
+                    'type' => 'expense_voucher',
+                    'type_text' => 'سند صرف',
+                    'voucher_number' => $voucher->voucher_number,
+                    'date' => $voucher->voucher_date,
+                    'amount' => $voucher->amount,
+                    'description' => $voucher->description,
+                    'payment_method' => $voucher->payment_method_text,
+                    'status' => $voucher->status,
+                    'status_text' => $voucher->status_text,
+                    'status_color' => $voucher->status_color,
+                    'entity' => $voucher->expenseEntity->name ?? ($voucher->employee->name ?? 'غير محدد'),
+                    'project' => $voucher->project->name ?? 'غير محدد',
+                    'notes' => $voucher->notes,
+                    'is_income' => false,
+                    'created_at' => $voucher->created_at
+                ];
+            });
+
+        // Get custodies
+        $custodies = Custody::with('employee')
+            ->when($fromDate, function ($query) use ($fromDate) {
+                return $query->whereDate('disbursement_date', '>=', $fromDate);
+            })
+            ->when($toDate, function ($query) use ($toDate) {
+                return $query->whereDate('disbursement_date', '<=', $toDate);
+            })
+            ->when($type != 'all', function ($query) use ($type) {
+                return $type == 'custody' ? $query : $query->whereRaw('1 = 0');
+            })
+            ->get()
+            ->map(function ($custody) {
+                return [
+                    'id' => $custody->id,
+                    'type' => 'custody',
+                    'type_text' => 'عهدة',
+                    'voucher_number' => 'C-' . str_pad($custody->id, 6, '0', STR_PAD_LEFT),
+                    'date' => $custody->disbursement_date,
+                    'amount' => $custody->amount,
+                    'description' => 'عهدة للموظف: ' . $custody->employee->name,
+                    'payment_method' => $custody->receipt_method_text,
+                    'status' => $custody->status ?? 'disbursed',
+                    'status_text' => $custody->status_text ?? 'تم الصرف',
+                    'status_color' => 'blue',
+                    'entity' => $custody->employee->name ?? 'غير محدد',
+                    'project' => 'غير محدد',
+                    'notes' => $custody->notes,
+                    'is_income' => false,
+                    'created_at' => $custody->created_at
+                ];
+            });
+
+        // Merge and sort all transactions
+        $transactions = $revenueVouchers
+            ->concat($expenseVouchers)
+            ->concat($custodies)
+            ->sortByDesc(function ($transaction) {
+                return $transaction['date'] . ' ' . $transaction['created_at'];
+            })
+            ->values();
+
+        // Calculate statistics - only include approved transactions
+        $totalRevenue = $transactions->where('is_income', true)
+            ->where('status', 'approved')
+            ->sum('amount');
+        $totalExpense = $transactions->where('is_income', false)
+            ->where('status', 'approved')
+            ->sum('amount');
+        $netBalance = $totalRevenue - $totalExpense;
+
+        // Calculate carried balance
+        $carriedBalance = $this->calculateCarriedBalance($fromDate);
+
+        return view('finance.all-transactions', compact(
+            'transactions',
+            'totalRevenue',
+            'totalExpense',
+            'netBalance',
+            'carriedBalance',
+            'fromDate',
+            'toDate',
+            'type'
+        ));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Calculate carried balance from start of year to a specific date
      */
-    public function store(Request $request)
+    private function calculateCarriedBalance($fromDate)
     {
-        $validated = $request->validate([
-            'type' => 'required|in:income,expense',
-            'category' => 'required|string|max:255',
-            'description' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'transaction_date' => 'required|date',
-            'payment_method' => 'required|string|max:255',
-            'reference_number' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-        ]);
+        $startOfYear = Carbon::parse($fromDate)->startOfYear();
+        $endDate = Carbon::parse($fromDate)->subDay();
 
-        $validated['status'] = 'completed';
+        $revenueSum = RevenueVoucher::whereDate('voucher_date', '>=', $startOfYear)
+            ->whereDate('voucher_date', '<=', $endDate)
+            ->where('status', 'approved')
+            ->sum('amount');
 
-        Finance::create($validated);
+        $expenseSum = ExpenseVoucher::whereDate('voucher_date', '>=', $startOfYear)
+            ->whereDate('voucher_date', '<=', $endDate)
+            ->where('status', 'approved')
+            ->sum('amount');
 
-        return redirect()->route('finance.index')
-            ->with('success', 'تم إضافة المعاملة المالية بنجاح');
+        $custodySum = Custody::whereDate('disbursement_date', '>=', $startOfYear)
+            ->whereDate('disbursement_date', '<=', $endDate)
+            ->where('status', 'approved')
+            ->sum('amount');
+
+        return $revenueSum - $expenseSum - $custodySum;
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified finance record.
      */
-    public function show(Finance $finance)
+    public function show($id)
     {
-        return view('finance.show', compact('finance'));
+        // Determine the type and fetch the correct model
+        $transaction = null;
+
+        // Try to find in RevenueVoucher
+        $transaction = RevenueVoucher::with(['revenueEntity', 'project'])->find($id);
+        if ($transaction) {
+            $transaction = (object) [
+                'id' => $transaction->id,
+                'type' => 'revenue',
+                'type_text' => 'سند قبض',
+                'reference_number' => $transaction->voucher_number,
+                'amount' => $transaction->amount,
+                'description' => $transaction->description,
+                'payment_method' => __('finance.payment_methods.' . $transaction->payment_method),
+                'date' => $transaction->voucher_date,
+                'status' => $transaction->status,
+                'status_text' => $transaction->status_text,
+                'status_color' => $transaction->status_color,
+                'project' => $transaction->project?->name,
+                'entity' => $transaction->revenueEntity?->name,
+                'notes' => $transaction->notes,
+                'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $transaction->updated_at->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        // If not found, try ExpenseVoucher
+        if (!$transaction) {
+            $transaction = ExpenseVoucher::with(['expenseEntity', 'employee', 'project'])->find($id);
+            if ($transaction) {
+                $transaction = (object) [
+                    'id' => $transaction->id,
+                    'type' => 'expense',
+                    'type_text' => 'سند صرف',
+                    'reference_number' => $transaction->voucher_number,
+                    'amount' => $transaction->amount,
+                    'description' => $transaction->description,
+                    'payment_method' => __('finance.payment_methods.' . $transaction->payment_method),
+                    'date' => $transaction->voucher_date,
+                    'status' => $transaction->status,
+                    'status_text' => $transaction->status_text,
+                    'status_color' => $transaction->status_color,
+                    'project' => $transaction->project?->name,
+                    'entity' => $transaction->expenseEntity?->name ?? $transaction->employee?->name,
+                    'notes' => $transaction->notes,
+                    'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $transaction->updated_at->format('Y-m-d H:i:s'),
+                ];
+            }
+        }
+
+        // If still not found, try Custody
+        if (!$transaction) {
+            $transaction = Custody::with(['employee'])->find($id);
+            if ($transaction) {
+                $transaction = (object) [
+                    'id' => $transaction->id,
+                    'type' => 'custody',
+                    'type_text' => 'عهدة',
+                    'reference_number' => 'C-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT),
+                    'amount' => $transaction->amount,
+                    'description' => 'عهدة للموظف: ' . $transaction->employee->name,
+                    'payment_method' => __('finance.payment_methods.' . ($transaction->receipt_method ?? 'other')),
+                    'date' => $transaction->disbursement_date,
+                    'status' => $transaction->status ?? 'disbursed',
+                    'status_text' => $transaction->status_text ?? 'تم الصرف',
+                    'status_color' => 'blue',
+                    'project' => null,
+                    'entity' => $transaction->employee?->name,
+                    'notes' => $transaction->notes,
+                    'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $transaction->updated_at->format('Y-m-d H:i:s'),
+                ];
+            }
+        }
+
+        if (!$transaction) {
+            abort(404, 'المعاملة المالية غير موجودة');
+        }
+
+        return view('finance.show', compact('transaction'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Export daily report
      */
-    public function edit(Finance $finance)
+    public function dailyReport(Request $request)
     {
-        return view('finance.edit', compact('finance'));
-    }
+        $date = $request->get('date', now()->format('Y-m-d'));
+        $print = $request->get('print', false);
+        $today = Carbon::parse($date);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Finance $finance)
-    {
-        $validated = $request->validate([
-            'type' => 'required|in:income,expense',
-            'category' => 'required|string|max:255',
-            'description' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'transaction_date' => 'required|date',
-            'payment_method' => 'required|string|max:255',
-            'reference_number' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'status' => 'required|in:pending,completed,cancelled'
-        ]);
+        if (!$today->isValid()) {
+            $today = now();
+            $date = $today->format('Y-m-d');
+        }
 
-        $finance->update($validated);
+        // Initialize collections
+        $transactions = collect();
+        $dayRevenue = 0;
+        $dayExpense = 0;
 
-        return redirect()->route('finance.index')
-            ->with('success', 'تم تحديث المعاملة المالية بنجاح');
-    }
+        // Revenue vouchers for approved transactions only
+        $revenueVouchers = RevenueVoucher::with(['revenueEntity'])
+            ->whereDate('voucher_date', $date)
+            ->where('status', 'approved')
+            ->get()
+            ->map(function ($voucher) {
+                return [
+                    'type' => 'سند قبض',
+                    'number' => $voucher->voucher_number ?? '-',
+                    'description' => $voucher->description,
+                    'amount' => $voucher->amount ?? 0,
+                    'is_income' => true,
+                    'status' => $voucher->status_text ?? 'معتمد'
+                ];
+            });
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Finance $finance)
-    {
-        $finance->delete();
+        // Expense vouchers for approved transactions only
+        $expenseVouchers = ExpenseVoucher::with(['expenseCategory', 'employee'])
+            ->whereDate('voucher_date', $date)
+            ->where('status', 'approved')
+            ->get()
+            ->map(function ($voucher) {
+                return [
+                    'type' => 'سند صرف',
+                    'number' => $voucher->voucher_number ?? '-',
+                    'description' => $voucher->description,
+                    'amount' => $voucher->amount ?? 0,
+                    'is_income' => false,
+                    'status' => $voucher->status_text ?? 'معتمد'
+                ];
+            });
 
-        return redirect()->route('finance.index')
-            ->with('success', 'تم حذف المعاملة المالية بنجاح');
+        // Custodies for approved transactions only
+        $custodies = Custody::with('employee')
+            ->whereDate('disbursement_date', $date)
+            ->where('status', 'approved')
+            ->get()
+            ->map(function ($custody) {
+                return [
+                    'type' => 'عهدة',
+                    'number' => 'C-' . str_pad($custody->id, 6, '0', STR_PAD_LEFT),
+                    'description' => $custody->employee
+                        ? 'عهدة للموظف: ' . $custody->employee->name
+                        : 'عهدة مالية',
+                    'amount' => $custody->amount ?? 0,
+                    'is_income' => false,
+                    'status' => $custody->status_text ?? 'معتمد'
+                ];
+            });
+
+        // Combine all transactions and calculate totals
+        $transactions = $revenueVouchers->concat($expenseVouchers)->concat($custodies);
+        $dayRevenue = $transactions->where('is_income', true)->sum('amount') ?? 0;
+        $dayExpense = $transactions->where('is_income', false)->sum('amount') ?? 0;
+        $dayNet = $dayRevenue - $dayExpense;
+
+        // Get carried balance
+        $carriedBalance = $this->calculateCarriedBalance($date) ?? 0;
+        $finalBalance = $carriedBalance + $dayNet;
+
+        $data = compact(
+            'transactions',
+            'dayRevenue',
+            'dayExpense',
+            'dayNet',
+            'carriedBalance',
+            'finalBalance',
+            'date'
+        );
+
+        return view('finance.daily-report', $data);
     }
 }

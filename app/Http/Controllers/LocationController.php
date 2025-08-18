@@ -33,10 +33,18 @@ class LocationController extends Controller
      */
     public function create()
     {
+        // Get all active employees for location supervisor selection
         $employees = Employee::where('status', 'active')->get();
+
+        // Get site managers separately for JavaScript filtering
+        $siteManagerVariants = ['site_manager', 'مشرف موقع', 'supervisor'];
+        $siteManagers = Employee::where('status', 'active')
+            ->whereIn('role', $siteManagerVariants)
+            ->get();
+
         $locationTypes = LocationType::where('is_active', true)->get();
         $projects = Project::where('status', 'active')->get();
-        return view('locations.create', compact('employees', 'locationTypes', 'projects'));
+        return view('locations.create', compact('employees', 'siteManagers', 'locationTypes', 'projects'));
     }
 
     /**
@@ -113,7 +121,14 @@ class LocationController extends Controller
     public function show(Location $location)
     {
         $location->load(['equipment', 'locationType']);
-        return view('locations.show', compact('location'));
+
+        // Get employees assigned to this location
+        $employees = Employee::where('location_id', $location->id)
+            ->where('status', 'active')
+            ->with(['user'])
+            ->get();
+
+        return view('locations.show', compact('location', 'employees'));
     }
 
     /**
@@ -121,9 +136,17 @@ class LocationController extends Controller
      */
     public function edit(Location $location)
     {
+        // Get all active employees for location supervisor selection
         $employees = Employee::where('status', 'active')->get();
+
+        // Get site managers separately for JavaScript filtering
+        $siteManagerVariants = ['site_manager', 'مشرف موقع', 'supervisor'];
+        $siteManagers = Employee::where('status', 'active')
+            ->whereIn('role', $siteManagerVariants)
+            ->get();
+
         $locationTypes = LocationType::where('is_active', true)->get();
-        return view('locations.edit', compact('location', 'employees', 'locationTypes'));
+        return view('locations.edit', compact('location', 'employees', 'siteManagers', 'locationTypes'));
     }
 
     /**

@@ -12,17 +12,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UserSeeder::class,
+            // إنشاء الأدوار والصلاحيات الأساسية
+            RolesAndPermissionsSeeder::class,
+
+            // إنشاء أنواع المواقع فقط
             LocationTypeSeeder::class,
-            LocationSeeder::class,
-            EquipmentTypeSeeder::class,
-            SupplierSeeder::class,
-            EmployeeSeeder::class,
-            EquipmentSeeder::class,
-            DocumentSeeder::class,
-            TransportSeeder::class,
-            FinanceSeeder::class,
-            ProjectSeeder::class,
+
+            // إنشاء المستخدم الوحيد محمد الشهراني
+            MinimalUserSeeder::class,
         ]);
     }
 }

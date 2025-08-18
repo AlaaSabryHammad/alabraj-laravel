@@ -17,6 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'check.password.changed' => \App\Http\Middleware\CheckPasswordChanged::class,
             'manager.only' => \App\Http\Middleware\CheckManagerRole::class,
+            'log.requests' => \App\Http\Middleware\LogRequests::class,
+            'check.employee.status' => \App\Http\Middleware\CheckEmployeeStatus::class,
+        ]);
+
+        // إضافة الـ middleware لجميع الـ web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\LogRequests::class,
+            \App\Http\Middleware\CheckEmployeeStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

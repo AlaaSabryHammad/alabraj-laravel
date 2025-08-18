@@ -19,8 +19,31 @@ class EmployeeController extends Controller
     {
         try {
             $perPage = $request->get('per_page', 15);
-            $employees = Employee::with(['department', 'projects'])
-                ->paginate($perPage);
+            $search = $request->get('search');
+            $sort = $request->get('sort', 'name');
+            $direction = $request->get('direction', 'asc');
+
+            $query = Employee::query();
+
+            // Handle search functionality
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('employee_number', 'LIKE', "%{$search}%")
+                        ->orWhere('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%")
+                        ->orWhere('position', 'LIKE', "%{$search}%")
+                        ->orWhere('department', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // Handle sorting
+            $allowedSorts = ['name', 'employee_number', 'email', 'position', 'hire_date', 'created_at'];
+            if (in_array($sort, $allowedSorts)) {
+                $query->orderBy($sort, $direction);
+            }
+
+            $employees = $query->paginate($perPage);
 
             return response()->json([
                 'status' => 'success',

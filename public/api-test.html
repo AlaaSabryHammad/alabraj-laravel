@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار API للمحروقات</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; }
+        .test-section { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .loading { color: #007bff; }
+        pre { background: #e9ecef; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>اختبار API للمحروقات</h1>
+    
+    <div class="test-section">
+        <h3>اختبار الـ API Endpoint</h3>
+        <button onclick="testAPI()">اختبار API</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>نتائج الاختبار</h3>
+        <div id="test-output"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            const outputDiv = document.getElementById('test-output');
+            
+            resultDiv.innerHTML = '<span class="loading">جاري الاختبار...</span>';
+            
+            try {
+                const response = await fetch('/api/fuel-truck/1/distributions', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                outputDiv.innerHTML += `<p><strong>HTTP Status:</strong> ${response.status}</p>`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = '<span class="success">نجح الاتصال بـ API!</span>';
+                    outputDiv.innerHTML += `<p><strong>عدد التوزيعات:</strong> ${data.length}</p>`;
+                    
+                    if (data.length > 0) {
+                        outputDiv.innerHTML += '<h4>أول توزيعة:</h4>';
+                        outputDiv.innerHTML += `<pre>${JSON.stringify(data[0], null, 2)}</pre>`;
+                    }
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = '<span class="error">فشل الاتصال بـ API</span>';
+                    outputDiv.innerHTML += `<p><strong>خطأ:</strong></p><pre>${errorText}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<span class="error">خطأ في الشبكة</span>';
+                outputDiv.innerHTML += `<p><strong>خطأ:</strong> ${error.message}</p>`;
+            }
+        }
+        
+        // اختبار تلقائي عند تحميل الصفحة
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

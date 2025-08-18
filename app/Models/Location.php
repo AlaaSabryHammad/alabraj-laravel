@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int|null $manager_id
+ */
 class Location extends Model
 {
     use HasFactory;
@@ -27,7 +30,8 @@ class Location extends Model
     ];
 
     protected $casts = [
-        'area_size' => 'decimal:2'
+        'area_size' => 'decimal:2',
+        'manager_id' => 'integer'
     ];
 
     // Equipment relationship

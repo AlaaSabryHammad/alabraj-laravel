@@ -138,13 +138,13 @@ class EquipmentController extends Controller
         Log::info('Equipment created:', ['id' => $equipment->id, 'location_id' => $equipment->location_id, 'location' => $equipment->location]);
 
         // Create initial movement history record
-        if ($equipment->location_id || $equipment->location) {
+        if ($equipment->location_id) {
             EquipmentMovementHistory::create([
                 'equipment_id' => $equipment->id,
                 'from_location_id' => null,
                 'from_location_text' => null,
                 'to_location_id' => $equipment->location_id,
-                'to_location_text' => $equipment->location,
+                'to_location_text' => $equipment->location ? $equipment->location->name : null,
                 'moved_by' => Auth::id(),
                 'moved_at' => now(),
                 'movement_reason' => 'تسجيل أولي للمعدة',
@@ -217,7 +217,17 @@ class EquipmentController extends Controller
      */
     public function show(Equipment $equipment)
     {
-        $equipment->load(['files', 'driver', 'locationDetail', 'driverHistory.driver', 'movementHistory.fromLocation', 'movementHistory.toLocation']);
+        $equipment->load([
+            'files',
+            'driver',
+            'locationDetail',
+            'driverHistory.driver',
+            'movementHistory.fromLocation',
+            'movementHistory.toLocation',
+            'fuelConsumptions.user',
+            'maintenances.user'
+        ]);
+
         $employees = Employee::select('id', 'name', 'position')->orderBy('name')->get();
         $locations = Location::select('id', 'name')->orderBy('name')->get();
 
@@ -420,11 +430,22 @@ class EquipmentController extends Controller
     /**
      * Get available equipment for location assignment
      */
-    public function getAvailableForLocation()
+    public function getAvailableForLocation(Request $request)
     {
-        $equipment = Equipment::with(['locationDetail'])
-            ->select('id', 'name', 'type', 'serial_number', 'status', 'location', 'location_id')
-            ->get()
+        $currentLocationId = $request->get('current_location_id');
+
+        $query = Equipment::with(['locationDetail'])
+            ->select('id', 'name', 'type', 'serial_number', 'status', 'location', 'location_id');
+
+        // Exclude equipment that are already in the current location
+        if ($currentLocationId) {
+            $query->where(function ($q) use ($currentLocationId) {
+                $q->where('location_id', '!=', $currentLocationId)
+                    ->orWhereNull('location_id');
+            });
+        }
+
+        $equipment = $query->get()
             ->map(function ($item) {
                 return [
                     'id' => $item->id,
@@ -432,7 +453,8 @@ class EquipmentController extends Controller
                     'type' => $item->type,
                     'serial_number' => $item->serial_number,
                     'status' => $item->status,
-                    'location' => $item->locationDetail ? $item->locationDetail->name : $item->location
+                    'location' => $item->locationDetail ? $item->locationDetail->name : $item->location,
+                    'location_id' => $item->location_id
                 ];
             });
 
@@ -563,5 +585,16 @@ class EquipmentController extends Controller
             'status' => $equipment->status,
             'current_location' => $equipment->locationDetail ? $equipment->locationDetail->name : 'غير محدد'
         ]);
+    }
+
+    public function updateLocation(Request $request, Equipment $equipment)
+    {
+        $validated = $request->validate([
+            'location_id' => 'nullable|exists:locations,id',
+        ]);
+
+        $equipment->update($validated);
+
+        return response()->json(['success' => true, 'message' => 'تم تحديث موقع المعدة بنجاح']);
     }
 }

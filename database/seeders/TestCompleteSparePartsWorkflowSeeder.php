@@ -20,11 +20,11 @@ class TestCompleteSparePartsWorkflowSeeder extends Seeder
     public function run(): void
     {
         echo "🚀 بداية اختبار سيناريو كامل لقطع الغيار...\n";
-        
+
         // البحث عن المستودع والمعدة
         $warehouse = Location::find(40);
         $equipment = Equipment::where('status', 'active')->first();
-        
+
         // إنشاء معدة تجريبية إذا لم تكن موجودة
         if (!$equipment) {
             $equipment = Equipment::create([
@@ -40,17 +40,17 @@ class TestCompleteSparePartsWorkflowSeeder extends Seeder
             ]);
             echo "🏗️ تم إنشاء معدة تجريبية: {$equipment->name}\n";
         }
-        
+
         if (!$warehouse) {
             echo "❌ المستودع 40 غير موجود!\n";
             return;
         }
-        
+
         echo "📦 المستودع: {$warehouse->name}\n";
         echo "🚜 المعدة: {$equipment->name}\n";
 
         DB::beginTransaction();
-        
+
         try {
             // 1. إنشاء قطعة غيار جديدة (سيناريو شراء من فاتورة)
             $newSparePart = SparePart::firstOrCreate([
@@ -70,7 +70,7 @@ class TestCompleteSparePartsWorkflowSeeder extends Seeder
             for ($i = 0; $i < 3; $i++) {
                 $serialNumber = $newSparePart->generateSerialNumber();
                 $barcode = $newSparePart->generateBarcode();
-                
+
                 SparePartSerial::create([
                     'spare_part_id' => $newSparePart->id,
                     'serial_number' => $serialNumber,
@@ -78,7 +78,7 @@ class TestCompleteSparePartsWorkflowSeeder extends Seeder
                     'location_id' => $warehouse->id,
                     'status' => 'available',
                 ]);
-                
+
                 echo "   📋 رقم تسلسلي: {$serialNumber}\n";
             }
 
@@ -124,9 +124,9 @@ class TestCompleteSparePartsWorkflowSeeder extends Seeder
             if ($serialToExport) {
                 $serialToExport->update([
                     'status' => 'assigned',
-                    'assigned_to_equipment' => $equipment->id,
-                    'assigned_to_employee' => 3,
-                    'assignment_date' => now(),
+                    'assigned_to_equipment_id' => $equipment->id,
+                    'assigned_to_employee_id' => 3,
+                    'assigned_date' => now()->toDateString(),
                 ]);
 
                 // تحديث المخزون
@@ -172,17 +172,17 @@ class TestCompleteSparePartsWorkflowSeeder extends Seeder
             // إنتاج رقم تسلسلي للقطعة التالفة
             $damagedSerial = $damagedPart->generateSerialNumber();
             $damagedBarcode = $damagedPart->generateBarcode();
-            
+
             SparePartSerial::create([
                 'spare_part_id' => $damagedPart->id,
                 'serial_number' => $damagedSerial,
                 'barcode' => $damagedBarcode,
                 'location_id' => $warehouse->id,
                 'status' => 'damaged',
-                'condition_notes' => 'قطعة تالفة تم استبدالها من المعدة - السبب: تآكل',
-                'returned_by' => 3,
-                'return_date' => now(),
-                'source_equipment_id' => $equipment->id,
+                'notes' => 'قطعة تالفة تم استبدالها من المعدة - السبب: تآكل',
+                'assigned_to_employee_id' => 3,
+                'returned_date' => now()->toDateString(),
+                'assigned_to_equipment_id' => $equipment->id,
             ]);
 
             // إنشاء مخزون للقطعة التالفة
@@ -222,21 +222,20 @@ class TestCompleteSparePartsWorkflowSeeder extends Seeder
 
             DB::commit();
             echo "\n🎉 تم إنجاز السيناريو الكامل بنجاح!\n";
-            
+
             // تقرير نهائي
             $totalActiveItems = WarehouseInventory::where('location_id', $warehouse->id)->sum('current_stock');
             $totalActiveTypes = WarehouseInventory::where('location_id', $warehouse->id)->count();
             $totalDamagedItems = WarehouseInventory::where('location_id', $warehouse->id)
-                ->whereHas('sparePart', function($query) {
+                ->whereHas('sparePart', function ($query) {
                     $query->where('source', 'damaged_replacement');
                 })
                 ->sum('current_stock');
-            
+
             echo "\n📈 التقرير النهائي:\n";
             echo "   📦 إجمالي القطع في المخزون: {$totalActiveItems}\n";
             echo "   🔧 إجمالي أنواع القطع: {$totalActiveTypes}\n";
             echo "   💔 القطع التالفة: {$totalDamagedItems}\n";
-            
         } catch (\Exception $e) {
             DB::rollBack();
             echo "❌ خطأ: {$e->getMessage()}\n";

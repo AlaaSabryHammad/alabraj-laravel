@@ -1,8 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:ar.islamway.net)"
+      "WebFetch(domain:ar.islamway.net)",
+      "Bash(php artisan:*)",
+      "Bash(php:*)",
+      "Bash(rm:*)",
+      "Bash(mkdir:*)",
+      "Bash(curl:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "C:\\c\\xampp\\htdocs"
+    ]
   }
 }

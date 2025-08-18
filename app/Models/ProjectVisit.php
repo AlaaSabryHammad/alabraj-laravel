@@ -17,12 +17,16 @@ class ProjectVisit extends Model
         'visitor_name',
         'visit_type',
         'visit_notes',
+        'duration_hours',
+        'purpose',
+        'notes',
         'recorded_by'
     ];
 
     protected $casts = [
         'visit_date' => 'date',
         'visit_time' => 'datetime:H:i',
+        'duration_hours' => 'decimal:2'
     ];
 
     public function project()
