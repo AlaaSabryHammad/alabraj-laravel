@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,8 +33,13 @@
 
     <style>
         @keyframes glow {
-            from { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-            to { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+            from {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            }
+
+            to {
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+            }
         }
 
         .gradient-bg {
@@ -81,14 +87,14 @@
             </div>
 
             <!-- Error Messages -->
-            @if($errors->any())
+            @if ($errors->any())
                 <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6">
                     <div class="flex items-center gap-2 text-red-100">
                         <i class="ri-error-warning-line"></i>
                         <span class="font-medium">خطأ في تسجيل الدخول</span>
                     </div>
                     <ul class="mt-2 text-sm text-red-200">
-                        @foreach($errors->all() as $error)
+                        @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
                     </ul>
@@ -104,14 +110,10 @@
                         <i class="ri-mail-line ml-1"></i>
                         البريد الإلكتروني
                     </label>
-                    <input type="email"
-                           name="email"
-                           id="email"
-                           value="{{ old('email') }}"
-                           required
-                           autocomplete="email"
-                           class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent input-glow transition-all duration-300"
-                           placeholder="example@company.com">
+                    <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                        autocomplete="email"
+                        class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent input-glow transition-all duration-300"
+                        placeholder="example@company.com">
                 </div>
 
                 <!-- Password Field -->
@@ -121,16 +123,11 @@
                         كلمة المرور
                     </label>
                     <div class="relative">
-                        <input type="password"
-                               name="password"
-                               id="password"
-                               required
-                               autocomplete="current-password"
-                               class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent input-glow transition-all duration-300"
-                               placeholder="أدخل كلمة المرور">
-                        <button type="button"
-                                onclick="togglePassword()"
-                                class="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors">
+                        <input type="password" name="password" id="password" required autocomplete="current-password"
+                            class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent input-glow transition-all duration-300"
+                            placeholder="أدخل كلمة المرور">
+                        <button type="button" onclick="togglePassword()"
+                            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors">
                             <i id="password-icon" class="ri-eye-off-line"></i>
                         </button>
                     </div>
@@ -139,19 +136,19 @@
                 <!-- Remember Me & Forgot Password -->
                 <div class="flex items-center justify-between">
                     <label class="flex items-center">
-                        <input type="checkbox"
-                               name="remember"
-                               class="rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-400 focus:ring-offset-0">
+                        <input type="checkbox" name="remember"
+                            class="rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-400 focus:ring-offset-0">
                         <span class="mr-2 text-sm text-blue-100">تذكرني</span>
                     </label>
-                    <a href="#" class="text-sm text-blue-200 hover:text-white transition-colors">
+                    <a href="{{ route('password.request') }}"
+                        class="text-sm text-blue-200 hover:text-white transition-colors">
                         نسيت كلمة المرور؟
                     </a>
                 </div>
 
                 <!-- Login Button -->
                 <button type="submit"
-                        class="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2">
+                    class="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2">
                     <i class="ri-login-circle-line"></i>
                     <span>تسجيل الدخول</span>
                 </button>
@@ -168,15 +165,13 @@
 
                 <!-- Quick Access -->
                 <div class="grid grid-cols-2 gap-4">
-                    <button type="button"
-                            onclick="demoLogin('admin')"
-                            class="py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center justify-center gap-2">
+                    <button type="button" onclick="demoLogin('admin')"
+                        class="py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center justify-center gap-2">
                         <i class="ri-admin-line"></i>
                         <span class="text-sm">مدير</span>
                     </button>
-                    <button type="button"
-                            onclick="demoLogin('user')"
-                            class="py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center justify-center gap-2">
+                    <button type="button" onclick="demoLogin('user')"
+                        class="py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center justify-center gap-2">
                         <i class="ri-user-line"></i>
                         <span class="text-sm">موظف</span>
                     </button>
@@ -255,4 +250,5 @@
         document.head.appendChild(style);
     </script>
 </body>
+
 </html>

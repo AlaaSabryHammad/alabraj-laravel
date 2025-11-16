@@ -43,7 +43,11 @@ class RevenueEntityController extends Controller
 
         RevenueEntity::create($validated);
 
-        return redirect()->route('revenue-entities.index')
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'تم إنشاء جهة الإيراد بنجاح']);
+        }
+
+        return redirect()->route('settings.index')
             ->with('success', 'تم إنشاء جهة الإيراد بنجاح');
     }
 
@@ -83,8 +87,20 @@ class RevenueEntityController extends Controller
 
         $revenueEntity->update($validated);
 
-        return redirect()->route('revenue-entities.index')
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'تم تحديث جهة الإيراد بنجاح']);
+        }
+
+        return redirect()->route('settings.index')
             ->with('success', 'تم تحديث جهة الإيراد بنجاح');
+    }
+
+    /**
+     * Get content for settings page
+     */
+    public function getContent()
+    {
+        return view('settings.partials.revenue-entities-content');
     }
 
     /**
@@ -94,29 +110,20 @@ class RevenueEntityController extends Controller
     {
         // Check if entity is used in any revenue vouchers
         if ($revenueEntity->revenueVouchers()->exists()) {
-            return redirect()->route('revenue-entities.index')
-                ->with('error', 'لا يمكن حذف هذه الجهة لأنها مرتبطة بسندات قبض');
+                    if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => false, 'message' => 'لا يمكن حذف هذه الجهة لأنها مرتبطة بسندات قبض']);
+        }
+        return redirect()->route('settings.index')
+            ->with('error', 'لا يمكن حذف هذه الجهة لأنها مرتبطة بسندات قبض');
         }
 
         $revenueEntity->delete();
 
-        return redirect()->route('revenue-entities.index')
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'تم حذف جهة الإيراد بنجاح']);
+        }
+
+        return redirect()->route('settings.index')
             ->with('success', 'تم حذف جهة الإيراد بنجاح');
-    }
-
-    /**
-     * Get content for settings page.
-     */
-    public function getContent()
-    {
-        $revenueEntities = RevenueEntity::orderBy('name')->get();
-        $entitiesCount = RevenueEntity::count();
-        $activeEntitiesCount = RevenueEntity::where('status', 'active')->count();
-
-        return view('revenue-entities.content', compact(
-            'revenueEntities',
-            'entitiesCount',
-            'activeEntitiesCount'
-        ));
     }
 }

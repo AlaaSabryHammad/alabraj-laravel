@@ -17,16 +17,23 @@ class ProjectExtract extends Model
         'extract_date',
         'status',
         'total_amount',
+        'tax_rate',
+        'tax_amount',
+        'total_with_tax',
         'file_path',
         'items_data',
         'notes',
         'metadata',
         'created_by',
+        'revenue_voucher_id',
     ];
 
     protected $casts = [
         'extract_date' => 'date',
         'total_amount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'total_with_tax' => 'decimal:2',
         'items_data' => 'array',
     ];
 
@@ -48,6 +55,11 @@ class ProjectExtract extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function revenueVoucher()
+    {
+        return $this->belongsTo(RevenueVoucher::class);
     }
 
     public function getStatusDisplayAttribute()

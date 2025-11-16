@@ -74,6 +74,25 @@ class ExpenseVoucherController extends Controller
             $validated['attachment_path'] = $filePath;
         }
 
+        // حساب الضريبة تلقائياً
+        $taxRate = 15.00; // معدل الضريبة 15%
+        
+        if ($validated['tax_type'] === 'taxable') {
+            // المبلغ شامل الضريبة، نحسب المبلغ بدون الضريبة
+            $amountWithTax = $validated['amount'];
+            $amountWithoutTax = $amountWithTax / (1 + ($taxRate / 100));
+            $taxAmount = $amountWithTax - $amountWithoutTax;
+            
+            $validated['tax_rate'] = $taxRate;
+            $validated['tax_amount'] = $taxAmount;
+            $validated['amount_without_tax'] = $amountWithoutTax;
+        } else {
+            // غير خاضع للضريبة
+            $validated['tax_rate'] = 0;
+            $validated['tax_amount'] = 0;
+            $validated['amount_without_tax'] = $validated['amount'];
+        }
+
         $validated['created_by'] = Auth::id();
 
         $voucher = ExpenseVoucher::create($validated);
@@ -124,6 +143,7 @@ class ExpenseVoucherController extends Controller
             'employee_id' => 'nullable|exists:employees,id',
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'required|in:cash,bank_transfer,check,credit_card,other',
+            'tax_type' => 'required|in:taxable,non_taxable',
             'description' => 'required|string|max:1000',
             'expense_entity_id' => 'nullable|exists:expense_entities,id',
             'project_id' => 'nullable|exists:projects,id',
@@ -132,6 +152,25 @@ class ExpenseVoucherController extends Controller
             'reference_number' => 'nullable|string|max:255',
             'status' => 'required|in:pending,approved,paid,cancelled'
         ]);
+
+        // حساب الضريبة تلقائياً
+        $taxRate = 15.00; // معدل الضريبة 15%
+        
+        if ($validated['tax_type'] === 'taxable') {
+            // المبلغ شامل الضريبة، نحسب المبلغ بدون الضريبة
+            $amountWithTax = $validated['amount'];
+            $amountWithoutTax = $amountWithTax / (1 + ($taxRate / 100));
+            $taxAmount = $amountWithTax - $amountWithoutTax;
+            
+            $validated['tax_rate'] = $taxRate;
+            $validated['tax_amount'] = $taxAmount;
+            $validated['amount_without_tax'] = $amountWithoutTax;
+        } else {
+            // غير خاضع للضريبة
+            $validated['tax_rate'] = 0;
+            $validated['tax_amount'] = 0;
+            $validated['amount_without_tax'] = $validated['amount'];
+        }
 
         $expenseVoucher->update($validated);
 

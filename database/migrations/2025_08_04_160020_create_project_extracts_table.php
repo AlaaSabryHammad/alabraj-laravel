@@ -19,8 +19,12 @@ return new class extends Migration
             $table->date('extract_date');
             $table->enum('status', ['draft', 'submitted', 'approved', 'paid'])->default('draft');
             $table->decimal('total_amount', 15, 2);
+            $table->decimal('tax_rate', 5, 2)->default(15.00);
+            $table->decimal('tax_amount', 15, 2)->default(0.00);
+            $table->decimal('total_with_tax', 15, 2)->default(0.00);
             $table->string('file_path')->nullable();
             $table->json('items_data')->nullable();
+            $table->unsignedBigInteger('revenue_voucher_id')->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
 

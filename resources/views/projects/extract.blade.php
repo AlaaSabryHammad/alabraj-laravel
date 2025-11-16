@@ -32,6 +32,9 @@
                             <input type="number" id="modal_tax_rate" name="tax_rate" value="15" step="0.1"
                                 min="0" max="100"
                                 class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <div class="mt-2 text-sm text-gray-600">
+                                <span id="tax-info">الضريبة: 0.00 ر.س | الإجمالي مع الضريبة: 0.00 ر.س</span>
+                            </div>
                         </div>
 
                         <div id="itemsContainer" class="space-y-4" style="max-height:45vh; overflow-y:auto;">
@@ -576,13 +579,21 @@
             // تحديث إجمالي المستخلص
             document.getElementById('extract_total').value = totalExtract.toFixed(2);
 
+            // حساب الضريبة والقيمة الإجمالية مع الضريبة
+            const taxRate = parseFloat(document.getElementById('modal_tax_rate').value) || 0;
+            const taxAmount = totalExtract * (taxRate / 100);
+            const totalWithTax = totalExtract + taxAmount;
+
+            // تحديث معلومات الضريبة
+            document.getElementById('tax-info').textContent = 
+                `الضريبة: ${taxAmount.toFixed(2)} ر.س | الإجمالي مع الضريبة: ${totalWithTax.toFixed(2)} ر.س`;
+
             // جمع بيانات البنود
             const extractItems = [];
             document.querySelectorAll('.current-quantity').forEach((input, index) => {
                 const quantity = parseFloat(input.value) || 0;
                 if (quantity > 0) {
                     const unitPrice = parseFloat(input.dataset.unitPrice);
-                    // لا توجد حقول total_with_tax في جدول المستخلص؛ نستخدم القيمة بدون ضريبة هنا
                     extractItems.push({
                         item_index: index,
                         quantity: quantity,
@@ -950,6 +961,15 @@
                             calculateTotal(qtyInput);
                         }
                     });
+                    
+                    // تحديث معلومات الضريبة
+                    const totalExtract = parseFloat(document.getElementById('extract_total').value) || 0;
+                    const taxRate = parseFloat(this.value) || 0;
+                    const taxAmount = totalExtract * (taxRate / 100);
+                    const totalWithTax = totalExtract + taxAmount;
+                    
+                    document.getElementById('tax-info').textContent = 
+                        `الضريبة: ${taxAmount.toFixed(2)} ر.س | الإجمالي مع الضريبة: ${totalWithTax.toFixed(2)} ر.س`;
                 });
             }
         });

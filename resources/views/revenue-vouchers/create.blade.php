@@ -191,7 +191,7 @@
                     <!-- Tax Type -->
                     <div>
                         <label for="tax_type" class="form-label">نوع الضريبة <span class="text-red-500">*</span></label>
-                        <select name="tax_type" id="tax_type" class="form-select" required>
+                        <select name="tax_type" id="tax_type" class="form-select" required onchange="updateTaxCalculation()">
                             <option value="">-- اختر نوع الضريبة --</option>
                             <option value="taxable" {{ old('tax_type') == 'taxable' ? 'selected' : '' }}>خاضع للضريبة</option>
                             <option value="non_taxable" {{ old('tax_type') == 'non_taxable' ? 'selected' : '' }}>غير خاضع للضريبة</option>
@@ -199,6 +199,26 @@
                         @error('tax_type')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    <!-- Tax Information Display -->
+                    <div class="md:col-span-2">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <label class="font-medium text-gray-700">المبلغ المدخل:</label>
+                                    <p id="entered-amount" class="text-gray-900">0.00 ر.س</p>
+                                </div>
+                                <div>
+                                    <label class="font-medium text-gray-700">المبلغ بدون الضريبة:</label>
+                                    <p id="amount-without-tax" class="text-gray-900">0.00 ر.س</p>
+                                </div>
+                                <div>
+                                    <label class="font-medium text-gray-700">قيمة الضريبة (15%):</label>
+                                    <p id="tax-amount" class="text-gray-900">0.00 ر.س</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Project -->
@@ -257,3 +277,41 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function updateTaxCalculation() {
+        const amount = parseFloat(document.getElementById('amount').value) || 0;
+        const taxType = document.getElementById('tax_type').value;
+        const taxRate = 15; // معدل الضريبة 15%
+        
+        // تحديث المبلغ المدخل
+        document.getElementById('entered-amount').textContent = amount.toFixed(2) + ' ر.س';
+        
+        if (taxType === 'taxable') {
+            // المبلغ شامل الضريبة، نحسب المبلغ بدون الضريبة
+            const amountWithoutTax = amount / (1 + (taxRate / 100));
+            const taxAmount = amount - amountWithoutTax;
+            
+            document.getElementById('amount-without-tax').textContent = amountWithoutTax.toFixed(2) + ' ر.س';
+            document.getElementById('tax-amount').textContent = taxAmount.toFixed(2) + ' ر.س';
+        } else if (taxType === 'non_taxable') {
+            // غير خاضع للضريبة
+            document.getElementById('amount-without-tax').textContent = amount.toFixed(2) + ' ر.س';
+            document.getElementById('tax-amount').textContent = '0.00 ر.س';
+        } else {
+            // لم يتم اختيار نوع الضريبة
+            document.getElementById('amount-without-tax').textContent = '0.00 ر.س';
+            document.getElementById('tax-amount').textContent = '0.00 ر.س';
+        }
+    }
+    
+    // تحديث الحساب عند تغيير المبلغ
+    document.getElementById('amount').addEventListener('input', updateTaxCalculation);
+    
+    // تحديث الحساب عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTaxCalculation();
+    });
+</script>
+@endpush

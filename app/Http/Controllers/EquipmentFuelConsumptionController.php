@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\FuelConsumptionApprovalNotification;
 
@@ -133,12 +134,45 @@ class EquipmentFuelConsumptionController extends Controller
 
     /**
      * Approve fuel consumption
+     * Only the equipment driver can approve fuel consumption
      */
     public function approve(Request $request, EquipmentFuelConsumption $fuelConsumption)
     {
+        // Check if the current user is the driver of the equipment
+        $equipment = $fuelConsumption->equipment;
+        if (!$equipment || !$equipment->driver || $equipment->driver->user_id != Auth::id()) {
+            return redirect()->back()->with('error', 'غير مسموح لك بموافقة هذا الاستهلاك. فقط سائق المعدة يمكنه الموافقة.');
+        }
+
         $validated = $request->validate([
             'approval_notes' => 'nullable|string|max:1000',
         ]);
+
+        // Check if fuel truck has sufficient quantity before approval
+        $user = $fuelConsumption->user;
+        $hasSufficientFuel = true;
+        $fuelTruckInfo = null;
+
+        if ($user) {
+            // Find equipment assigned to this user (should be a fuel truck)
+            // The equipment's driver_id references an employee, and that employee has a user_id
+            $fuelTruckEquipment = Equipment::whereHas('driver', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->whereHas('fuelTruck')->first();
+
+            if ($fuelTruckEquipment) {
+                $fuelTruck = $fuelTruckEquipment->fuelTruck;
+                $fuelTruckInfo = $fuelTruckEquipment->name . ' (' . $fuelTruck->fuel_type . ')';
+
+                if ($fuelTruck->current_quantity < $fuelConsumption->quantity) {
+                    $hasSufficientFuel = false;
+                }
+            }
+        }
+
+        if (!$hasSufficientFuel) {
+            return redirect()->back()->with('error', 'لا توجد كمية كافية في سيارة المحروقات ' . $fuelTruckInfo . '. الكمية المتاحة: ' . $fuelTruck->current_quantity . ' لتر، الكمية المطلوبة: ' . $fuelConsumption->quantity . ' لتر.');
+        }
 
         $fuelConsumption->update([
             'approval_status' => 'approved',
@@ -147,14 +181,24 @@ class EquipmentFuelConsumptionController extends Controller
             'approval_notes' => $validated['approval_notes'] ?? null,
         ]);
 
+        // Deduct the quantity from the fuel truck's inventory if it's a fuel truck
+        $this->deductFromFuelTruck($fuelConsumption);
+
         return redirect()->back()->with('success', 'تم اعتماد استهلاك المحروقات بنجاح');
     }
 
     /**
      * Reject fuel consumption
+     * Only the equipment driver can reject fuel consumption
      */
     public function reject(Request $request, EquipmentFuelConsumption $fuelConsumption)
     {
+        // Check if the current user is the driver of the equipment
+        $equipment = $fuelConsumption->equipment;
+        if (!$equipment || !$equipment->driver || $equipment->driver->user_id != Auth::id()) {
+            return redirect()->back()->with('error', 'غير مسموح لك برفض هذا الاستهلاك. فقط سائق المعدة يمكنه الرفض.');
+        }
+
         $validated = $request->validate([
             'approval_notes' => 'required|string|max:1000',
         ]);
@@ -167,6 +211,55 @@ class EquipmentFuelConsumptionController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'تم رفض استهلاك المحروقات');
+    }
+
+    /**
+     * Deduct the fuel consumption from the fuel truck's inventory
+     */
+    private function deductFromFuelTruck(EquipmentFuelConsumption $fuelConsumption): void
+    {
+        try {
+            // Find the fuel truck that recorded this consumption
+            // This assumes the user who recorded the consumption is a fuel truck driver
+            $user = $fuelConsumption->user;
+            if (!$user) {
+                Log::info('No user found for fuel consumption: ' . $fuelConsumption->id);
+                return;
+            }
+
+            // Find equipment assigned to this user (should be a fuel truck)
+            // The equipment's driver_id references an employee, and that employee has a user_id
+            $fuelTruckEquipment = Equipment::whereHas('driver', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->whereHas('fuelTruck')->first();
+
+            if (!$fuelTruckEquipment) {
+                Log::info('No fuel truck equipment found for user ID: ' . $user->id);
+                return;
+            }
+
+            $fuelTruck = $fuelTruckEquipment->fuelTruck;
+
+            // Check if fuel truck has sufficient quantity
+            if ($fuelTruck && $fuelTruck->current_quantity >= $fuelConsumption->quantity) {
+                $newQuantity = $fuelTruck->current_quantity - $fuelConsumption->quantity;
+                $fuelTruck->update([
+                    'current_quantity' => $newQuantity
+                ]);
+
+                Log::info('Successfully deducted fuel from truck. Truck ID: ' . $fuelTruck->id .
+                    ', Previous quantity: ' . ($fuelTruck->current_quantity + $fuelConsumption->quantity) .
+                    ', New quantity: ' . $newQuantity .
+                    ', Deducted: ' . $fuelConsumption->quantity);
+            } else {
+                Log::warning('Insufficient fuel in truck. Truck ID: ' . ($fuelTruck ? $fuelTruck->id : 'N/A') .
+                    ', Available: ' . ($fuelTruck ? $fuelTruck->current_quantity : 'N/A') .
+                    ', Required: ' . $fuelConsumption->quantity);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to deduct fuel from truck: ' . $e->getMessage() .
+                ' in file ' . $e->getFile() . ' on line ' . $e->getLine());
+        }
     }
 
     /**
@@ -193,7 +286,7 @@ class EquipmentFuelConsumptionController extends Controller
                 $manager->user->notify(new FuelConsumptionApprovalNotification($fuelConsumption));
             }
         } catch (\Exception $e) {
-            \Log::info('Failed to send fuel consumption notification: ' . $e->getMessage());
+            Log::info('Failed to send fuel consumption notification: ' . $e->getMessage());
         }
     }
 }

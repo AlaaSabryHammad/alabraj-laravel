@@ -432,33 +432,63 @@ class EquipmentController extends Controller
      */
     public function getAvailableForLocation(Request $request)
     {
-        $currentLocationId = $request->get('current_location_id');
+        try {
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                Log::warning('Unauthorized access attempt to getAvailableForLocation');
+                return response()->json([
+                    'error' => 'انتهت صلاحية الجلسة',
+                    'message' => 'يرجى تسجيل الدخول مرة أخرى'
+                ], 401);
+            }
 
-        $query = Equipment::with(['locationDetail'])
-            ->select('id', 'name', 'type', 'serial_number', 'status', 'location', 'location_id');
+            $currentLocationId = $request->get('current_location_id');
 
-        // Exclude equipment that are already in the current location
-        if ($currentLocationId) {
-            $query->where(function ($q) use ($currentLocationId) {
-                $q->where('location_id', '!=', $currentLocationId)
-                    ->orWhereNull('location_id');
-            });
+            // Build query to get all equipment with their relationships
+            $query = Equipment::with(['locationDetail', 'equipmentType'])
+                ->select('id', 'name', 'type', 'type_id', 'serial_number', 'status', 'location', 'location_id');
+
+            // Exclude equipment that are already in the current location
+            if ($currentLocationId) {
+                $query->where(function ($q) use ($currentLocationId) {
+                    // Show equipment not in this location OR equipment without a location
+                    $q->where('location_id', '!=', $currentLocationId)
+                        ->orWhereNull('location_id');
+                });
+            }
+
+            // Always exclude out_of_order equipment
+            $query->where('status', '!=', 'out_of_order');
+
+            // Get all equipment ordered by name
+            $equipment = $query->orderBy('name', 'asc')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'type' => $item->type ?? ($item->equipmentType ? $item->equipmentType->name : 'غير محدد'),
+                        'serial_number' => $item->serial_number,
+                        'status' => $item->status,
+                        'location' => $item->locationDetail ? $item->locationDetail->name : ($item->location ?: 'غير محدد'),
+                        'location_id' => $item->location_id
+                    ];
+                });
+
+            return response()->json($equipment, 200, [
+                'Content-Type' => 'application/json',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in getAvailableForLocation: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'حدث خطأ أثناء تحميل المعدات',
+                'message' => $e->getMessage()
+            ], 500, [
+                'Content-Type' => 'application/json',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate'
+            ]);
         }
-
-        $equipment = $query->get()
-            ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'type' => $item->type,
-                    'serial_number' => $item->serial_number,
-                    'status' => $item->status,
-                    'location' => $item->locationDetail ? $item->locationDetail->name : $item->location,
-                    'location_id' => $item->location_id
-                ];
-            });
-
-        return response()->json($equipment);
     }
 
     /**

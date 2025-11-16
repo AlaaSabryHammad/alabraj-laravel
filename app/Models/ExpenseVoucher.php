@@ -19,6 +19,9 @@ class ExpenseVoucher extends Model
         'amount',
         'payment_method',
         'tax_type',
+        'tax_rate',
+        'tax_amount',
+        'amount_without_tax',
         'description',
         'expense_entity_id',
         'project_id',
@@ -35,6 +38,9 @@ class ExpenseVoucher extends Model
     protected $casts = [
         'voucher_date' => 'date',
         'amount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'amount_without_tax' => 'decimal:2',
         'attachments' => 'array',
         'approved_at' => 'datetime'
     ];

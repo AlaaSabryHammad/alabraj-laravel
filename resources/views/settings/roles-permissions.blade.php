@@ -82,13 +82,40 @@
 @endpush
 
 @section('content')
-    <div class="container mx-auto px-4 py-6">
-        <div class="flex justify-between items-center mb-6">
+    <div class="space-y-6">
+        <!-- Header with Breadcrumb and Back Button -->
+        <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">إدارة الأدوار والصلاحيات</h1>
-                <p class="text-gray-600 mt-1">إدارة أدوار المستخدمين والصلاحيات المختلفة</p>
+                <div class="flex items-center space-x-2 space-x-reverse mb-4">
+                    <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="ri-home-line"></i>
+                    </a>
+                    <span class="text-gray-400">/</span>
+                    <a href="{{ route('settings.index') }}"
+                        class="text-gray-600 hover:text-blue-600 transition-colors">الإعدادات</a>
+                    <span class="text-gray-400">/</span>
+                    <span class="text-blue-600 font-medium">الأدوار والصلاحيات</span>
+                </div>
+                <div class="flex items-center space-x-reverse space-x-4">
+                    <a href="{{ route('settings.index') }}"
+                        class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                        <i class="ri-arrow-right-line ml-2"></i>
+                        العودة
+                    </a>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900">إدارة الأدوار والصلاحيات</h1>
+                </div>
+                <p class="text-gray-600 mt-2">إدارة أدوار المستخدمين والصلاحيات المختلفة</p>
+            </div>
+            <div class="hidden md:flex items-center justify-center">
+                <div
+                    class="w-24 h-24 bg-gradient-to-r from-blue-500 via-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <i class="ri-shield-user-line text-white text-4xl"></i>
+                </div>
             </div>
         </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6">
 
         <!-- Tabs Navigation -->
         <div class="mb-6 border-b border-gray-200">

@@ -1685,15 +1685,15 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div class="flex items-center gap-2">
-                                ${consumption.approval_status === 'pending' ? 
+                                ${consumption.approval_status === 'pending' && {{ $equipment->driver->user_id ?? 0 }} == {{ Auth::id() ?? 0 }} ? 
                                     `<button onclick="approveFuelConsumption(${consumption.id}, '${consumption.quantity}', '${getFuelTypeText(consumption.fuel_type)}', '${consumption.user.name}')" 
-                                                        class="text-green-600 hover:text-green-900" title="اعتماد">
-                                                    <i class="ri-check-line"></i>
-                                                </button>
-                                                <button onclick="rejectFuelConsumption(${consumption.id})" 
-                                                        class="text-red-600 hover:text-red-900" title="رفض">
-                                                    <i class="ri-close-line"></i>
-                                                </button>` : ''
+                                                            class="text-green-600 hover:text-green-900" title="اعتماد">
+                                                        <i class="ri-check-line"></i>
+                                                    </button>
+                                                    <button onclick="rejectFuelConsumption(${consumption.id})" 
+                                                            class="text-red-600 hover:text-red-900" title="رفض">
+                                                        <i class="ri-close-line"></i>
+                                                    </button>` : ''
                                 }
                                 <button onclick="deleteFuelConsumption(${consumption.id})" 
                                         class="text-red-600 hover:text-red-900" title="حذف">
@@ -1822,49 +1822,93 @@
 
                     <!-- Modal Body -->
                     <div class="px-6 py-4">
-                        <div class="space-y-4">
+                        <div class="space-y-5">
                             <!-- نوع المحروقات -->
-                            <div>
-                                <label for="fuel_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            <div class="space-y-2">
+                                <label for="fuel_type"
+                                    class="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                    <i class="ri-gas-station-line text-green-600"></i>
                                     نوع المحروقات
                                 </label>
-                                <select id="fuel_type" name="fuel_type" required
-                                    class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                                    <option value="">اختر نوع المحروقات...</option>
-                                    <option value="diesel">ديزل</option>
-                                    <option value="engine_oil">زيت ماكينة</option>
-                                    <option value="hydraulic_oil">زيت هيدروليك</option>
-                                    <option value="radiator_water">ماء ردياتير</option>
-                                </select>
+                                <div class="relative">
+                                    <select id="fuel_type" name="fuel_type" required
+                                        class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-green-400 appearance-none bg-white">
+                                        <option value="">اختر نوع المحروقات...</option>
+                                        <option value="diesel">ديزل</option>
+                                        <option value="engine_oil">زيت ماكينة</option>
+                                        <option value="hydraulic_oil">زيت هيدروليك</option>
+                                        <option value="radiator_water">ماء ردياتير</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="ri-arrow-down-s-line text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <i class="ri-information-line text-gray-400"></i>
+                                    حدد نوع المحروقات المستهلكة
+                                </p>
                             </div>
 
                             <!-- الكمية -->
-                            <div>
-                                <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                            <div class="space-y-2">
+                                <label for="quantity"
+                                    class="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                    <i class="ri-speed-line text-blue-600"></i>
                                     الكمية (باللتر)
                                 </label>
-                                <input type="number" id="quantity" name="quantity" step="0.01" min="0.01"
-                                    required placeholder="0.00"
-                                    class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                <div class="relative">
+                                    <input type="number" id="quantity" name="quantity" step="0.01" min="0.01"
+                                        required placeholder="0.00"
+                                        class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-green-400">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <span class="text-gray-500 font-medium">لتر</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <i class="ri-information-line text-gray-400"></i>
+                                    أدخل الكمية المستهلكة باللتر
+                                </p>
                             </div>
 
                             <!-- تاريخ الاستهلاك -->
-                            <div>
-                                <label for="consumption_date" class="block text-sm font-medium text-gray-700 mb-2">
+                            <div class="space-y-2">
+                                <label for="consumption_date"
+                                    class="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                    <i class="ri-calendar-line text-purple-600"></i>
                                     تاريخ الاستهلاك
                                 </label>
-                                <input type="date" id="consumption_date" name="consumption_date" required
-                                    value="{{ now()->format('Y-m-d') }}"
-                                    class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                <div class="relative">
+                                    <input type="date" id="consumption_date" name="consumption_date" required
+                                        value="{{ now()->format('Y-m-d') }}"
+                                        class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-green-400 appearance-none">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="ri-calendar-2-line text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <i class="ri-information-line text-gray-400"></i>
+                                    حدد تاريخ استهلاك المحروقات
+                                </p>
                             </div>
 
                             <!-- ملاحظات -->
-                            <div>
-                                <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                            <div class="space-y-2">
+                                <label for="notes"
+                                    class="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                    <i class="ri-edit-line text-orange-600"></i>
                                     ملاحظات (اختياري)
                                 </label>
-                                <textarea id="notes" name="notes" rows="3" placeholder="أضف أي ملاحظات إضافية..."
-                                    class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+                                <div class="relative">
+                                    <textarea id="notes" name="notes" rows="4" placeholder="أضف أي ملاحظات إضافية..."
+                                        class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-green-400 resize-none"></textarea>
+                                    <div class="absolute top-3 left-3 pointer-events-none">
+                                        <i class="ri-edit-2-line text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <i class="ri-information-line text-gray-400"></i>
+                                    يمكنك إضافة تفاصيل إضافية حول الاستهلاك
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -1876,7 +1920,7 @@
                             إلغاء
                         </button>
                         <button type="submit"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                            class="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg">
                             <i class="ri-save-line"></i>
                             حفظ
                         </button>

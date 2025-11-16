@@ -23,6 +23,7 @@ return new class extends Migration
             // Contract fields
             $table->unsignedBigInteger('supplier_id')->nullable();
             $table->string('contract_number')->nullable();
+            $table->decimal('daily_rate', 10, 2)->nullable();
             $table->date('contract_start_date')->nullable();
             $table->date('contract_end_date')->nullable();
             $table->decimal('contract_value', 12, 2)->nullable();

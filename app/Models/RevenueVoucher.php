@@ -19,6 +19,9 @@ class RevenueVoucher extends Model
         'description',
         'payment_method',
         'tax_type',
+        'tax_rate',
+        'tax_amount',
+        'amount_without_tax',
         'project_id',
         'location_id',
         'attachment_path',
@@ -32,6 +35,9 @@ class RevenueVoucher extends Model
     protected $casts = [
         'voucher_date' => 'date',
         'amount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'amount_without_tax' => 'decimal:2',
         'approved_at' => 'datetime'
     ];
 
@@ -43,11 +49,20 @@ class RevenueVoucher extends Model
         static::creating(function ($voucher) {
             if (empty($voucher->voucher_number)) {
                 $year = Carbon::now()->year;
-                $lastVoucher = static::whereYear('created_at', $year)
-                    ->orderBy('id', 'desc')
+                
+                // البحث عن آخر سند في هذا العام (بغض النظر عن تاريخ الإنشاء)
+                $lastVoucher = static::where('voucher_number', 'like', 'RV-' . $year . '-%')
+                    ->orderByRaw('CAST(SUBSTRING(voucher_number, -4) AS UNSIGNED) DESC')
                     ->first();
                 
-                $sequence = $lastVoucher ? (int) substr($lastVoucher->voucher_number, -4) + 1 : 1;
+                if ($lastVoucher) {
+                    // استخراج الرقم التسلسلي من آخر سند
+                    $lastSequence = (int) substr($lastVoucher->voucher_number, -4);
+                    $sequence = $lastSequence + 1;
+                } else {
+                    $sequence = 1;
+                }
+                
                 $voucher->voucher_number = 'RV-' . $year . '-' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
             }
         });

@@ -44,6 +44,7 @@ return new class extends Migration
 
             // Driving License Information
             $table->string('driving_license_number')->nullable();
+            $table->date('driving_license_issue_date')->nullable();
             $table->date('driving_license_expiry')->nullable();
             $table->json('driving_license_types')->nullable();
             $table->string('driving_license_photo')->nullable();
@@ -85,6 +86,7 @@ return new class extends Migration
             $table->string('cv_document')->nullable();
             $table->string('certificates_document')->nullable();
             $table->string('other_documents')->nullable();
+            $table->text('additional_documents')->nullable();
 
             // System
             $table->unsignedBigInteger('user_id')->nullable();

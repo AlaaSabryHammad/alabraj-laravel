@@ -6,7 +6,13 @@
       "Bash(php:*)",
       "Bash(rm:*)",
       "Bash(mkdir:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mysql:*)",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

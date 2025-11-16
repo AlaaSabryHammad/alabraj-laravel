@@ -486,6 +486,11 @@ class ProjectController extends Controller
             // Parse extract items
             $extractItems = json_decode($validated['extract_items'], true);
 
+            // حساب الضريبة والقيمة الإجمالية مع الضريبة
+            $taxRate = $request->input('tax_rate', 15); // افتراضياً 15%
+            $taxAmount = $validated['extract_total'] * ($taxRate / 100);
+            $totalWithTax = $validated['extract_total'] + $taxAmount;
+
             // Create the extract record
             $extract = $project->projectExtracts()->create([
                 'extract_number' => $validated['extract_number'],
@@ -493,6 +498,9 @@ class ProjectController extends Controller
                 'extract_date' => $validated['extract_date'],
                 'status' => $validated['extract_status'],
                 'total_amount' => $validated['extract_total'],
+                'tax_rate' => $taxRate,
+                'tax_amount' => $taxAmount,
+                'total_with_tax' => $totalWithTax,
                 'file_path' => $filePath,
                 'items_data' => json_encode($extractItems),
                 'created_by' => Auth::id(),
@@ -508,12 +516,67 @@ class ProjectController extends Controller
                 ]);
             }
 
+            // إذا كان المستخلص مدفوع، قم بإنشاء سند قبض تلقائياً
+            if ($validated['extract_status'] === 'paid') {
+                $this->createRevenueVoucherFromExtract($extract, $project);
+            }
+
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم حفظ المستخلص بنجاح');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
                 ->with('error', 'حدث خطأ أثناء حفظ المستخلص: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * إنشاء سند قبض تلقائياً من المستخلص المدفوع
+     */
+    private function createRevenueVoucherFromExtract($extract, $project)
+    {
+        try {
+            // البحث عن جهة إيراد افتراضية أو إنشاء واحدة
+            $revenueEntity = \App\Models\RevenueEntity::where('type', 'government')
+                ->orWhere('type', 'company')
+                ->first();
+
+            if (!$revenueEntity) {
+                // إنشاء جهة إيراد افتراضية
+                $revenueEntity = \App\Models\RevenueEntity::create([
+                    'name' => $project->government_entity ?? 'جهة حكومية',
+                    'type' => 'government',
+                    'status' => 'active'
+                ]);
+            }
+
+            // إنشاء سند القبض
+            $revenueVoucher = \App\Models\RevenueVoucher::create([
+                'voucher_number' => 'RV-EXT-' . $extract->extract_number,
+                'voucher_date' => $extract->extract_date,
+                'revenue_entity_id' => $revenueEntity->id,
+                'amount' => $extract->total_with_tax, // استخدام القيمة مع الضريبة
+                'description' => 'مستخلص مشروع: ' . $project->name . ' - ' . ($extract->description ?? 'مستخلص رقم ' . $extract->extract_number),
+                'payment_method' => 'bank_transfer', // افتراضياً تحويل بنكي
+                'tax_type' => 'taxable',
+                'project_id' => $project->id,
+                'location_id' => $project->location_id ?? null,
+                'status' => 'approved', // معتمد تلقائياً
+                'notes' => 'تم إنشاؤه تلقائياً من المستخلص المدفوع رقم: ' . $extract->extract_number . ' (القيمة مع الضريبة: ' . number_format($extract->total_with_tax, 2) . ' ر.س)',
+                'created_by' => Auth::id(),
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+            ]);
+
+            // تحديث المستخلص ليرتبط بسند القبض
+            $extract->update([
+                'revenue_voucher_id' => $revenueVoucher->id
+            ]);
+
+            return $revenueVoucher;
+        } catch (\Exception $e) {
+            Log::error('خطأ في إنشاء سند القبض من المستخلص: ' . $e->getMessage());
+            return null;
         }
     }
 
@@ -647,6 +710,11 @@ class ProjectController extends Controller
             // Parse extract items
             $extractItems = json_decode($validated['extract_items'], true);
 
+            // حساب الضريبة والقيمة الإجمالية مع الضريبة
+            $taxRate = $request->input('tax_rate', 15); // افتراضياً 15%
+            $taxAmount = $validated['extract_total'] * ($taxRate / 100);
+            $totalWithTax = $validated['extract_total'] + $taxAmount;
+
             // Update the extract record
             $extract->update([
                 'extract_number' => $validated['extract_number'],
@@ -654,6 +722,9 @@ class ProjectController extends Controller
                 'extract_date' => $validated['extract_date'],
                 'status' => $validated['extract_status'],
                 'total_amount' => $validated['extract_total'],
+                'tax_rate' => $taxRate,
+                'tax_amount' => $taxAmount,
+                'total_with_tax' => $totalWithTax,
                 'file_path' => $filePath,
                 'items_data' => json_encode($extractItems),
             ]);
@@ -667,6 +738,11 @@ class ProjectController extends Controller
                     'unit_price' => $itemData['unit_price'],
                     'total_value' => $itemData['total_value'],
                 ]);
+            }
+
+            // إذا تم تغيير حالة المستخلص إلى مدفوع، قم بإنشاء سند قبض
+            if ($validated['extract_status'] === 'paid' && $extract->status !== 'paid') {
+                $this->createRevenueVoucherFromExtract($extract, $project);
             }
 
             return redirect()->route('projects.show', $project)
@@ -810,7 +886,7 @@ class ProjectController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            \Log::error('Project visit store failed', [
+            Log::error('Project visit store failed', [
                 'project_id' => $project->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()

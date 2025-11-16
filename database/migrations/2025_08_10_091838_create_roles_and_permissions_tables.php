@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('display_name');
+            $table->string('category')->default('general'); // تصنيف الدور
             $table->text('description')->nullable();
             $table->json('permissions')->nullable(); // صلاحيات الدور بصيغة JSON
             $table->boolean('is_active')->default(true);

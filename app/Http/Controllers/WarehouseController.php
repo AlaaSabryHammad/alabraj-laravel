@@ -13,6 +13,7 @@ use App\Models\Employee;
 use App\Models\DamagedPartsReceipt;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WarehouseController extends Controller
 {
@@ -23,7 +24,7 @@ class WarehouseController extends Controller
     {
         // البحث عن نوع الموقع "مستودع"
         $warehouseTypeId = \App\Models\LocationType::where('name', 'مستودع')->first()?->id;
-        
+
         if (!$warehouseTypeId) {
             // إذا لم يوجد نوع "مستودع"، ننشئه
             $warehouseType = \App\Models\LocationType::create(['name' => 'مستودع']);
@@ -45,34 +46,34 @@ class WarehouseController extends Controller
     {
         // التأكد من أن الموقع هو مستودع
         $warehouseTypeId = \App\Models\LocationType::where('name', 'مستودع')->first()?->id;
-        
+
         if ($warehouse->location_type_id !== $warehouseTypeId) {
             abort(404, 'الموقع المطلوب ليس مستودعاً');
         }
 
         // قطع الغيار الجديدة (الصالحة)
-        $newInventory = WarehouseInventory::with(['sparePart.serialNumbers' => function($query) use ($warehouse) {
+        $newInventory = WarehouseInventory::with(['sparePart.serialNumbers' => function ($query) use ($warehouse) {
             $query->where('location_id', $warehouse->id);
         }])
             ->where('location_id', $warehouse->id)
-            ->whereHas('sparePart', function($query) {
+            ->whereHas('sparePart', function ($query) {
                 $query->where('is_active', true)
-                      ->whereIn('source', ['new', 'returned']);
+                    ->whereIn('source', ['new', 'returned']);
             })
             ->get();
 
         // قطع الغيار التالفة
-        $damagedInventory = WarehouseInventory::with(['sparePart.serialNumbers' => function($query) use ($warehouse) {
+        $damagedInventory = WarehouseInventory::with(['sparePart.serialNumbers' => function ($query) use ($warehouse) {
             $query->where('location_id', $warehouse->id);
         }])
             ->where('location_id', $warehouse->id)
-            ->whereHas('sparePart', function($query) {
+            ->whereHas('sparePart', function ($query) {
                 $query->where('is_active', false)
-                      ->where(function($subQuery) {
-                          $subQuery->where('source', 'damaged_replacement')
-                                   ->orWhere('source', 'returned')
-                                   ->orWhere('name', 'LIKE', '%(تالفة)%');
-                      });
+                    ->where(function ($subQuery) {
+                        $subQuery->where('source', 'damaged_replacement')
+                            ->orWhere('source', 'returned')
+                            ->orWhere('name', 'LIKE', '%(تالفة)%');
+                    });
             })
             ->get();
 
@@ -81,35 +82,35 @@ class WarehouseController extends Controller
 
         // الحصول على جميع قطع الغيار للنماذج المنبثقة
         $allSpareParts = SparePart::where('is_active', true)->get();
-        
+
         // الحصول على أنواع قطع الغيار
         $sparePartTypes = \App\Models\SparePartType::all();
-        
+
         // الحصول على الموردين
         $suppliers = \App\Models\Supplier::all();
-        
+
         // الحصول على الموظفين
         $employees = \App\Models\Employee::where('status', 'active')->get();
-        
+
         // الحصول على جميع المعدات لربطها بالتصدير
         $equipments = Equipment::where('status', 'active')->get();
 
         // الحصول على جميع الأرقام التسلسلية للمستودع
-        $allSparePartSerials = SparePartSerial::whereHas('sparePart.inventories', function($query) use ($warehouse) {
-                $query->where('location_id', $warehouse->id);
-            })
+        $allSparePartSerials = SparePartSerial::whereHas('sparePart.inventories', function ($query) use ($warehouse) {
+            $query->where('location_id', $warehouse->id);
+        })
             ->with(['sparePart', 'exportedToEmployee'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         // الحصول على استلامات قطع الغيار التالفة للمستودع
         $damagedPartsReceipts = DamagedPartsReceipt::with([
-                'project',
-                'equipment', 
-                'sparePart',
-                'receivedByEmployee',
-                'sentByEmployee'
-            ])
+            'project',
+            'equipment',
+            'sparePart',
+            'receivedByEmployee',
+            'sentByEmployee'
+        ])
             ->where('warehouse_id', $warehouse->id)
             ->orderBy('receipt_date', 'desc')
             ->orderBy('receipt_time', 'desc')
@@ -196,7 +197,6 @@ class WarehouseController extends Controller
             DB::commit();
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم إضافة قطعة الغيار بنجاح');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()
@@ -273,7 +273,6 @@ class WarehouseController extends Controller
             DB::commit();
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم استلام قطع الغيار بنجاح');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()
@@ -290,9 +289,9 @@ class WarehouseController extends Controller
             ->where('location_id', $warehouse->id)
             ->where('available_stock', '>', 0)
             ->get();
-        
+
         $equipment = Equipment::orderBy('name')->get();
-        
+
         return view('warehouses.export-spares', compact('warehouse', 'inventories', 'equipment'));
     }
 
@@ -315,7 +314,7 @@ class WarehouseController extends Controller
         DB::beginTransaction();
         try {
             $recipientEmployee = Employee::find($request->recipient_employee_id);
-            
+
             foreach ($request->items as $item) {
                 $inventory = WarehouseInventory::where('spare_part_id', $item['spare_part_id'])
                     ->where('location_id', $warehouse->id)
@@ -382,7 +381,6 @@ class WarehouseController extends Controller
             DB::commit();
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم تصدير قطع الغيار بنجاح');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()
@@ -395,8 +393,8 @@ class WarehouseController extends Controller
      */
     public function receiveNewSpares(Request $request, Location $warehouse)
     {
-        \Log::info('receiveNewSpares called', ['request_data' => $request->all()]);
-        
+        Log::info('receiveNewSpares called', ['request_data' => $request->all()]);
+
         $validated = $request->validate([
             'invoice_number' => 'required|string|max:255',
             'supplier_id' => 'required|exists:suppliers,id',
@@ -410,7 +408,7 @@ class WarehouseController extends Controller
             'items.*.notes' => 'nullable|string',
         ]);
 
-        \Log::info('Validation passed', ['validated' => $validated]);
+        Log::info('Validation passed', ['validated' => $validated]);
 
         DB::beginTransaction();
         try {
@@ -427,13 +425,13 @@ class WarehouseController extends Controller
                     'source' => 'new', // جديدة من فاتورة
                 ]);
 
-                \Log::info('Spare part created/found', ['spare_part' => $sparePart]);
+                Log::info('Spare part created/found', ['spare_part' => $sparePart]);
 
                 // إنتاج الأرقام التسلسلية والباركود
                 for ($i = 0; $i < $item['quantity']; $i++) {
                     $serialNumber = $sparePart->generateSerialNumber();
                     $barcode = $sparePart->generateBarcode();
-                    
+
                     // إنشاء السجل في جدول الأرقام التسلسلية
                     \App\Models\SparePartSerial::create([
                         'spare_part_id' => $sparePart->id,
@@ -458,7 +456,7 @@ class WarehouseController extends Controller
                 $inventory->current_stock += $item['quantity'];
                 $inventory->available_stock += $item['quantity'];
                 $inventory->total_value += ($item['quantity'] * $item['unit_price']);
-                $inventory->average_cost = $inventory->current_stock > 0 ? 
+                $inventory->average_cost = $inventory->current_stock > 0 ?
                     $inventory->total_value / $inventory->current_stock : $item['unit_price'];
                 $inventory->last_transaction_date = now();
                 $inventory->save();
@@ -483,14 +481,13 @@ class WarehouseController extends Controller
             }
 
             DB::commit();
-            \Log::info('Transaction committed successfully');
-            
+            Log::info('Transaction committed successfully');
+
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم استلام قطع الغيار الجديدة بنجاح وإنتاج الأرقام التسلسلية');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error in receiveNewSpares', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Error in receiveNewSpares', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->withInput()
                 ->with('error', 'حدث خطأ أثناء استلام قطع الغيار: ' . $e->getMessage());
         }
@@ -587,7 +584,7 @@ class WarehouseController extends Controller
                 for ($i = 0; $i < $item['quantity']; $i++) {
                     $serialNumber = $damagedPart->generateSerialNumber();
                     $barcode = $damagedPart->generateBarcode();
-                    
+
                     SparePartSerial::create([
                         'spare_part_id' => $damagedPart->id,
                         'serial_number' => $serialNumber,
@@ -637,10 +634,9 @@ class WarehouseController extends Controller
             }
 
             DB::commit();
-            
+
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم تصدير قطع الغيار الجديدة واستلام القطع التالفة بنجاح');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()
@@ -653,8 +649,8 @@ class WarehouseController extends Controller
      */
     public function receiveDamagedSpares(Request $request, Location $warehouse)
     {
-        \Log::info('receiveDamagedSpares called', ['request_data' => $request->all()]);
-        
+        Log::info('receiveDamagedSpares called', ['request_data' => $request->all()]);
+
         $validated = $request->validate([
             'returned_by_employee_id' => 'required|exists:employees,id',
             'return_date' => 'required|date',
@@ -666,7 +662,7 @@ class WarehouseController extends Controller
             'items.*.notes' => 'nullable|string',
         ]);
 
-        \Log::info('Validation passed', ['validated' => $validated]);
+        Log::info('Validation passed', ['validated' => $validated]);
 
         DB::beginTransaction();
         try {
@@ -686,7 +682,7 @@ class WarehouseController extends Controller
                 for ($i = 0; $i < $item['quantity']; $i++) {
                     $serialNumber = $damagedSparePart->generateSerialNumber();
                     $barcode = $damagedSparePart->generateBarcode();
-                    
+
                     SparePartSerial::create([
                         'spare_part_id' => $damagedSparePart->id,
                         'serial_number' => $serialNumber,
@@ -738,14 +734,13 @@ class WarehouseController extends Controller
             }
 
             DB::commit();
-            \Log::info('Damaged parts reception transaction committed successfully');
-            
+            Log::info('Damaged parts reception transaction committed successfully');
+
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم استلام القطع التالفة بنجاح وإنتاج الأرقام التسلسلية');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error in receiveDamagedSpares', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Error in receiveDamagedSpares', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->withInput()
                 ->with('error', 'حدث خطأ أثناء استلام القطع التالفة: ' . $e->getMessage());
         }
@@ -756,8 +751,8 @@ class WarehouseController extends Controller
      */
     public function receiveGoodReturnedSpares(Request $request, Location $warehouse)
     {
-        \Log::info('receiveGoodReturnedSpares called', ['request_data' => $request->all()]);
-        
+        Log::info('receiveGoodReturnedSpares called', ['request_data' => $request->all()]);
+
         $validated = $request->validate([
             'returned_by_employee_id' => 'required|exists:employees,id',
             'return_date' => 'required|date',
@@ -769,15 +764,15 @@ class WarehouseController extends Controller
             'items.*.notes' => 'nullable|string',
         ]);
 
-        \Log::info('Validation passed', ['validated' => $validated]);
+        Log::info('Validation passed', ['validated' => $validated]);
 
         DB::beginTransaction();
         try {
             foreach ($validated['items'] as $item) {
                 $sparePart = SparePart::find($item['spare_part_id']);
-                
-                \Log::info('Processing returned good spare part', ['spare_part' => $sparePart]);
-                
+
+                Log::info('Processing returned good spare part', ['spare_part' => $sparePart]);
+
                 // البحث عن Serial Numbers التي تم تصديرها لهذا الموظف
                 $returnedSerials = SparePartSerial::where('spare_part_id', $sparePart->id)
                     ->where('assigned_to_employee', $validated['returned_by_employee_id'])
@@ -836,14 +831,13 @@ class WarehouseController extends Controller
             }
 
             DB::commit();
-            \Log::info('Good return transaction committed successfully');
-            
+            Log::info('Good return transaction committed successfully');
+
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم استلام قطع الغيار الصالحة المُرجعة بنجاح');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error in receiveGoodReturnedSpares', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Error in receiveGoodReturnedSpares', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->withInput()
                 ->with('error', 'حدث خطأ أثناء استلام قطع الغيار: ' . $e->getMessage());
         }
@@ -882,7 +876,7 @@ class WarehouseController extends Controller
         try {
             foreach ($validated['items'] as $item) {
                 $sparePart = SparePart::find($item['spare_part_id']);
-                
+
                 // التحقق من أن هذه قطعة تالفة
                 if ($sparePart->source !== 'damaged_replacement') {
                     return back()->withInput()
@@ -938,10 +932,9 @@ class WarehouseController extends Controller
             }
 
             DB::commit();
-            
+
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم التخلص من القطع التالفة بنجاح');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()
@@ -956,7 +949,7 @@ class WarehouseController extends Controller
     {
         $sparePart = SparePart::with([
             'sparePartType',
-            'serialNumbers' => function($query) use ($warehouse) {
+            'serialNumbers' => function ($query) use ($warehouse) {
                 $query->where('location_id', $warehouse->id);
             }
         ])->findOrFail($sparePartId);

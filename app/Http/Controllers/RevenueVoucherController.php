@@ -61,6 +61,25 @@ class RevenueVoucherController extends Controller
             $validated['attachment_path'] = $filePath;
         }
 
+        // حساب الضريبة تلقائياً
+        $taxRate = 15.00; // معدل الضريبة 15%
+        
+        if ($validated['tax_type'] === 'taxable') {
+            // المبلغ شامل الضريبة، نحسب المبلغ بدون الضريبة
+            $amountWithTax = $validated['amount'];
+            $amountWithoutTax = $amountWithTax / (1 + ($taxRate / 100));
+            $taxAmount = $amountWithTax - $amountWithoutTax;
+            
+            $validated['tax_rate'] = $taxRate;
+            $validated['tax_amount'] = $taxAmount;
+            $validated['amount_without_tax'] = $amountWithoutTax;
+        } else {
+            // غير خاضع للضريبة
+            $validated['tax_rate'] = 0;
+            $validated['tax_amount'] = 0;
+            $validated['amount_without_tax'] = $validated['amount'];
+        }
+
         $validated['created_by'] = Auth::id();
 
         $voucher = RevenueVoucher::create($validated);
@@ -112,6 +131,25 @@ class RevenueVoucherController extends Controller
             'notes' => 'nullable|string|max:2000',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
         ]);
+
+        // حساب الضريبة تلقائياً
+        $taxRate = 15.00; // معدل الضريبة 15%
+        
+        if ($validated['tax_type'] === 'taxable') {
+            // المبلغ شامل الضريبة، نحسب المبلغ بدون الضريبة
+            $amountWithTax = $validated['amount'];
+            $amountWithoutTax = $amountWithTax / (1 + ($taxRate / 100));
+            $taxAmount = $amountWithTax - $amountWithoutTax;
+            
+            $validated['tax_rate'] = $taxRate;
+            $validated['tax_amount'] = $taxAmount;
+            $validated['amount_without_tax'] = $amountWithoutTax;
+        } else {
+            // غير خاضع للضريبة
+            $validated['tax_rate'] = 0;
+            $validated['tax_amount'] = 0;
+            $validated['amount_without_tax'] = $validated['amount'];
+        }
 
         // معالجة رفع الملف
         if ($request->hasFile('attachment')) {

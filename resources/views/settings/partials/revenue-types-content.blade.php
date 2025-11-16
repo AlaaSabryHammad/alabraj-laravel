@@ -1,104 +1,104 @@
-<div class="space-y-6">
-    <!-- Search and Filter Bar -->
-    <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div class="flex-1 max-w-md">
-            <div class="relative">
-                <input type="text" id="search-revenue-types"
-                    class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="البحث في أنواع الإيرادات...">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="ri-search-line text-gray-400"></i>
-                </div>
-            </div>
+<div class="space-y-4">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h3 class="text-xl font-bold text-gray-900">أنواع الإيرادات</h3>
+            <p class="text-gray-600 text-sm mt-1">إدارة أنواع الإيرادات والمصادر</p>
         </div>
-        <div class="flex gap-2">
-            <button onclick="filterRevenueTypes('all')"
-                class="revenue-filter-btn active px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                data-filter="all">الكل</button>
-            <button onclick="filterRevenueTypes('active')"
-                class="revenue-filter-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                data-filter="active">فعال</button>
-            <button onclick="filterRevenueTypes('inactive')"
-                class="revenue-filter-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                data-filter="inactive">غير فعال</button>
-        </div>
+        <button onclick="openRevenueTypeModal()"
+            class="flex items-center px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-medium text-sm rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-sm hover:shadow-md">
+            <i class="ri-add-line ml-2"></i>
+            <span>إضافة نوع</span>
+        </button>
     </div>
 
     <!-- Revenue Types Table -->
-    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div class="overflow-hidden border border-gray-200 rounded-xl">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الرقم</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الاسم</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الكود</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الوصف</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الحالة</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الإجراءات</th>
+                <thead>
+                    <tr class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-700">الاسم</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-700">الكود</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-700">الوصف</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-700">الحالة</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-700">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody id="revenue-types-tbody" class="bg-white divide-y divide-gray-200">
+                <tbody id="revenue-types-tbody" class="divide-y divide-gray-100">
                     @forelse($revenueTypes ?? [] as $type)
-                        <tr class="revenue-type-row hover:bg-gray-50"
+                        <tr class="revenue-type-row hover:bg-gray-50 transition-colors duration-150"
                             data-status="{{ $type->is_active ? 'active' : 'inactive' }}">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $type->id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $type->name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span class="bg-gray-100 px-2 py-1 rounded text-xs font-mono">{{ $type->code }}</span>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-10 h-10 bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-lg flex items-center justify-center ml-3 flex-shrink-0">
+                                        <i class="ri-coin-line text-emerald-600"></i>
+                                    </div>
+                                    <div class="font-medium text-gray-900">{{ $type->name }}</div>
+                                </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
-                                <div class="max-w-xs truncate">{{ $type->description ?? '-' }}</div>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-mono bg-gray-100 text-gray-700 border border-gray-200">
+                                    {{ $type->code }}
+                                </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4">
+                                <p class="text-sm text-gray-600">{{ $type->description ?: '—' }}</p>
+                            </td>
+                            <td class="px-6 py-4">
                                 @if ($type->is_active)
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="ri-checkbox-circle-line ml-1"></i>
-                                        فعال
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                        <span class="w-2 h-2 ml-2 bg-green-500 rounded-full"></span>
+                                        نشط
                                     </span>
                                 @else
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        <i class="ri-close-circle-line ml-1"></i>
-                                        غير فعال
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-300">
+                                        <span class="w-2 h-2 ml-2 bg-gray-400 rounded-full"></span>
+                                        معطل
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center gap-2">
-                                    <button onclick="editRevenueType({{ $type->id }}, '{{ addslashes($type->name) }}', '{{ addslashes($type->code) }}', '{{ addslashes($type->description ?? '') }}', {{ $type->is_active ? 'true' : 'false' }})"
-                                        class="text-blue-600 hover:text-blue-800 transition-colors"
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-2 space-x-reverse">
+                                    <button
+                                        onclick="editRevenueType({{ $type->id }}, '{{ addslashes($type->name) }}', '{{ addslashes($type->code) }}', '{{ addslashes($type->description ?? '') }}', {{ $type->is_active ? 'true' : 'false' }})"
+                                        class="inline-flex items-center justify-center p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-150"
                                         title="تعديل">
-                                        <i class="ri-edit-line"></i>
+                                        <i class="ri-edit-line text-lg"></i>
                                     </button>
                                     <button onclick="toggleRevenueTypeStatus({{ $type->id }})"
-                                        class="text-yellow-600 hover:text-yellow-800 transition-colors"
+                                        class="inline-flex items-center justify-center p-2 text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors duration-150"
                                         title="تبديل الحالة">
-                                        <i class="ri-toggle-line"></i>
+                                        <i class="ri-toggle-line text-lg"></i>
                                     </button>
-                                    <button onclick="deleteRevenueType({{ $type->id }}, '{{ addslashes($type->name) }}', '{{ addslashes($type->code) }}')"
-                                        class="text-red-600 hover:text-red-800 transition-colors"
+                                    <button
+                                        onclick="deleteRevenueType({{ $type->id }}, '{{ addslashes($type->name) }}', '{{ addslashes($type->code) }}')"
+                                        class="inline-flex items-center justify-center p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors duration-150"
                                         title="حذف">
-                                        <i class="ri-delete-bin-line"></i>
+                                        <i class="ri-delete-bin-line text-lg"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="5" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
-                                    <i class="ri-folder-open-line text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-lg font-medium mb-2">لا توجد أنواع إيرادات</p>
-                                    <p class="text-sm">ابدأ بإضافة نوع إيراد جديد</p>
+                                    <div
+                                        class="w-20 h-20 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-2xl flex items-center justify-center mb-6">
+                                        <i class="ri-coin-line text-emerald-600 text-3xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد أنواع إيرادات</h3>
+                                    <p class="text-gray-600 text-sm mb-8">ابدأ بإضافة أول نوع إيراد في النظام</p>
+                                    <button onclick="openRevenueTypeModal()"
+                                        class="flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-medium rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-sm hover:shadow-md">
+                                        <i class="ri-add-line ml-2"></i>
+                                        <span>إضافة أول نوع</span>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -166,29 +166,35 @@
     }
 
     function editRevenueType(id, name, code, description, isActive) {
-        console.log('Edit revenue type called with:', {id, name, code, description, isActive});
-        
+        console.log('Edit revenue type called with:', {
+            id,
+            name,
+            code,
+            description,
+            isActive
+        });
+
         // Set modal title and button text
         const modalTitle = document.getElementById('revenue-type-modal-title');
         const submitText = document.getElementById('revenue-type-submit-text');
         const form = document.getElementById('revenue-type-form');
         const methodField = document.getElementById('revenue-type-form-method');
-        
+
         if (modalTitle && submitText && form && methodField) {
             modalTitle.textContent = 'تعديل نوع الإيراد';
             submitText.textContent = 'تحديث';
-            
+
             // Set form action and method
             form.action = `/settings/revenue-types/${id}`;
             methodField.value = 'PUT';
-            
+
             // Fill form fields
             document.getElementById('revenue-type-id').value = id;
             document.getElementById('revenue_type_name').value = name;
             document.getElementById('revenue_type_code').value = code;
             document.getElementById('revenue_type_description').value = description;
             document.getElementById('revenue_type_is_active').checked = isActive;
-            
+
             // Clear errors and show modal
             clearRevenueTypeErrors();
             document.getElementById('revenue-type-modal').classList.remove('hidden');
@@ -199,75 +205,83 @@
 
     function toggleRevenueTypeStatus(id) {
         console.log('Toggle revenue type status:', id);
-        
+
         const csrfToken = document.querySelector('meta[name="csrf-token"]');
         if (!csrfToken) {
             alert('لم يتم العثور على رمز CSRF');
             return;
         }
-        
+
         // Show loading state on the button
         const toggleBtn = document.querySelector(`button[onclick="toggleRevenueTypeStatus(${id})"]`);
         if (toggleBtn) {
             toggleBtn.disabled = true;
             toggleBtn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i>';
         }
-        
+
         fetch(`/settings/revenue-types/${id}/toggle-status`, {
-            method: 'PATCH',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => {
-            console.log('Toggle status response:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Toggle status response data:', data);
-            if (data.success) {
-                // Check if we're in the global context and have access to loadSectionContent
-                if (typeof loadSectionContent === 'function') {
-                    loadSectionContent('{{ route('settings.revenue-types.content') }}');
-                } else {
-                    // Fallback: reload the page
-                    window.location.reload();
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
-            } else {
-                alert(data.message || 'حدث خطأ أثناء تغيير حالة نوع الإيراد');
+            })
+            .then(response => {
+                console.log('Toggle status response:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Toggle status response data:', data);
+                if (data.success) {
+                    // Check if we're in the global context and have access to loadSectionContent
+                    if (typeof loadSectionContent === 'function') {
+                        loadSectionContent('{{ route('settings.revenue-types.content') }}');
+                    } else {
+                        // Fallback: reload the page
+                        window.location.reload();
+                    }
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء تغيير حالة نوع الإيراد');
+                    // Reset button state
+                    if (toggleBtn) {
+                        toggleBtn.disabled = false;
+                        toggleBtn.innerHTML = '<i class="ri-toggle-line"></i>';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في الاتصال: ' + error.message);
                 // Reset button state
                 if (toggleBtn) {
                     toggleBtn.disabled = false;
                     toggleBtn.innerHTML = '<i class="ri-toggle-line"></i>';
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('حدث خطأ في الاتصال: ' + error.message);
-            // Reset button state
-            if (toggleBtn) {
-                toggleBtn.disabled = false;
-                toggleBtn.innerHTML = '<i class="ri-toggle-line"></i>';
-            }
-        });
+            });
     }
 
     function deleteRevenueType(id, name = '', code = '') {
-        console.log('Delete revenue type called with:', {id, name, code});
-        
+        console.log('Delete revenue type called with:', {
+            id,
+            name,
+            code
+        });
+
         // Store revenue type info for deletion
-        window.revenueTypeToDelete = { id, name, code };
-        
+        window.revenueTypeToDelete = {
+            id,
+            name,
+            code
+        };
+
         // Update modal content 
         document.getElementById('delete-revenue-type-name').textContent = name || 'نوع إيراد غير محدد';
         document.getElementById('delete-revenue-type-code').textContent = code || 'كود غير محدد';
-        
+
         // Show delete modal
         document.getElementById('delete-revenue-type-modal').classList.remove('hidden');
     }
@@ -278,57 +292,57 @@
 
     function confirmDeleteRevenueType() {
         console.log('Confirm delete revenue type called, revenueTypeToDelete:', window.revenueTypeToDelete);
-        
+
         if (!window.revenueTypeToDelete) {
             console.log('No revenue type to delete found');
             return;
         }
-        
+
         const id = window.revenueTypeToDelete.id;
         const csrfToken = document.querySelector('meta[name="csrf-token"]');
-        
+
         if (!csrfToken) {
             alert('لم يتم العثور على رمز CSRF');
             return;
         }
-        
+
         // Show loading state
         const confirmBtn = document.getElementById('confirm-delete-revenue-type-btn');
         const originalText = confirmBtn.textContent;
         confirmBtn.textContent = 'جاري الحذف...';
         confirmBtn.disabled = true;
-        
+
         fetch(`/settings/revenue-types/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeDeleteRevenueTypeModal();
-                // Reload the content to remove the deleted item
-                if (typeof loadSectionContent === 'function') {
-                    loadSectionContent('{{ route('settings.revenue-types.content') }}');
-                } else {
-                    window.location.reload();
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
-            } else {
-                alert(data.message || 'حدث خطأ أثناء الحذف');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('حدث خطأ في الاتصال');
-        })
-        .finally(() => {
-            // Reset button state
-            confirmBtn.textContent = originalText;
-            confirmBtn.disabled = false;
-        });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeDeleteRevenueTypeModal();
+                    // Reload the content to remove the deleted item
+                    if (typeof loadSectionContent === 'function') {
+                        loadSectionContent('{{ route('settings.revenue-types.content') }}');
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في الاتصال');
+            })
+            .finally(() => {
+                // Reset button state
+                confirmBtn.textContent = originalText;
+                confirmBtn.disabled = false;
+            });
     }
 
     // Search functionality

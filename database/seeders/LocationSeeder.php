@@ -23,6 +23,12 @@ class LocationSeeder extends Seeder
         $locationTypes = LocationType::all();
         $employees = Employee::all();
 
+        // If no employees exist, skip seeding locations
+        if ($employees->isEmpty()) {
+            $this->command->info('⚠️ لا توجد موظفين في قاعدة البيانات، يتم تخطي إنشاء المواقع');
+            return;
+        }
+
         $locations = [
             ['name' => 'Main Office - Riyadh'],
             ['name' => 'Jeddah Branch'],
@@ -78,7 +84,7 @@ class LocationSeeder extends Seeder
 
         // إضافة مستودعات مخصصة
         $warehouseType = $locationTypes->where('name', 'مستودع')->first();
-        
+
         if ($warehouseType) {
             $warehouseLocations = [
                 [

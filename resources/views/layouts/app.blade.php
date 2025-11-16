@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,9 @@
     <!-- Enhanced Project Edit Styles -->
     <link href="{{ asset('css/project-edit-enhanced.css') }}" rel="stylesheet">
 
+    <!-- Unified Settings Styles -->
+    <link href="{{ asset('css/unified-settings.css') }}" rel="stylesheet">
+
     <!-- Custom CSS for RTL -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
@@ -28,8 +32,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .sidebar-item {
@@ -44,8 +55,21 @@
             direction: ltr;
         }
 
+        /* منع تمدد المحتوى تحت القائمة الجانبية */
+        .flex-1.mr-64 {
+            max-width: calc(100vw - 16rem);
+            overflow-x: hidden;
+        }
+
+        /* تحسين عرض المحتوى */
+        .max-w-7xl {
+            width: 100%;
+            max-width: 100%;
+        }
+
         /* Print Styles - تحسينات شاملة للطباعة */
         @media print {
+
             /* إعدادات الصفحة */
             @page {
                 size: A4;
@@ -190,7 +214,8 @@
             }
 
             /* تحسين العناوين */
-            h1, .text-3xl {
+            h1,
+            .text-3xl {
                 font-size: 18pt !important;
                 font-weight: bold !important;
                 color: #000 !important;
@@ -198,7 +223,8 @@
                 page-break-after: avoid;
             }
 
-            h2, .text-2xl {
+            h2,
+            .text-2xl {
                 font-size: 16pt !important;
                 font-weight: bold !important;
                 color: #000 !important;
@@ -206,7 +232,8 @@
                 page-break-after: avoid;
             }
 
-            h3, .text-lg {
+            h3,
+            .text-lg {
                 font-size: 14pt !important;
                 font-weight: 600 !important;
                 color: #000 !important;
@@ -214,7 +241,8 @@
                 page-break-after: avoid;
             }
 
-            h4, .text-base {
+            h4,
+            .text-base {
                 font-size: 12pt !important;
                 font-weight: 600 !important;
                 color: #000 !important;
@@ -254,7 +282,7 @@
                 display: block !important;
             }
 
-            .grid > div {
+            .grid>div {
                 display: block !important;
                 margin-bottom: 6pt !important;
                 page-break-inside: avoid;
@@ -268,12 +296,14 @@
                 border: 1px solid #ddd !important;
             }
 
-            .w-24, .h-24 {
+            .w-24,
+            .h-24 {
                 width: 60pt !important;
                 height: 60pt !important;
             }
 
-            .w-32, .h-32 {
+            .w-32,
+            .h-32 {
                 width: 80pt !important;
                 height: 80pt !important;
             }
@@ -314,15 +344,15 @@
             }
 
             /* تحسين المساحات بين العناصر */
-            .space-y-6 > * + * {
+            .space-y-6>*+* {
                 margin-top: 12pt !important;
             }
 
-            .space-y-4 > * + * {
+            .space-y-4>*+* {
                 margin-top: 8pt !important;
             }
 
-            .space-y-2 > * + * {
+            .space-y-2>*+* {
                 margin-top: 4pt !important;
             }
 
@@ -344,7 +374,9 @@
             }
 
             /* تحسين النماذج */
-            input, select, textarea {
+            input,
+            select,
+            textarea {
                 border: 1px solid #ccc !important;
                 background: white !important;
                 padding: 2pt !important;
@@ -460,8 +492,9 @@
 
     @stack('styles')
 </head>
+
 <body class="bg-gradient-to-br from-slate-50 to-blue-50 rtl" dir="rtl">
-    <div class="min-h-screen flex">
+    <div class="min-h-screen flex relative">
         <!-- Sidebar -->
         @include('layouts.sidebar')
 
@@ -475,4 +508,5 @@
 
     @stack('scripts')
 </body>
+
 </html>

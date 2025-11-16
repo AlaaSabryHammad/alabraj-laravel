@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class ExpenseCategoryController extends Controller
 {
@@ -69,7 +70,7 @@ class ExpenseCategoryController extends Controller
     public function toggleStatus(ExpenseCategory $expenseCategory)
     {
         try {
-            \Log::info('Toggle expense category status called', [
+            Log::info('Toggle expense category status called', [
                 'id' => $expenseCategory->id,
                 'current_status' => $expenseCategory->is_active,
                 'new_status' => !$expenseCategory->is_active
@@ -77,29 +78,29 @@ class ExpenseCategoryController extends Controller
 
             $oldStatus = $expenseCategory->is_active;
             $expenseCategory->update(['is_active' => !$expenseCategory->is_active]);
-            
+
             // Reload to get the updated status
             $expenseCategory->refresh();
-            
+
             $status = $expenseCategory->is_active ? 'تم تفعيل' : 'تم إلغاء تفعيل';
-            
-            \Log::info('Toggle expense category status completed', [
+
+            Log::info('Toggle expense category status completed', [
                 'id' => $expenseCategory->id,
                 'old_status' => $oldStatus,
                 'new_status' => $expenseCategory->is_active
             ]);
 
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => $status . ' فئة المصروف بنجاح',
                 'new_status' => $expenseCategory->is_active
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error toggling expense category status', [
+            Log::error('Error toggling expense category status', [
                 'id' => $expenseCategory->id,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ أثناء تغيير الحالة: ' . $e->getMessage()

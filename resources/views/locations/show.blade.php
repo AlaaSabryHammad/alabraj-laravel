@@ -382,31 +382,48 @@
     <div id="existingEquipmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50"
         onclick="hideExistingEquipmentModal()">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6" onclick="event.stopPropagation()">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-bold text-gray-900">اختيار معدة موجودة</h3>
-                    <button onclick="hideExistingEquipmentModal()" class="text-gray-500 hover:text-gray-700">
+            <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full p-6" onclick="event.stopPropagation()">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                            <i class="ri-database-2-line text-green-600"></i>
+                            اختيار معدة موجودة
+                        </h3>
+                        <p class="text-gray-600 text-sm mt-1">اختر من قائمة المعدات المتاحة في قاعدة البيانات</p>
+                    </div>
+                    <button onclick="hideExistingEquipmentModal()"
+                        class="text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition-colors">
                         <i class="ri-close-line text-xl"></i>
                     </button>
                 </div>
 
-                <div class="mb-4">
-                    <input type="text" id="equipmentSearch" placeholder="ابحث عن المعدة..."
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        onkeyup="filterEquipment()">
-                </div>
-
-                <div id="equipmentList" class="max-h-64 overflow-y-auto space-y-2">
-                    <!-- Equipment list will be loaded here -->
-                    <div class="text-center py-4">
-                        <i class="ri-loader-4-line text-gray-400 text-xl animate-spin"></i>
-                        <p class="text-gray-500 mt-2">جاري تحميل المعدات...</p>
+                <!-- Search Box -->
+                <div class="mb-6">
+                    <div class="relative">
+                        <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="equipmentSearch"
+                            placeholder="ابحث عن المعدة باسمها أو رقمها التسلسلي..."
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                            onkeyup="filterEquipment()">
                     </div>
                 </div>
 
-                <div class="mt-6 flex gap-3">
+                <!-- Equipment List -->
+                <div id="equipmentList" class="max-h-96 overflow-y-auto space-y-2">
+                    <!-- Equipment list will be loaded here -->
+                    <div class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                            <i class="ri-loader-4-line text-blue-600 text-2xl animate-spin"></i>
+                        </div>
+                        <p class="text-gray-600 font-medium">جاري تحميل المعدات من قاعدة البيانات...</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-6 pt-4 border-t border-gray-200 flex gap-3 justify-end">
                     <button onclick="hideExistingEquipmentModal()"
-                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium">
                         إلغاء
                     </button>
                 </div>
@@ -721,12 +738,24 @@ $roleColor = match($employee->role) {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
                 })
                 .then(response => {
                     console.log('Response status:', response.status);
                     console.log('Response headers:', response.headers.get('content-type'));
+
+                    // Handle 401 Unauthorized
+                    if (response.status === 401) {
+                        throw new Error('Unauthorized');
+                    }
+
+                    // Handle 403 Forbidden
+                    if (response.status === 403) {
+                        throw new Error('Forbidden');
+                    }
 
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -747,34 +776,60 @@ $roleColor = match($employee->role) {
                     const equipmentList = document.getElementById('equipmentList');
                     if (data.length === 0) {
                         equipmentList.innerHTML = `
-                <div class="text-center py-8">
-                    <i class="ri-tools-line text-gray-400 text-3xl"></i>
-                    <p class="text-gray-500 mt-2">لا توجد معدات متاحة للنقل إلى هذا الموقع</p>
-                    <p class="text-gray-400 text-sm">جميع المعدات الأخرى موجودة في هذا الموقع بالفعل أو غير متاحة</p>
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
+                        <i class="ri-tools-line text-yellow-600 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-900 font-medium mb-2">لا توجد معدات متاحة</p>
+                    <p class="text-gray-600 text-sm">جميع المعدات المسجلة في النظام موجودة بالفعل في هذا الموقع أو غير متاحة للنقل</p>
+                    <div class="mt-4">
+                        <a href="{{ route('equipment.create') }}?location_id={{ $location->id }}" class="text-green-600 hover:text-green-700 font-medium inline-flex items-center gap-2">
+                            <i class="ri-add-line"></i>
+                            إضافة معدة جديدة
+                        </a>
+                    </div>
                 </div>
             `;
                         return;
                     }
 
                     equipmentList.innerHTML = data.map(equipment => `
-            <div class="equipment-item border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+            <div class="equipment-item group border border-gray-200 rounded-xl p-4 hover:border-green-400 hover:shadow-md cursor-pointer transition-all duration-200 bg-white hover:bg-green-50"
                  onclick="assignEquipmentToLocation(${equipment.id})">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center
-                            ${getStatusBgColor(equipment.status)}">
-                            <i class="ri-tools-line ${getStatusTextColor(equipment.status)}"></i>
+                <div class="flex items-center justify-between gap-4">
+                    <!-- Left Side: Icon and Info -->
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
+                            ${getStatusBgColor(equipment.status)} group-hover:shadow-md transition-all">
+                            <i class="ri-tools-line text-lg ${getStatusTextColor(equipment.status)}"></i>
                         </div>
-                        <div>
-                            <div class="font-medium text-gray-900">${equipment.name}</div>
-                            <div class="text-sm text-gray-500">${equipment.type} - ${equipment.serial_number}</div>
+                        <div class="flex-1 min-w-0">
+                            <!-- Equipment Name -->
+                            <div class="font-semibold text-gray-900 truncate text-base">${equipment.name}</div>
+                            <!-- Equipment Details -->
+                            <div class="flex items-center gap-3 mt-2 flex-wrap">
+                                <span class="inline-flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                                    <i class="ri-price-tag-3-line"></i>
+                                    ${equipment.type || 'نوع غير محدد'}
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                                    <i class="ri-barcode-line"></i>
+                                    ${equipment.serial_number || 'بدون'}
+                                </span>
+                                ${equipment.location ? `<span class="inline-flex items-center gap-1 text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
+                                        <i class="ri-map-pin-line"></i>
+                                        ${equipment.location}
+                                    </span>` : '<span class="inline-flex items-center gap-1 text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded"><i class="ri-alert-line"></i>بدون موقع</span>'}
+                            </div>
                         </div>
                     </div>
-                    <div class="text-left">
-                        <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(equipment.status)}">
+                    
+                    <!-- Right Side: Status Badge -->
+                    <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full transition-all ${getStatusBadgeColor(equipment.status)}">
                             ${getStatusText(equipment.status)}
                         </span>
-                        ${equipment.location ? `<div class="text-xs text-gray-500 mt-1">الموقع: ${equipment.location}</div>` : ''}
+                        <span class="text-xs text-gray-500">اضغط للاختيار</span>
                     </div>
                 </div>
             </div>
@@ -782,34 +837,46 @@ $roleColor = match($employee->role) {
                 })
                 .catch(error => {
                     console.error('Error loading equipment:', error);
-                    console.error('Response status:', error.status);
-                    console.error('Response text:', error.message);
 
-                    let errorMessage = 'خطأ في تحميل المعدات';
+                    let errorMessage = 'خطأ في تحميل المعدات من قاعدة البيانات';
                     let actionButton = '';
+                    let showRetry = true;
 
-                    if (error.message.includes('Authentication required')) {
-                        errorMessage = 'انتهت صلاحية الجلسة';
+                    if (error.message.includes('Unauthorized') || error.message.includes('Authentication required')) {
+                        errorMessage = 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى';
+                        showRetry = false;
                         actionButton = `
-                            <div class="mt-4 space-y-2">
-                                <button onclick="window.location.href='/login'" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    تسجيل الدخول مرة أخرى
+                            <div class="mt-4 flex gap-2 justify-center">
+                                <button onclick="window.location.href='/login'" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                                    <i class="ri-login-box-line ml-1"></i>
+                                    تسجيل الدخول
                                 </button>
-                                <button onclick="window.location.reload()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors ml-2">
-                                    إعادة تحميل الصفحة
+                            </div>
+                        `;
+                    } else if (error.message.includes('Forbidden')) {
+                        errorMessage = 'ليس لديك صلاحية للوصول إلى هذه البيانات';
+                        showRetry = false;
+                    } else {
+                        actionButton = `
+                            <div class="mt-4 flex gap-2 justify-center">
+                                <button onclick="loadAvailableEquipment()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                                    <i class="ri-refresh-line ml-1"></i>
+                                    إعادة محاولة
                                 </button>
                             </div>
                         `;
                     }
 
                     document.getElementById('equipmentList').innerHTML = `
-            <div class="text-center py-8">
-                <i class="ri-error-warning-line text-red-400 text-3xl"></i>
-                <p class="text-red-500 mt-2">${errorMessage}</p>
-                <p class="text-red-400 text-xs mt-1">تحقق من وحدة التحكم للتفاصيل</p>
-                ${actionButton}
-            </div>
-        `;
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                                <i class="ri-alert-line text-red-600 text-2xl"></i>
+                            </div>
+                            <p class="text-red-600 font-medium mb-2">${errorMessage}</p>
+                            <p class="text-gray-600 text-sm mb-4">تحقق من الاتصال بالإنترنت وحاول مرة أخرى</p>
+                            ${actionButton}
+                        </div>
+                    `;
                 });
         }
 
@@ -886,37 +953,37 @@ $roleColor = match($employee->role) {
             };
 
             fetch(`/equipment/${equipmentId}/update-location`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 419) {
-                        throw new Error('Session expired. Please refresh the page and try again.');
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 419) {
+                            throw new Error('Session expired. Please refresh the page and try again.');
+                        }
+                        return response.json().then(err => {
+                            throw new Error(err.message || 'An unknown error occurred.');
+                        });
                     }
-                    return response.json().then(err => {
-                        throw new Error(err.message || 'An unknown error occurred.');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    hideExistingEquipmentModal();
-                    location.reload(); // Reload page to show updated equipment list
-                } else {
-                    alert(data.message || 'An error occurred while updating the equipment location.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert(`An error occurred: ${error.message}`);
-            });
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        hideExistingEquipmentModal();
+                        location.reload(); // Reload page to show updated equipment list
+                    } else {
+                        alert(data.message || 'An error occurred while updating the equipment location.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(`An error occurred: ${error.message}`);
+                });
         }
 
         function getStatusBgColor(status) {

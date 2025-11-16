@@ -224,7 +224,7 @@
                                         {{ $message }}
                                     </p>
                                 @enderror
-                                <div
+                                <div id="driver-status-info"
                                     class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
                                     <div class="flex items-start gap-3">
                                         <div
@@ -619,7 +619,7 @@
                     const purchaseDate = new Date(this.value);
                     const warrantyExpiry = new Date(purchaseDate);
                     warrantyExpiry.setFullYear(warrantyExpiry.getFullYear() +
-                    2); // Default 2 years warranty
+                        2); // Default 2 years warranty
                     warrantyExpiryInput.value = warrantyExpiry.toISOString().split('T')[0];
                 }
             });
@@ -881,7 +881,7 @@
 
             // Monitor driver selection changes
             const driverSelect = document.getElementById('driver_id');
-            const statusInfo = document.querySelector('.bg-blue-50');
+            const statusInfo = document.getElementById('driver-status-info');
 
             if (driverSelect && statusInfo) {
                 const currentDriverId = '{{ old('driver_id', $equipment->driver_id) }}';

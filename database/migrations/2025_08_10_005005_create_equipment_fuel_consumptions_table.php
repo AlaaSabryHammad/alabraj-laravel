@@ -19,10 +19,16 @@ return new class extends Migration
             $table->decimal('quantity', 8, 2); // الكمية باللتر
             $table->date('consumption_date');
             $table->text('notes')->nullable();
+            $table->enum('approval_status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->text('approval_notes')->nullable();
             $table->timestamps();
 
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
             $table->index(['equipment_id', 'consumption_date']);
             $table->index(['equipment_id', 'fuel_type']);
+            $table->index('approval_status');
         });
     }
 

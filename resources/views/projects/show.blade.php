@@ -1009,7 +1009,17 @@
                                         {{ $extract->description ?? 'بدون وصف' }}
                                     </td>
                                     <td class="px-4 py-3 border text-center font-medium">
-                                        {{ number_format($extract->total_amount, 2) }} ر.س
+                                        <div class="text-sm">
+                                            <div class="font-medium">{{ number_format($extract->total_amount, 2) }} ر.س</div>
+                                            @if($extract->tax_amount > 0)
+                                                <div class="text-xs text-gray-500">
+                                                    + ضريبة: {{ number_format($extract->tax_amount, 2) }} ر.س
+                                                </div>
+                                                <div class="text-xs font-semibold text-green-600">
+                                                    الإجمالي: {{ number_format($extract->total_with_tax, 2) }} ر.س
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3 border text-center">
                                         <span

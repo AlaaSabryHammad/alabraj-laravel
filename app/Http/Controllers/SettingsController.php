@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\EquipmentType;
 use App\Models\LocationType;
 use App\Models\Role;
@@ -45,11 +46,11 @@ class SettingsController extends Controller
         ]);
 
         // Force JSON response for AJAX requests
-        $isAjax = $request->ajax() || 
-                  $request->wantsJson() || 
-                  $request->expectsJson() ||
-                  $request->header('X-Requested-With') === 'XMLHttpRequest' ||
-                  $request->header('Content-Type') === 'application/json';
+        $isAjax = $request->ajax() ||
+            $request->wantsJson() ||
+            $request->expectsJson() ||
+            $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+            $request->header('Content-Type') === 'application/json';
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:equipment_types',
@@ -117,10 +118,10 @@ class SettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $isAjax = $request->ajax() || 
-                      $request->wantsJson() || 
-                      $request->expectsJson() ||
-                      $request->header('X-Requested-With') === 'XMLHttpRequest';
+            $isAjax = $request->ajax() ||
+                $request->wantsJson() ||
+                $request->expectsJson() ||
+                $request->header('X-Requested-With') === 'XMLHttpRequest';
             if ($isAjax) {
                 return response()->json([
                     'success' => false,
@@ -136,10 +137,10 @@ class SettingsController extends Controller
             'is_active' => $request->boolean('is_active', false)
         ]);
 
-        $isAjax = $request->ajax() || 
-                  $request->wantsJson() || 
-                  $request->expectsJson() ||
-                  $request->header('X-Requested-With') === 'XMLHttpRequest';
+        $isAjax = $request->ajax() ||
+            $request->wantsJson() ||
+            $request->expectsJson() ||
+            $request->header('X-Requested-With') === 'XMLHttpRequest';
         if ($isAjax) {
             return response()->json([
                 'success' => true,
@@ -154,10 +155,10 @@ class SettingsController extends Controller
     {
         // Check if equipment type is used
         if ($equipmentType->equipment()->count() > 0) {
-            $isAjax = request()->ajax() || 
-                      request()->wantsJson() || 
-                      request()->expectsJson() ||
-                      request()->header('X-Requested-With') === 'XMLHttpRequest';
+            $isAjax = request()->ajax() ||
+                request()->wantsJson() ||
+                request()->expectsJson() ||
+                request()->header('X-Requested-With') === 'XMLHttpRequest';
             if ($isAjax) {
                 return response()->json([
                     'success' => false,
@@ -169,10 +170,10 @@ class SettingsController extends Controller
 
         $equipmentType->delete();
 
-        $isAjax = request()->ajax() || 
-                  request()->wantsJson() || 
-                  request()->expectsJson() ||
-                  request()->header('X-Requested-With') === 'XMLHttpRequest';
+        $isAjax = request()->ajax() ||
+            request()->wantsJson() ||
+            request()->expectsJson() ||
+            request()->header('X-Requested-With') === 'XMLHttpRequest';
         if ($isAjax) {
             return response()->json([
                 'success' => true,
@@ -198,11 +199,11 @@ class SettingsController extends Controller
             'data' => $request->all()
         ]);
 
-        $isAjax = $request->ajax() || 
-                  $request->wantsJson() || 
-                  $request->expectsJson() ||
-                  $request->header('X-Requested-With') === 'XMLHttpRequest' ||
-                  $request->header('Content-Type') === 'application/json';
+        $isAjax = $request->ajax() ||
+            $request->wantsJson() ||
+            $request->expectsJson() ||
+            $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+            $request->header('Content-Type') === 'application/json';
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:location_types',
@@ -268,10 +269,10 @@ class SettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $isAjax = $request->ajax() || 
-                      $request->wantsJson() || 
-                      $request->expectsJson() ||
-                      $request->header('X-Requested-With') === 'XMLHttpRequest';
+            $isAjax = $request->ajax() ||
+                $request->wantsJson() ||
+                $request->expectsJson() ||
+                $request->header('X-Requested-With') === 'XMLHttpRequest';
             if ($isAjax) {
                 return response()->json([
                     'success' => false,
@@ -289,10 +290,10 @@ class SettingsController extends Controller
             'is_active' => $request->boolean('is_active', false)
         ]);
 
-        $isAjax = $request->ajax() || 
-                  $request->wantsJson() || 
-                  $request->expectsJson() ||
-                  $request->header('X-Requested-With') === 'XMLHttpRequest';
+        $isAjax = $request->ajax() ||
+            $request->wantsJson() ||
+            $request->expectsJson() ||
+            $request->header('X-Requested-With') === 'XMLHttpRequest';
         if ($isAjax) {
             return response()->json([
                 'success' => true,
@@ -307,10 +308,10 @@ class SettingsController extends Controller
     {
         // Check if location type is used
         if ($locationType->locations()->count() > 0) {
-            $isAjax = request()->ajax() || 
-                      request()->wantsJson() || 
-                      request()->expectsJson() ||
-                      request()->header('X-Requested-With') === 'XMLHttpRequest';
+            $isAjax = request()->ajax() ||
+                request()->wantsJson() ||
+                request()->expectsJson() ||
+                request()->header('X-Requested-With') === 'XMLHttpRequest';
             if ($isAjax) {
                 return response()->json([
                     'success' => false,
@@ -322,10 +323,10 @@ class SettingsController extends Controller
 
         $locationType->delete();
 
-        $isAjax = request()->ajax() || 
-                  request()->wantsJson() || 
-                  request()->expectsJson() ||
-                  request()->header('X-Requested-With') === 'XMLHttpRequest';
+        $isAjax = request()->ajax() ||
+            request()->wantsJson() ||
+            request()->expectsJson() ||
+            request()->header('X-Requested-With') === 'XMLHttpRequest';
         if ($isAjax) {
             return response()->json([
                 'success' => true,
@@ -366,7 +367,7 @@ class SettingsController extends Controller
         }
 
         $materials = $query->latest()->paginate(10);
-        
+
         // Get all materials for statistics
         $allMaterials = \App\Models\Material::all();
 
@@ -446,7 +447,7 @@ class SettingsController extends Controller
                 foreach ($request->permissions as $permissionName) {
                     $permission = \App\Models\Permission::where('name', $permissionName)->first();
                     if ($permission) {
-                        \DB::table('role_permissions')->insert([
+                        DB::table('role_permissions')->insert([
                             'role_id' => $role->id,
                             'permission_id' => $permission->id,
                             'created_at' => now(),
@@ -532,14 +533,14 @@ class SettingsController extends Controller
             ]);
 
             // حذف الصلاحيات القديمة
-            \DB::table('role_permissions')->where('role_id', $role->id)->delete();
+            DB::table('role_permissions')->where('role_id', $role->id)->delete();
 
             // ربط الصلاحيات الجديدة
             if ($request->has('permissions') && is_array($request->permissions)) {
                 foreach ($request->permissions as $permissionName) {
                     $permission = \App\Models\Permission::where('name', $permissionName)->first();
                     if ($permission) {
-                        \DB::table('role_permissions')->insert([
+                        DB::table('role_permissions')->insert([
                             'role_id' => $role->id,
                             'permission_id' => $permission->id,
                             'created_at' => now(),

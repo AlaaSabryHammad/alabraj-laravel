@@ -409,7 +409,17 @@ class EmployeeController extends Controller
         $balances = $employee->balances()->with('creator')->orderBy('transaction_date', 'desc')->get();
         $netBalance = $employee->getNetBalance();
 
-        return view('employees.show', compact('employee', 'balances', 'netBalance'));
+        // Get potential managers for the manager assignment modal
+        $requiredRole = \App\Models\Employee::MANAGER_CHAIN[$employee->role] ?? null;
+        $potentialManagers = collect();
+        if ($requiredRole) {
+            $potentialManagers = \App\Models\Employee::where('role', $requiredRole)
+                ->where('id', '!=', $employee->id)
+                ->orderBy('name')
+                ->get();
+        }
+
+        return view('employees.show', compact('employee', 'balances', 'netBalance', 'potentialManagers'));
     }
 
     public function edit(Employee $employee)
@@ -609,13 +619,13 @@ class EmployeeController extends Controller
         try {
             $oldData = $employee->toArray();
 
-            // Handle status field - only admin users can modify employee status
+            // Handle status field - only general_manager users can modify employee status
             if (isset($validated['status'])) {
-                if (!Auth::check() || Auth::user()->role !== 'admin') {
-                    // Remove status from validated data if user is not admin
+                if (!Auth::check() || Auth::user()->role !== 'general_manager') {
+                    // Remove status from validated data if user is not general_manager
                     unset($validated['status']);
 
-                    Log::info('Non-admin user attempted to modify employee status', [
+                    Log::info('Non-general_manager user attempted to modify employee status', [
                         'user_id' => Auth::id(),
                         'user_role' => Auth::user()->role ?? 'guest',
                         'employee_id' => $employee->id
@@ -1068,7 +1078,7 @@ class EmployeeController extends Controller
 
             return view('employees.daily_attendance_report', compact('employees', 'stats', 'selectedDate', 'date'));
         } catch (\Exception $e) {
-            \Log::error('Error in dailyAttendanceReport: ' . $e->getMessage(), [
+            Log::error('Error in dailyAttendanceReport: ' . $e->getMessage(), [
                 'date' => $request->input('date'),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -1180,7 +1190,7 @@ class EmployeeController extends Controller
 
             return view('employees.daily_attendance_edit', compact('employees', 'selectedDate', 'date'));
         } catch (\Exception $e) {
-            \Log::error('Error in dailyAttendanceEdit: ' . $e->getMessage(), [
+            Log::error('Error in dailyAttendanceEdit: ' . $e->getMessage(), [
                 'date' => $request->input('date'),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -1485,15 +1495,32 @@ class EmployeeController extends Controller
      */
     private function mapEmployeeRoleToUserRole($employeeRole)
     {
+        // أدوار النظام - يجب أن تتطابق مع role field في جدول roles
         $roleMapping = [
-            'عامل' => 'employee',
-            'مشرف موقع' => 'supervisor',
+            'general_manager' => 'general_manager',
+            'project_manager' => 'project_manager',
+            'engineer' => 'engineer',
+            'financial_manager' => 'financial_manager',
+            'accountant' => 'accountant',
+            'manager' => 'manager',
+            'driver' => 'driver',
+            'security' => 'security',
+            'worker' => 'worker',
+            'warehouse_manager' => 'warehouse_manager',
+            'workship_manager' => 'workship_manager',
+            'site_manager' => 'site_manager',
+            'fuel_manager' => 'fuel_manager',
+            'truck_driver' => 'truck_driver',
+
+            // Legacy mappings for old data
+            'عامل' => 'worker',
+            'مشرف موقع' => 'site_manager',
             'مهندس' => 'engineer',
-            'إداري' => 'admin',
+            'إداري' => 'manager',
             'مسئول رئيسي' => 'manager'
         ];
 
-        return $roleMapping[$employeeRole] ?? 'employee';
+        return $roleMapping[$employeeRole] ?? 'worker';
     }
 
     /**
@@ -1760,30 +1787,28 @@ class EmployeeController extends Controller
     }
 
     /**
-     * تفعيل الموظف - للمديرين العامين فقط
+     * تفعيل الموظف - للمستخدمين الذين لهم نفس الدور فقط
      */
     public function activate(Employee $employee)
     {
-        // التحقق من أن المستخدم مدير عام
-        if (!Auth::user() || !Auth::user()->isGeneralManager()) {
-            return redirect()->back()->with('error', 'غير مصرح لك بتفعيل الموظفين. هذه العملية مخصصة للمدير العام فقط.');
+        $authUser = Auth::user();
+        if (!$authUser || !$authUser->isGeneralManager()) {
+            return redirect()->back()->with('error', 'غير مصرح لك بتفعيل الموظفين. يسمح فقط للمدير العام.');
         }
-
         $employee->update(['status' => 'active']);
 
         return redirect()->back()->with('success', 'تم تفعيل الموظف بنجاح');
     }
 
     /**
-     * إلغاء تفعيل الموظف - للمديرين العامين فقط
+     * إلغاء تفعيل الموظف - للمستخدمين الذين لهم نفس الدور فقط
      */
     public function deactivate(Employee $employee)
     {
-        // التحقق من أن المستخدم مدير عام
-        if (!Auth::user() || !Auth::user()->isGeneralManager()) {
-            return redirect()->back()->with('error', 'غير مصرح لك بإلغاء تفعيل الموظفين. هذه العملية مخصصة للمدير العام فقط.');
+        $authUser = Auth::user();
+        if (!$authUser || !$authUser->isGeneralManager()) {
+            return redirect()->back()->with('error', 'غير مصرح لك بإلغاء تفعيل الموظفين. يسمح فقط للمدير العام.');
         }
-
         $employee->update(['status' => 'inactive']);
 
         return redirect()->back()->with('success', 'تم إلغاء تفعيل الموظف بنجاح');

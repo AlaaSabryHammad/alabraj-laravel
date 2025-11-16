@@ -19,7 +19,11 @@ return new class extends Migration
             $table->enum('receipt_method', ['cash', 'bank_transfer', 'check', 'other']);
             $table->text('notes')->nullable();
             $table->enum('status', ['pending', 'disbursed', 'returned', 'cancelled'])->default('pending');
+            $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->timestamps();
+
+            $table->foreign('approved_by')->references('id')->on('users')->nullOnDelete();
         });
     }
 

@@ -4,16 +4,23 @@
 
 @section('content')
     <div class="space-y-6">
-        <!-- Header -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">الإعدادات</h1>
-                    <p class="text-gray-600">إدارة إعدادات النظام والبيانات الأساسية</p>
+        <!-- Header with Breadcrumb -->
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="flex items-center space-x-2 space-x-reverse mb-4">
+                    <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="ri-home-line"></i>
+                    </a>
+                    <span class="text-gray-400">/</span>
+                    <span class="text-blue-600 font-medium">الإعدادات</span>
                 </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">الإعدادات والتكوينات</h1>
+                <p class="text-gray-600">إدارة شاملة لإعدادات النظام والبيانات الأساسية</p>
+            </div>
+            <div class="hidden md:flex items-center justify-center">
                 <div
-                    class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                    <i class="ri-settings-3-line text-white text-2xl"></i>
+                    class="w-24 h-24 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <i class="ri-settings-3-line text-white text-4xl"></i>
                 </div>
             </div>
         </div>
@@ -22,7 +29,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Revenue Entities Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('revenue-entities')">
+                onclick="window.location.href='{{ route('settings.revenue-entities.show') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -38,7 +45,7 @@
             </div>
             <!-- Equipment Types Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('equipment-types')">
+                onclick="window.location.href='{{ route('settings.equipment-types.show') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -55,7 +62,7 @@
 
             <!-- Location Types Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('location-types')">
+                onclick="window.location.href='{{ route('settings.location-types.show') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -72,7 +79,7 @@
 
             <!-- Materials Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('materials')">
+                onclick="window.location.href='{{ route('settings.materials.show') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -106,7 +113,7 @@
 
             <!-- Suppliers Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('suppliers')">
+                onclick="window.location.href='{{ route('suppliers.show-page') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -123,7 +130,7 @@
 
             <!-- Expense Categories Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('expense-categories')">
+                onclick="window.location.href='{{ route('settings.expense-categories.show') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -140,7 +147,7 @@
 
             <!-- Revenue Types Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('revenue-types')">
+                onclick="window.location.href='{{ route('settings.revenue-types.show') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -157,7 +164,7 @@
 
             <!-- Expense Entities Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="showSettingsSection('expense-entities')">
+                onclick="window.location.href='{{ route('settings.expense-entities.show') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
@@ -812,6 +819,12 @@
                     description: 'إدارة الموردين والمقاولين والجهات المختلفة',
                     addText: 'إضافة جهة صرف',
                     loadUrl: '{{ route('expense-entities.index') }}'
+                },
+                'revenue-entities': {
+                    title: 'جهات الإيرادات',
+                    description: 'إدارة جهات مصدر الإيرادات والزبائن',
+                    addText: 'إضافة جهة إيراد',
+                    loadUrl: '{{ route('settings.revenue-entities.content') }}'
                 }
             };
 
@@ -846,6 +859,9 @@
                     } else if (section === 'expense-entities') {
                         console.log('Redirecting to expense entities create page...');
                         window.location.href = '{{ route('expense-entities.create') }}';
+                    } else if (section === 'revenue-entities') {
+                        console.log('Redirecting to revenue entities create page...');
+                        window.location.href = '{{ route('settings.revenue-entities.create') }}';
                     }
                 } catch (error) {
                     console.error('Error in add button click handler:', error);

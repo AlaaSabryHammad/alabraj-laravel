@@ -1,295 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إصلاح مشكلة JavaScript في الصفحة</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fix-gradient {
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        }
-
-        .error-gradient {
-            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-        }
-    </style>
-</head>
-
-<body class="bg-gray-50">
-    <div class="min-h-screen p-4">
-        <div class="max-w-5xl mx-auto">
-            <!-- Header -->
-            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden fade-in mb-6">
-                <div class="fix-gradient text-white p-6 text-center">
-                    <div
-                        class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="ri-code-s-slash-line text-3xl"></i>
-                    </div>
-                    <h1 class="text-3xl font-bold mb-2">تم إصلاح مشكلة JavaScript! 🚀</h1>
-                    <p class="text-xl opacity-90">حُلت مشكلة ظهور الكود في أسفل الصفحة</p>
-                </div>
-            </div>
-
-            <!-- Problem Analysis -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <i class="ri-bug-line text-red-600"></i>
-                    تحليل المشكلة
-                </h2>
-
-                <div class="grid md:grid-cols-2 gap-6">
-                    <!-- Problem -->
-                    <div class="bg-red-50 rounded-lg p-4">
-                        <h3 class="font-bold text-red-900 mb-3 flex items-center gap-2">
-                            <i class="ri-error-warning-line text-red-600"></i>
-                            ما كانت المشكلة؟
-                        </h3>
-                        <ul class="space-y-2 text-sm text-red-800">
-                            <li class="flex items-start gap-2">
-                                <i class="ri-arrow-right-line text-red-600 mt-1"></i>
-                                كود JavaScript يظهر كنص في أسفل الصفحة
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="ri-arrow-right-line text-red-600 mt-1"></i>
-                                الدوال الجديدة كانت خارج تاج &lt;script&gt;
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="ri-arrow-right-line text-red-600 mt-1"></i>
-                                تكسر في تخطيط الصفحة والتصميم
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Solution -->
-                    <div class="bg-green-50 rounded-lg p-4">
-                        <h3 class="font-bold text-green-900 mb-3 flex items-center gap-2">
-                            <i class="ri-tools-line text-green-600"></i>
-                            كيف تم الإصلاح؟
-                        </h3>
-                        <ul class="space-y-2 text-sm text-green-800">
-                            <li class="flex items-start gap-2">
-                                <i class="ri-check-line text-green-600 mt-1"></i>
-                                نقل جميع الدوال داخل تاج &lt;script&gt;
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="ri-check-line text-green-600 mt-1"></i>
-                                إصلاح Template Literals (backticks)
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="ri-check-line text-green-600 mt-1"></i>
-                                تنظيم بنية الكود بشكل صحيح
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Technical Details -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <i class="ri-code-line text-blue-600"></i>
-                    التفاصيل التقنية
-                </h2>
-
-                <div class="space-y-6">
-                    <!-- Before -->
-                    <div class="bg-red-50 rounded-lg p-4">
-                        <h3 class="font-bold text-red-900 mb-3 flex items-center gap-2">
-                            <i class="ri-close-circle-line text-red-600"></i>
-                            قبل الإصلاح - مشكلة في البنية
-                        </h3>
-                        <div class="bg-gray-900 rounded p-4 text-sm overflow-x-auto">
-                            <pre class="text-red-400"><code>&lt;script&gt;
-// دالة طباعة الباركود
-function printBarcode() { ... }
-&lt;/script&gt;
-
-<span class="text-yellow-400">// هذا الكود كان خارج تاج script ❌</span>
-function showAllSerialNumbers() { ... }
-function closeAllSerialsModal() { ... }
-
-@endsection</code></pre>
-                        </div>
-                    </div>
-
-                    <!-- After -->
-                    <div class="bg-green-50 rounded-lg p-4">
-                        <h3 class="font-bold text-green-900 mb-3 flex items-center gap-2">
-                            <i class="ri-check-circle-line text-green-600"></i>
-                            بعد الإصلاح - البنية الصحيحة
-                        </h3>
-                        <div class="bg-gray-900 rounded p-4 text-sm overflow-x-auto">
-                            <pre class="text-green-400"><code>&lt;script&gt;
-// دالة طباعة الباركود
-function printBarcode() { ... }
-
-<span class="text-yellow-400">// جميع الدوال الآن داخل script ✅</span>
-function showAllSerialNumbers() { ... }
-function closeAllSerialsModal() { ... }
-function printAllBarcodes() { ... }
-&lt;/script&gt;
-
-@endsection</code></pre>
-                        </div>
-                    </div>
-
-                    <!-- Template Literals Fix -->
-                    <div class="bg-blue-50 rounded-lg p-4">
-                        <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
-                            <i class="ri-code-box-line text-blue-600"></i>
-                            إصلاح Template Literals
-                        </h3>
-                        <div class="space-y-2 text-sm text-blue-800">
-                            <p><strong>المشكلة:</strong> استخدام backticks عادية <code
-                                    class="bg-blue-200 px-1 rounded">`</code> داخل strings</p>
-                            <p><strong>الحل:</strong> escape باستخدام <code class="bg-blue-200 px-1 rounded">\`</code>
-                            </p>
-                        </div>
-                        <div class="bg-gray-900 rounded p-4 text-xs overflow-x-auto mt-2">
-                            <pre class="text-blue-400"><code>// قبل: مشكلة في template literals
-const modalHTML = `<div>...</div>`;
-
-// بعد: escaped بشكل صحيح
-const modalHTML = \`&lt;div&gt;...&lt;/div&gt;\`;</code></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Functions Overview -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <i class="ri-function-line text-purple-600"></i>
-                    الدوال المُصححة
-                </h2>
-
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-purple-50 rounded-lg p-4 text-center">
-                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <i class="ri-printer-line text-purple-600"></i>
-                        </div>
-                        <h3 class="font-bold text-purple-900 text-sm">printBarcode()</h3>
-                        <p class="text-xs text-purple-700 mt-1">طباعة باركود واحد</p>
-                    </div>
-
-                    <div class="bg-green-50 rounded-lg p-4 text-center">
-                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <i class="ri-eye-line text-green-600"></i>
-                        </div>
-                        <h3 class="font-bold text-green-900 text-sm">showAllSerialNumbers()</h3>
-                        <p class="text-xs text-green-700 mt-1">عرض جميع الأرقام</p>
-                    </div>
-
-                    <div class="bg-red-50 rounded-lg p-4 text-center">
-                        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <i class="ri-close-line text-red-600"></i>
-                        </div>
-                        <h3 class="font-bold text-red-900 text-sm">closeAllSerialsModal()</h3>
-                        <p class="text-xs text-red-700 mt-1">إغلاق المودال</p>
-                    </div>
-
-                    <div class="bg-blue-50 rounded-lg p-4 text-center">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <i class="ri-stack-line text-blue-600"></i>
-                        </div>
-                        <h3 class="font-bold text-blue-900 text-sm">printAllBarcodes()</h3>
-                        <p class="text-xs text-blue-700 mt-1">طباعة جماعية</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Testing -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <i class="ri-test-tube-line text-green-600"></i>
-                    اختبار الإصلاح
-                </h2>
-
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="ri-check-double-line text-2xl text-green-600"></i>
-                        </div>
-                        <h3 class="font-bold text-gray-900 mb-2">لا يظهر كود JavaScript</h3>
-                        <p class="text-sm text-gray-600">الصفحة نظيفة بدون أي كود ظاهر</p>
-                    </div>
-
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="ri-function-line text-2xl text-blue-600"></i>
-                        </div>
-                        <h3 class="font-bold text-gray-900 mb-2">الوظائف تعمل بشكل طبيعي</h3>
-                        <p class="text-sm text-gray-600">جميع دوال طباعة الباركود تعمل</p>
-                    </div>
-
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="ri-layout-line text-2xl text-purple-600"></i>
-                        </div>
-                        <h3 class="font-bold text-gray-900 mb-2">التصميم سليم</h3>
-                        <p class="text-sm text-gray-600">التخطيط والتصميم عاد طبيعياً</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Call to Action -->
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                <div class="flex items-center justify-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <i class="ri-check-line text-2xl text-green-600"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900">تم إصلاح المشكلة بالكامل! ✅</h3>
-                        <p class="text-gray-600">الصفحة تعمل بشكل مثالي الآن</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="http://127.0.0.1:8000/warehouses/6"
-                        class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
-                        <i class="ri-external-link-line"></i>
-                        اختبر الصفحة الآن
-                    </a>
-                    <a href="http://127.0.0.1:8000/warehouses"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
-                        <i class="ri-list-line"></i>
-                        جميع المستودعات
-                    </a>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="text-center mt-8 text-gray-500">
-                <p class="text-sm">
-                    <i class="ri-code-s-slash-line text-green-600"></i>
-                    تم إصلاح جميع مشاكل JavaScript وتنظيم بنية الكود
-                </p>
-            </div>
-        </div>
-    </div>
-</body>
-
-</html>

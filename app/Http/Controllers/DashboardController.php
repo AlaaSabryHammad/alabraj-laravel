@@ -55,7 +55,7 @@ class DashboardController extends Controller
         // حساب الإيرادات من جدول RevenueVoucher (مع التحقق من وجود الجدول)
         $revenueVoucherIncome = 0;
         try {
-            if (\Schema::hasTable('revenue_vouchers')) {
+            if (Schema::hasTable('revenue_vouchers')) {
                 $revenueVoucherIncome = RevenueVoucher::where('status', 'approved')
                     ->whereMonth('voucher_date', $currentMonth)
                     ->whereYear('voucher_date', $currentYear)
@@ -93,7 +93,7 @@ class DashboardController extends Controller
             // حساب إيرادات RevenueVoucher (مع التحقق من وجود الجدول)
             $revenueVoucherIncome = 0;
             try {
-                if (\Schema::hasTable('revenue_vouchers')) {
+                if (Schema::hasTable('revenue_vouchers')) {
                     $revenueVoucherIncome = RevenueVoucher::where('status', 'approved')
                         ->whereMonth('voucher_date', $monthNumber)
                         ->whereYear('voucher_date', $currentYear)

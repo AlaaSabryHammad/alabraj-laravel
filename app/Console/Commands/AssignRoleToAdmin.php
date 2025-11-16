@@ -31,26 +31,21 @@ class AssignRoleToAdmin extends Command
         $this->info('تعيين الأدوار للمديرين...');
 
         // العثور على دور المدير العام
-        $superAdminRole = Role::where('name', 'super_admin')->first();
+        $generalManagerRole = Role::where('name', 'general_manager')->first();
 
-        if (!$superAdminRole) {
+        if (!$generalManagerRole) {
             $this->error('لم يتم العثور على دور المدير العام');
             return;
         }
 
-        // تعيين دور المدير العام لكلا الحسابين
-        $adminUsers = User::whereIn('email', ['admin@abraj.com', 'admin123@abraj.com'])->get();
+        // تعيين دور المدير العام للمستخدمين الرئيسيين
+        $adminUsers = User::whereIn('email', ['mohamed.alshahrani@example.com', '2406418059@alabraaj.com.sa'])->get();
 
         foreach ($adminUsers as $user) {
-            // حذف الأدوار السابقة
-            DB::table('user_roles')->where('user_id', $user->id)->delete();
-
-            // إضافة دور المدير العام
-            DB::table('user_roles')->insert([
-                'user_id' => $user->id,
-                'role_id' => $superAdminRole->id,
-                'created_at' => now(),
-                'updated_at' => now()
+            // تحديث role_id
+            $user->update([
+                'role_id' => $generalManagerRole->id,
+                'role' => 'general_manager'
             ]);
 
             $this->info("تم تعيين دور المدير العام للمستخدم: {$user->email}");

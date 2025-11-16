@@ -96,7 +96,7 @@ class User extends Authenticatable
      */
     public function isGeneralManager()
     {
-        return $this->hasRole('general_manager') || $this->hasRole('admin') || $this->hasRole('super_admin');
+        return $this->hasRole('general_manager') || $this->role === 'general_manager';
     }
 
     /**

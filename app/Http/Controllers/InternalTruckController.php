@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class InternalTruckController extends Controller
 {
@@ -148,7 +149,7 @@ class InternalTruckController extends Controller
             $removedImages = $request->input('removed_images');
             // Remove deleted images from storage
             foreach ($removedImages as $imagePath) {
-                \Storage::disk('public')->delete($imagePath);
+                Storage::disk('public')->delete($imagePath);
             }
             // Filter out removed images from existing images
             $existingImages = array_filter($existingImages, function ($imagePath) use ($removedImages) {
@@ -172,8 +173,14 @@ class InternalTruckController extends Controller
         }
 
         // If driver is assigned, set status to in_use
-        if ($validated['driver_id']) {
+        // But allow manual override to out_of_service even with a driver
+        if ($validated['driver_id'] && $validated['status'] !== 'out_of_service') {
             $validated['status'] = 'in_use';
+        }
+
+        // If driver is removed and status was in_use, change to available
+        if (!$validated['driver_id'] && $validated['status'] === 'in_use') {
+            $validated['status'] = 'available';
         }
 
         $internalTruck->update($validated);
@@ -200,29 +207,29 @@ class InternalTruckController extends Controller
     {
         $validated = $request->validate([
             'equipment_id' => 'required|exists:equipment,id',
-            'year' => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
-            'fuel_type' => 'required|in:gasoline,diesel,hybrid',
+            'fuel_type' => 'nullable|string|in:gasoline,diesel,electric,hybrid'
         ]);
 
         $equipment = \App\Models\Equipment::findOrFail($validated['equipment_id']);
 
-        // تحقق من أن المعدة ليست مرتبطة بشاحنة
-        if ($equipment->truck_id) {
-            return redirect()->back()->with('error', 'هذه المعدة مرتبطة بشاحنة بالفعل');
+        // التأكد من أن المعدة من فئة شاحنات وغير مربوطة
+        if (!in_array($equipment->category, ['شاحنات', 'شاحنة']) || $equipment->truck_id) {
+            return redirect()->back()->with('error', 'هذه المعدة غير قابلة للربط أو مرتبطة بالفعل');
         }
 
-        // استخراج معلومات من اسم المعدة
+        // استخراج معلومات الشاحنة من اسم المعدة
         $equipmentName = $equipment->name;
         $parts = explode(' - ', $equipmentName);
 
         $brand = 'غير محدد';
         $model = 'غير محدد';
-        $plateNumber = 'EQ-' . $equipment->id;
+        $plateNumber = 'غير محدد';
 
         if (count($parts) >= 2) {
             $brandModel = trim($parts[0]);
             $plateNumber = trim($parts[1]);
 
+            // محاولة فصل العلامة التجارية والموديل
             $brandModelParts = explode(' ', $brandModel, 2);
             $brand = $brandModelParts[0];
             $model = isset($brandModelParts[1]) ? $brandModelParts[1] : $brand;
@@ -233,18 +240,18 @@ class InternalTruckController extends Controller
             'plate_number' => $plateNumber,
             'brand' => $brand,
             'model' => $model,
-            'year' => $validated['year'] ?? date('Y'),
+            'year' => date('Y'), // السنة الحالية كقيمة افتراضية
             'load_capacity' => 5.0, // قيمة افتراضية
-            'fuel_type' => $validated['fuel_type'],
+            'fuel_type' => $validated['fuel_type'] ?? 'diesel',
             'status' => $equipment->status == 'in_use' ? 'in_use' : 'available',
             'purchase_date' => $equipment->purchase_date ?? now(),
             'purchase_price' => $equipment->purchase_price ?? 0,
-            'description' => $equipment->description ?? 'شاحنة محولة من المعدات',
+            'description' => $equipment->description ?? 'شاحنة مضافة من المعدات',
             'driver_id' => $equipment->driver_id,
-            'user_id' => $equipment->user_id ?? \Illuminate\Support\Facades\Auth::id(),
+            'user_id' => $equipment->user_id ?? (\Illuminate\Support\Facades\Auth::id() ?? 1),
         ]);
 
-        // ربط المعدة بالشاحنة الجديدة
+        // ربط المعدة بالشاحنة المنشأة حديثاً
         $equipment->update(['truck_id' => $internalTruck->id]);
 
         return redirect()->route('internal-trucks.index')

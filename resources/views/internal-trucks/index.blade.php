@@ -19,6 +19,12 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             @if ($trucks->isEmpty())
                 <div class="text-center py-12">
@@ -197,18 +203,22 @@
             @endif
         </div>
 
-        <!-- قسم المعدات غير المربوطة -->
+        <!-- قسم المعدات من نوع الشاحنات -->
         @if ($unlinkedTruckEquipments->isNotEmpty())
             <div class="bg-white rounded-lg shadow-sm overflow-hidden mt-6">
                 <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                    <div class="flex items-center">
-                        <i class="ri-tools-line text-blue-600 text-xl ml-2"></i>
-                        <h3 class="text-lg font-semibold text-blue-900">معدات شاحنات غير مربوطة</h3>
-                        <span class="mr-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                            {{ $unlinkedTruckEquipments->count() }}
-                        </span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="ri-tools-line text-blue-600 text-xl ml-2"></i>
+                            <h3 class="text-lg font-semibold text-blue-900">معدات شاحنات غير مربوطة</h3>
+                            <span class="mr-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                {{ $unlinkedTruckEquipments->count() }}
+                            </span>
+                        </div>
+                        <div class="text-sm text-blue-700">
+                            هذه المعدات من فئة "شاحنات" ولا تملك شاحنة داخلية مرتبطة
+                        </div>
                     </div>
-                    <p class="text-blue-700 text-sm mt-1">هذه المعدات من فئة "شاحنات" ولا تملك شاحنة داخلية مرتبطة</p>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -293,6 +303,22 @@
                 </div>
             </div>
         @endif
+
+        <!-- إرشادات الاستخدام -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
+            <div class="flex items-start">
+                <i class="ri-information-line text-yellow-600 text-xl ml-3 mt-1"></i>
+                <div>
+                    <h3 class="text-lg font-semibold text-yellow-800 mb-2">كيفية إضافة شاحنات جديدة</h3>
+                    <ul class="text-yellow-700 space-y-1 list-disc pr-5">
+                        <li>لإضافة شاحنة جديدة مباشرة، انقر على زر "إضافة شاحنة نقل داخلي"</li>
+                        <li>لتحويل معدة من نوع "شاحنة" موجودة إلى شاحنة داخلية، استخدم زر "تحويل لشاحنة" في قسم المعدات غير
+                            المربوطة</li>
+                        <li>يمكنك إضافة صور وملفات للشاحنات لتوثيقها بشكل أفضل</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -397,6 +423,7 @@
                             brand.includes(searchTerm) ||
                             model.includes(searchTerm) ||
                             color.includes(searchTerm);
+
                         const matchesStatus = statusValue === '' || status === statusValue;
 
                         if (matchesSearch && matchesStatus) {

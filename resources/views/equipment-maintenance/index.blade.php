@@ -180,16 +180,11 @@
                                                     <i class="ri-edit-line"></i>
                                                 </a>
                                                 @if ($maintenance->status === 'in_progress')
-                                                    <form method="POST"
-                                                        action="{{ route('equipment-maintenance.complete', $maintenance) }}"
-                                                        class="inline">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit" class="text-green-600 hover:text-green-900"
-                                                            onclick="return confirm('هل تريد تسجيل اكتمال هذه الصيانة؟')">
-                                                            <i class="ri-check-line"></i>
-                                                        </button>
-                                                    </form>
+                                                    <!-- Button to open modal instead of direct submit -->
+                                                    <button type="button" class="text-green-600 hover:text-green-900"
+                                                        onclick="openCompleteModal({{ $maintenance->id }}, '{{ $maintenance->equipment->name }}', '{{ $maintenance->equipment->model ?? '' }}')">
+                                                        <i class="ri-check-line"></i>
+                                                    </button>
                                                 @endif
                                                 <form method="POST"
                                                     action="{{ route('equipment-maintenance.destroy', $maintenance) }}"
@@ -230,6 +225,125 @@
             </div>
         </div>
     </div>
+
+    <!-- Complete Maintenance Modal -->
+    <div id="completeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full shadow-xl" dir="rtl">
+                <form id="completeForm" method="POST">
+                    @csrf
+                    @method('PATCH')
+
+                    <!-- Modal Header -->
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <i class="ri-check-circle-line text-green-600 ml-2"></i>
+                                تسجيل اكتمال الصيانة
+                            </h3>
+                            <button type="button"
+                                onclick="document.getElementById('completeModal').classList.add('hidden')"
+                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="ri-close-line text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="px-6 py-4">
+                        <div class="mb-4">
+                            <div class="flex items-center p-4 bg-blue-50 rounded-lg">
+                                <i class="ri-information-line text-blue-600 text-xl ml-3"></i>
+                                <div>
+                                    <h4 class="font-medium text-blue-900">معلومات الصيانة</h4>
+                                    <p id="equipmentInfo" class="text-blue-700 text-sm mt-1">
+                                        <!-- Equipment info will be filled by JavaScript -->
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="actual_completion_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-calendar-check-line text-green-600 ml-1"></i>
+                                تاريخ الاكتمال الفعلي
+                            </label>
+                            <input type="date" id="actual_completion_date" name="actual_completion_date"
+                                value="{{ now()->format('Y-m-d') }}" required
+                                class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="completion_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-sticky-note-line text-gray-600 ml-1"></i>
+                                ملاحظات الاكتمال (اختياري)
+                            </label>
+                            <textarea id="completion_notes" name="completion_notes" rows="3"
+                                placeholder="أضف أي ملاحظات حول اكتمال الصيانة..."
+                                class="w-full border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                            <div class="flex items-start">
+                                <i class="ri-alert-line text-yellow-600 text-lg ml-2 mt-0.5"></i>
+                                <div>
+                                    <p class="text-sm text-yellow-800">
+                                        <strong>تنبيه:</strong> بعد تسجيل الاكتمال سيتم تحديث حالة الصيانة إلى "مكتملة" ولن
+                                        يمكن التراجع عن هذا الإجراء.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                        <button type="button" onclick="document.getElementById('completeModal').classList.add('hidden')"
+                            class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                            إلغاء
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                            <i class="ri-check-line"></i>
+                            تأكيد الاكتمال
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to open the complete modal
+        function openCompleteModal(maintenanceId, equipmentName, equipmentModel) {
+            // Set the form action URL
+            var form = document.getElementById('completeForm');
+            form.action = '/equipment-maintenance/' + maintenanceId + '/complete';
+
+            // Set equipment info in the modal
+            var equipmentInfo = document.getElementById('equipmentInfo');
+            if (equipmentModel) {
+                equipmentInfo.textContent = equipmentName + ' - ' + equipmentModel;
+            } else {
+                equipmentInfo.textContent = equipmentName;
+            }
+
+            // Show the modal
+            document.getElementById('completeModal').classList.remove('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            var modal = document.getElementById('completeModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 
     @if (session('success'))
         <div class="fixed bottom-4 left-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">

@@ -25,6 +25,9 @@ return new class extends Migration
             $table->foreignId('location_id')->nullable()->constrained('locations')->onDelete('set null'); // الموقع
             $table->enum('status', ['pending', 'approved', 'paid', 'cancelled'])->default('pending'); // حالة السند
             $table->text('notes')->nullable(); // ملاحظات
+            $table->decimal('tax_rate', 5, 2)->default(15.00)->comment('معدل الضريبة');
+            $table->decimal('tax_amount', 15, 2)->default(0.00)->comment('قيمة الضريبة');
+            $table->decimal('amount_without_tax', 15, 2)->default(0.00)->comment('المبلغ بدون الضريبة');
             $table->string('reference_number')->nullable(); // رقم مرجعي
             $table->json('attachments')->nullable(); // المرفقات
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null'); // منشئ السند

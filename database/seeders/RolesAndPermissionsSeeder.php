@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use App\Models\Role;
 use App\Models\Permission;
 
@@ -411,13 +412,13 @@ class RolesAndPermissionsSeeder extends Seeder
             );
 
             // حذف الصلاحيات السابقة للدور
-            \DB::table('role_permissions')->where('role_id', $role->id)->delete();
+            DB::table('role_permissions')->where('role_id', $role->id)->delete();
 
             // ربط الصلاحيات بالدور
             foreach ($permissions as $permissionName) {
                 $permission = Permission::where('name', $permissionName)->first();
                 if ($permission) {
-                    \DB::table('role_permissions')->insertOrIgnore([
+                    DB::table('role_permissions')->insertOrIgnore([
                         'role_id' => $role->id,
                         'permission_id' => $permission->id,
                         'created_at' => now(),

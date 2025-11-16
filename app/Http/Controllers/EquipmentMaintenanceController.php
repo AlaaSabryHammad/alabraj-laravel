@@ -104,8 +104,8 @@ class EquipmentMaintenanceController extends Controller
      */
     public function edit(EquipmentMaintenance $equipmentMaintenance)
     {
-        $equipment = Equipment::orderBy('name')->get();
-        return view('equipment-maintenance.edit', compact('equipmentMaintenance', 'equipment'));
+        $equipments = Equipment::orderBy('name')->get();
+        return view('equipment-maintenance.edit', compact('equipmentMaintenance', 'equipments'));
     }
 
     /**

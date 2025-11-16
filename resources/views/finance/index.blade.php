@@ -42,7 +42,7 @@
         </div>
 
         <!-- Financial Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-6">
             <div class="bg-white rounded-xl shadow-sm p-6 border">
                 <div class="flex items-center justify-between">
                     <div>
@@ -58,8 +58,8 @@
             <div class="bg-white rounded-xl shadow-sm p-6 border">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">إجمالي المصروفات</p>
-                        <p class="text-2xl font-bold text-red-600">{{ number_format($totalExpense, 0) }} ر.س</p>
+                        <p class="text-sm font-medium text-gray-600">إجمالي سندات الصرف</p>
+                        <p class="text-2xl font-bold text-red-600">{{ number_format($totalExpenseVouchers, 0) }} ر.س</p>
                     </div>
                     <div class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
                         <i class="ri-arrow-down-line text-xl text-red-600"></i>
@@ -71,6 +71,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">صافي الربح</p>
+                        <p class="text-xs text-gray-500 mb-1">(الإيرادات - سندات الصرف فقط)</p>
                         <p class="text-2xl font-bold {{ $netProfit >= 0 ? 'text-green-600' : 'text-red-600' }}">
                             {{ number_format($netProfit, 0) }} ر.س
                         </p>
@@ -85,11 +86,51 @@
             <div class="bg-white rounded-xl shadow-sm p-6 border">
                 <div class="flex items-center justify-between">
                     <div>
+                        <p class="text-sm font-medium text-gray-600">إجمالي العهد</p>
+                        <p class="text-2xl font-bold text-orange-600">{{ number_format($totalCustodies, 0) }} ر.س</p>
+                    </div>
+                    <div class="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-hand-coin-line text-xl text-orange-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                <div class="flex items-center justify-between">
+                    <div>
                         <p class="text-sm font-medium text-gray-600">إيرادات الشهر</p>
                         <p class="text-2xl font-bold text-blue-600">{{ number_format($monthlyIncome, 0) }} ر.س</p>
                     </div>
                     <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <i class="ri-calendar-line text-xl text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بطاقة الإيرادات الضريبية -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">الإيرادات الضريبية</p>
+                        <p class="text-xs text-gray-500 mb-1">(المستخلصات + سندات القبض الخاضعة للضريبة)</p>
+                        <p class="text-2xl font-bold text-purple-600">{{ number_format($totalTaxRevenue, 0) }} ر.س</p>
+                    </div>
+                    <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-money-dollar-circle-line text-xl text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بطاقة المصروفات الضريبية -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">المصروفات الضريبية</p>
+                        <p class="text-xs text-gray-500 mb-1">(ضرائب سندات الصرف)</p>
+                        <p class="text-2xl font-bold text-indigo-600">{{ number_format($totalTaxExpenses, 0) }} ر.س</p>
+                    </div>
+                    <div class="h-12 w-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-receipt-line text-xl text-indigo-600"></i>
                     </div>
                 </div>
             </div>

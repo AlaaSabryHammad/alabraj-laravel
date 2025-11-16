@@ -33,6 +33,8 @@ return new class extends Migration
             // Additional fields that were added later
             $table->date('purchase_date')->nullable();
             $table->decimal('purchase_price', 12, 2)->nullable();
+            $table->date('warranty_expiry')->nullable();
+            $table->date('last_maintenance')->nullable();
             $table->text('description')->nullable();
             $table->unsignedBigInteger('driver_id')->nullable();
             $table->unsignedBigInteger('location_id')->nullable();

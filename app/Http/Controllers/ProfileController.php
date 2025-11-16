@@ -26,7 +26,23 @@ class ProfileController extends Controller
      */
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'المستخدم غير مصرح له'
+            ], 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'المستخدم غير موجود'
+            ], 404);
+        }
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -54,17 +70,16 @@ class ProfileController extends Controller
                 $user->avatar = $avatarPath;
             }
 
-            $user->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'avatar' => $user->avatar
-            ]);
+            // Update user fields
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->phone = $request->phone;
+            $user->save();
 
             return response()->json([
                 'success' => true,
                 'message' => 'تم تحديث البروفايل بنجاح',
-                'user' => $user
+                'user' => $user->fresh()
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -91,7 +106,23 @@ class ProfileController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'المستخدم غير مصرح له'
+            ], 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'المستخدم غير موجود'
+            ], 404);
+        }
 
         // Check current password
         if (!Hash::check($request->current_password, $user->password)) {
@@ -102,9 +133,8 @@ class ProfileController extends Controller
         }
 
         try {
-            $user->update([
-                'password' => Hash::make($request->new_password)
-            ]);
+            $user->password = Hash::make($request->new_password);
+            $user->save();
 
             return response()->json([
                 'success' => true,

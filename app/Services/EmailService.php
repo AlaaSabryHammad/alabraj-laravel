@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Mail\NewEmployeeNotification;
 
@@ -20,12 +21,12 @@ class EmailService
         $testEmail = 'admin@alabraaj.com.sa';
 
         try {
-            \Log::info("محاولة إرسال بريد إلكتروني إلى: {$testEmail}");
+            Log::info("محاولة إرسال بريد إلكتروني إلى: {$testEmail}");
             Mail::to($testEmail)->send(new NewEmployeeNotification($employee));
-            \Log::info("تم إرسال البريد الإلكتروني بنجاح إلى: {$testEmail}");
+            Log::info("تم إرسال البريد الإلكتروني بنجاح إلى: {$testEmail}");
             return true;
         } catch (\Exception $e) {
-            \Log::error("فشل إرسال البريد الإلكتروني: " . $e->getMessage());
+            Log::error("فشل إرسال البريد الإلكتروني: " . $e->getMessage());
             return false;
         }
 
@@ -48,12 +49,12 @@ class EmailService
                     try {
                         Mail::to($manager->email)->send(new NewEmployeeNotification($employee));
                     } catch (\Exception $e) {
-                        \Log::error('فشل إرسال البريد الإلكتروني للمدير العام: ' . $e->getMessage());
+                        Log::error('فشل إرسال البريد الإلكتروني للمدير العام: ' . $e->getMessage());
                     }
                 }
             }
         } else {
-            \Log::warning('لا يوجد مدير عام لإرسال إشعار إضافة الموظف الجديد إليه');
+            Log::warning('لا يوجد مدير عام لإرسال إشعار إضافة الموظف الجديد إليه');
         }
         */
     }

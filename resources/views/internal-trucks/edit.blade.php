@@ -123,7 +123,7 @@
                             @error('driver_id')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
-                            <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div id="driver-status-info" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div class="flex items-start">
                                     <i class="ri-information-line text-blue-600 mt-0.5 ml-2"></i>
                                     <div class="text-sm text-blue-800">
@@ -553,9 +553,14 @@
         // Monitor driver selection changes
         document.addEventListener('DOMContentLoaded', function() {
             const driverSelect = document.getElementById('driver_id');
-            const statusInfo = document.querySelector('.bg-blue-50');
+            const statusSelect = document.getElementById('status');
+            // Use a more specific selector to target only the status info within the form
+            const statusInfo = document.querySelector('#driver-status-info');
 
             if (driverSelect && statusInfo) {
+                // Store the original status value
+                let originalStatus = statusSelect.value;
+
                 driverSelect.addEventListener('change', function() {
                     if (this.value) {
                         // Driver selected - show status will change to in_use
@@ -570,6 +575,10 @@
                         </div>
                     </div>
                 `;
+                        // Store the current status before changing it
+                        originalStatus = statusSelect.value;
+                        // Automatically set the status to "in_use" when a driver is selected
+                        statusSelect.value = 'in_use';
                     } else {
                         // No driver - reset to original info
                         statusInfo.className = 'mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg';
@@ -579,6 +588,54 @@
                         <div class="text-sm text-blue-800">
                             <p class="font-medium">تحديث تلقائي للحالة:</p>
                             <p class="mt-1">عند تعيين سائق، ستتغير حالة الشاحنة الداخلية تلقائياً إلى "قيد الاستخدام"</p>
+                        </div>
+                    </div>
+                `;
+                        // Reset status to the original value if it was previously set to "in_use"
+                        if (statusSelect.value === 'in_use') {
+                            statusSelect.value = originalStatus;
+                        }
+                    }
+                });
+
+                // Also monitor status changes to handle manual override
+                statusSelect.addEventListener('change', function() {
+                    if (this.value === 'out_of_service' && driverSelect.value) {
+                        // Show warning when manually setting to out of service with a driver
+                        statusInfo.style.display = 'block';
+                        statusInfo.className = 'mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg';
+                        statusInfo.innerHTML = `
+                    <div class="flex items-start">
+                        <i class="ri-alert-line text-yellow-600 mt-0.5 ml-2"></i>
+                        <div class="text-sm text-yellow-800">
+                            <p class="font-medium">تحذير:</p>
+                            <p class="mt-1">الشاحنة لديها سائق مسند لكن تم تعيين الحالة إلى "خارج الخدمة"</p>
+                        </div>
+                    </div>
+                `;
+                    } else if (this.value === 'in_use' && !driverSelect.value) {
+                        // Show warning when setting to in_use without a driver
+                        statusInfo.style.display = 'block';
+                        statusInfo.className = 'mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg';
+                        statusInfo.innerHTML = `
+                    <div class="flex items-start">
+                        <i class="ri-alert-line text-yellow-600 mt-0.5 ml-2"></i>
+                        <div class="text-sm text-yellow-800">
+                            <p class="font-medium">تحذير:</p>
+                            <p class="mt-1">الشاحنة ليس لديها سائق مسند لكن تم تعيين الحالة إلى "قيد الاستخدام"</p>
+                        </div>
+                    </div>
+                `;
+                    } else if (this.value === 'available' && driverSelect.value) {
+                        // Show warning when setting to available with a driver
+                        statusInfo.style.display = 'block';
+                        statusInfo.className = 'mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg';
+                        statusInfo.innerHTML = `
+                    <div class="flex items-start">
+                        <i class="ri-alert-line text-yellow-600 mt-0.5 ml-2"></i>
+                        <div class="text-sm text-yellow-800">
+                            <p class="font-medium">تحذير:</p>
+                            <p class="mt-1">الشاحنة لديها سائق مسند لكن تم تعيين الحالة إلى "متاحة"</p>
                         </div>
                     </div>
                 `;

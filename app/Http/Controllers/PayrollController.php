@@ -10,6 +10,7 @@ use App\Models\PayrollDeduction;
 use App\Models\PayrollBonus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class PayrollController extends Controller
@@ -50,7 +51,7 @@ class PayrollController extends Controller
     {
         try {
             $month = $request->input('month'); // Format: YYYY-MM
-            
+
             if (!$month) {
                 return response()->json([
                     'success' => false,
@@ -66,11 +67,11 @@ class PayrollController extends Controller
 
             // Get all active employees with their balances
             $employees = Employee::where('status', 'active')
-                ->with(['balances' => function($query) {
+                ->with(['balances' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }])
                 ->get();
-            
+
             $attendanceData = [];
 
             foreach ($employees as $employee) {
@@ -129,7 +130,7 @@ class PayrollController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->limit(3)
                     ->get()
-                    ->map(function($balance) {
+                    ->map(function ($balance) {
                         return [
                             'type' => $balance->type,
                             'amount' => $balance->amount,
@@ -174,13 +175,12 @@ class PayrollController extends Controller
                 'month_end' => $endOfMonth->format('Y-m-d'),
                 'month_name' => $this->getArabicMonthName($date->month) . ' ' . $date->year
             ]);
-
         } catch (\Exception $e) {
-            \Log::error('Error getting monthly attendance: ' . $e->getMessage(), [
+            Log::error('Error getting monthly attendance: ' . $e->getMessage(), [
                 'month' => $request->input('month'),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ في جلب بيانات الحضور: ' . $e->getMessage()
@@ -223,11 +223,20 @@ class PayrollController extends Controller
     private function getArabicMonthName($monthNumber)
     {
         $months = [
-            1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
-            5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
-            9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'
+            1 => 'يناير',
+            2 => 'فبراير',
+            3 => 'مارس',
+            4 => 'أبريل',
+            5 => 'مايو',
+            6 => 'يونيو',
+            7 => 'يوليو',
+            8 => 'أغسطس',
+            9 => 'سبتمبر',
+            10 => 'أكتوبر',
+            11 => 'نوفمبر',
+            12 => 'ديسمبر'
         ];
-        
+
         return $months[$monthNumber] ?? 'غير معروف';
     }
 
@@ -285,7 +294,7 @@ class PayrollController extends Controller
                 // Get salary and eligibility from form
                 $baseSalary = $request->input("salary.{$employeeId}", $employee->salary ?? 0);
                 $isEligible = $request->has("is_eligible.{$employeeId}");
-                
+
                 // Get attendance data
                 $workingDays = $request->input("working_days.{$employeeId}", 0);
                 $absentDays = $request->input("absent_days.{$employeeId}", 0);
@@ -346,7 +355,6 @@ class PayrollController extends Controller
 
             return redirect()->route('payroll.show', $payroll)
                 ->with('success', 'تم إنشاء مسيرة الراتب بنجاح');
-
         } catch (\Exception $e) {
             DB::rollback();
 

@@ -111,9 +111,34 @@ class FinanceController extends Controller
                 ];
             });
 
+        // إضافة المستخلصات المدفوعة التي لها سندات قبض
+        $paidExtracts = \App\Models\ProjectExtract::with(['project', 'revenueVoucher'])
+            ->where('status', 'paid')
+            ->whereNotNull('revenue_voucher_id')
+            ->get()
+                                ->map(function ($extract) {
+                        return [
+                            'id' => $extract->id,
+                            'type' => 'paid_extract',
+                            'type_label' => 'مستخلص مدفوع',
+                            'type_color' => 'purple',
+                            'description' => 'مستخلص مشروع: ' . ($extract->project->name ?? 'غير محدد') . ' - ' . ($extract->description ?? 'مستخلص رقم ' . $extract->extract_number),
+                            'amount' => $extract->total_with_tax, // استخدام القيمة مع الضريبة
+                            'formatted_amount' => number_format($extract->total_with_tax, 2) . ' ر.س',
+                            'transaction_date' => $extract->extract_date,
+                            'payment_method' => 'تحويل بنكي',
+                            'status' => 'paid',
+                            'status_label' => 'مدفوع',
+                            'status_color' => 'green',
+                            'reference_number' => $extract->extract_number,
+                            'created_at' => $extract->created_at
+                        ];
+                    });
+
         $transactions = $revenueVouchers
             ->concat($expenseVouchers)
             ->concat($custodies)
+            ->concat($paidExtracts)
             ->sortByDesc('created_at')
             ->values();
 
@@ -127,12 +152,35 @@ class FinanceController extends Controller
 
         // Calculate statistics
         $totalIncome = RevenueVoucher::where('status', '!=', 'cancelled')->sum('amount');
-        $totalExpense = ExpenseVoucher::where('status', '!=', 'cancelled')->sum('amount') +
-            Custody::where('status', '!=', 'cancelled')->sum('amount');
-        $netProfit = $totalIncome - $totalExpense;
+        $totalExpenseVouchers = ExpenseVoucher::where('status', '!=', 'cancelled')->sum('amount');
+        $totalCustodies = Custody::where('status', '!=', 'cancelled')->sum('amount');
+        $totalExpense = $totalExpenseVouchers + $totalCustodies; // إجمالي المصروفات (سندات صرف + عهد)
+        $netProfit = $totalIncome - $totalExpenseVouchers; // صافي الربح = الإيرادات - سندات الصرف فقط
         $monthlyIncome = RevenueVoucher::where('status', '!=', 'cancelled')
             ->whereMonth('voucher_date', Carbon::now()->month)
             ->sum('amount');
+
+        // حساب الضرائب
+        // 1. الضرائب من المستخلصات المدفوعة
+        $extractTaxRevenue = \App\Models\ProjectExtract::where('status', 'paid')
+            ->whereNotNull('revenue_voucher_id')
+            ->sum('tax_amount');
+        
+        // 2. الضرائب من سندات القبض الخاضعة للضريبة
+        $voucherTaxRevenue = \App\Models\RevenueVoucher::where('status', '!=', 'cancelled')
+            ->where('tax_type', 'taxable')
+            ->sum('tax_amount');
+        
+        // إجمالي الإيرادات الضريبية (المستخلصات + سندات القبض)
+        $totalTaxRevenue = $extractTaxRevenue + $voucherTaxRevenue;
+        
+        // حساب الضرائب من سندات الصرف (افتراضياً 15%)
+        $totalTaxExpenses = ExpenseVoucher::where('status', '!=', 'cancelled')
+            ->where('tax_type', 'taxable')
+            ->get()
+            ->sum(function ($voucher) {
+                return $voucher->amount * 0.15; // ضريبة 15%
+            });
 
         // Get all active employees for custody form
         $employees = Employee::active()->orderBy('name')->get();
@@ -163,7 +211,7 @@ class FinanceController extends Controller
             ->sortByDesc('current_balance')
             ->values();
 
-        return view('finance.index', compact('finances', 'totalIncome', 'totalExpense', 'netProfit', 'monthlyIncome', 'employees', 'employeeBalances'));
+        return view('finance.index', compact('finances', 'totalIncome', 'totalExpense', 'totalExpenseVouchers', 'totalCustodies', 'netProfit', 'monthlyIncome', 'totalTaxRevenue', 'totalTaxExpenses', 'employees', 'employeeBalances'));
     }
 
     /**

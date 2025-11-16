@@ -1,182 +1,0 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔧 اختبار تحديثات المستودع</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-        }
-
-        .update-card {
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .success-border {
-            border-left: 5px solid #28a745;
-        }
-
-        .info-border {
-            border-left: 5px solid #17a2b8;
-        }
-
-        .emoji {
-            font-size: 2rem;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container my-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="text-center mb-5">
-                    <h1 class="display-4">🔧 تحديثات نظام المستودع</h1>
-                    <p class="lead">تم إصلاح جميع المشاكل وإضافة الميزات الجديدة</p>
-                </div>
-
-                <!-- الإصلاحات المطبقة -->
-                <div class="card update-card success-border">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">
-                            <span class="emoji">✅</span>
-                            الإصلاحات المطبقة
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>مشكلة عدم تحديث الكميات:</h6>
-                                <ul>
-                                    <li>إصلاح تحديث <code>available_stock</code> عند الاستلام</li>
-                                    <li>إصلاح تحديث <code>available_stock</code> عند التصدير</li>
-                                    <li>إضافة تحديث <code>last_transaction_date</code></li>
-                                    <li>تحسين حساب <code>average_cost</code></li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>ميزة عرض التفاصيل:</h6>
-                                <ul>
-                                    <li>إضافة أيقونة 🔍 لعرض تفاصيل قطعة الغيار</li>
-                                    <li>نافذة منبثقة شاملة للتفاصيل</li>
-                                    <li>عرض الأرقام التسلسلية والمعاملات</li>
-                                    <li>معلومات المخزون التفصيلية</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- التحسينات التقنية -->
-                <div class="card update-card info-border">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
-                            <span class="emoji">⚙️</span>
-                            التحسينات التقنية
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <strong>Controller:</strong>
-                                <ul class="small">
-                                    <li>إضافة method <code>showSparePartDetails</code></li>
-                                    <li>تحسين منطق تحديث المخزون</li>
-                                    <li>إضافة حساب <code>average_cost</code></li>
-                                </ul>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Database:</strong>
-                                <ul class="small">
-                                    <li>إضافة حقل <code>available_stock</code></li>
-                                    <li>إضافة حقل <code>average_cost</code></li>
-                                    <li>إضافة حقل <code>last_transaction_date</code></li>
-                                </ul>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Frontend:</strong>
-                                <ul class="small">
-                                    <li>أيقونات حديثة للإجراءات</li>
-                                    <li>نافذة تفاصيل تفاعلية</li>
-                                    <li>عرض محسن للبيانات</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- روابط الاختبار -->
-                <div class="text-center">
-                    <h4 class="mb-4">🧪 اختبار النظام</h4>
-                    <div class="d-grid gap-3 d-md-block">
-                        <a href="http://127.0.0.1:8000/warehouses/40" class="btn btn-primary btn-lg" target="_blank">
-                            🏪 اختبار صفحة المستودع
-                        </a>
-                        <a href="http://127.0.0.1:8000/test-damaged-parts-system.html" class="btn btn-secondary btn-lg"
-                            target="_blank">
-                            🧪 صفحة الاختبارات الشاملة
-                        </a>
-                    </div>
-                </div>
-
-                <!-- تعليمات الاختبار -->
-                <div class="card update-card mt-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">
-                            <span class="emoji">📋</span>
-                            خطوات الاختبار المطلوبة
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>اختبار تحديث الكميات:</h6>
-                                <ol>
-                                    <li>افتح صفحة المستودع</li>
-                                    <li>سجل كمية قطعة غيار قبل العملية</li>
-                                    <li>قم بعملية استلام جديدة</li>
-                                    <li>تأكد من زيادة الكمية</li>
-                                    <li>قم بعملية تصدير</li>
-                                    <li>تأكد من نقص الكمية</li>
-                                </ol>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>اختبار ميزة التفاصيل:</h6>
-                                <ol>
-                                    <li>افتح صفحة المستودع</li>
-                                    <li>اضغط على أيقونة المعلومات 🔍</li>
-                                    <li>تحقق من ظهور النافذة المنبثقة</li>
-                                    <li>تحقق من عرض البيانات الصحيحة</li>
-                                    <li>تحقق من عرض الأرقام التسلسلية</li>
-                                    <li>تحقق من عرض المعاملات الأخيرة</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ملاحظات مهمة -->
-                <div class="alert alert-info">
-                    <h6><strong>📌 ملاحظات مهمة:</strong></h6>
-                    <ul class="mb-0">
-                        <li>تم تحديث جميع السجل الموجود بحيث يكون <code>available_stock = current_stock</code></li>
-                        <li>تم إضافة route جديد لعرض تفاصيل قطع الغيار</li>
-                        <li>تم تحسين UI الخاص بعمود الإجراءات</li>
-                        <li>جميع العمليات الآن تحدث الكميات بشكل صحيح</li>
-                    </ul>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-
-</html>

@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('location_shelf')->nullable(); // موقع الرف في المستودع
             $table->json('specifications')->nullable(); // مواصفات إضافية
             $table->boolean('is_active')->default(true); // حالة قطعة الغيار
+            $table->enum('source', ['new', 'returned', 'damaged_replacement'])->default('new');
             $table->timestamps();
 
             $table->index(['code', 'name']);

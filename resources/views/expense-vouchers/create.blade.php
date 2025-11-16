@@ -151,6 +151,7 @@
                     </label>
                     <select name="tax_type" 
                             required
+                            onchange="updateTaxCalculation()"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">اختر نوع الضريبة</option>
                         <option value="taxable">ضريبي</option>
@@ -160,6 +161,26 @@
 
                 <!-- فراغ للمحاذاة -->
                 <div></div>
+            </div>
+
+            <!-- معلومات الضريبة -->
+            <div class="md:col-span-2">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <label class="font-medium text-gray-700">المبلغ المدخل:</label>
+                            <p id="entered-amount" class="text-gray-900">0.00 ر.س</p>
+                        </div>
+                        <div>
+                            <label class="font-medium text-gray-700">المبلغ بدون الضريبة:</label>
+                            <p id="amount-without-tax" class="text-gray-900">0.00 ر.س</p>
+                        </div>
+                        <div>
+                            <label class="font-medium text-gray-700">قيمة الضريبة (15%):</label>
+                            <p id="tax-amount" class="text-gray-900">0.00 ر.س</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- البيان -->
@@ -289,6 +310,38 @@
 </div>
 
 <script>
+// دالة حساب الضريبة
+function updateTaxCalculation() {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const taxType = document.getElementById('tax_type').value;
+    
+    const enteredAmountEl = document.getElementById('entered-amount');
+    const amountWithoutTaxEl = document.getElementById('amount-without-tax');
+    const taxAmountEl = document.getElementById('tax-amount');
+    
+    if (taxType === 'taxable') {
+        // المبلغ شامل الضريبة (15%)
+        const taxRate = 15;
+        const amountWithTax = amount;
+        const amountWithoutTax = amountWithTax / (1 + (taxRate / 100));
+        const taxAmount = amountWithTax - amountWithoutTax;
+        
+        enteredAmountEl.textContent = amountWithTax.toFixed(2) + ' ر.س';
+        amountWithoutTaxEl.textContent = amountWithoutTax.toFixed(2) + ' ر.س';
+        taxAmountEl.textContent = taxAmount.toFixed(2) + ' ر.س';
+    } else if (taxType === 'non_taxable') {
+        // غير خاضع للضريبة
+        enteredAmountEl.textContent = amount.toFixed(2) + ' ر.س';
+        amountWithoutTaxEl.textContent = amount.toFixed(2) + ' ر.س';
+        taxAmountEl.textContent = '0.00 ر.س';
+    } else {
+        // لم يتم اختيار نوع الضريبة
+        enteredAmountEl.textContent = '0.00 ر.س';
+        amountWithoutTaxEl.textContent = '0.00 ر.س';
+        taxAmountEl.textContent = '0.00 ر.س';
+    }
+}
+
 // معالجة رفع الملف وعرض اسم الملف المختار
 document.getElementById('attachment').addEventListener('change', function(e) {
     const fileNameDiv = document.getElementById('file-name');
@@ -301,6 +354,13 @@ document.getElementById('attachment').addEventListener('change', function(e) {
         fileNameDiv.classList.add('hidden');
     }
 });
+
+// إضافة event listeners لحقول الضريبة
+document.getElementById('amount').addEventListener('input', updateTaxCalculation);
+document.getElementById('tax_type').addEventListener('change', updateTaxCalculation);
+
+// تشغيل الحساب عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', updateTaxCalculation);
 
 // إضافة تأثير السحب والإفلات
 const dropArea = document.querySelector('label[for="attachment"]');

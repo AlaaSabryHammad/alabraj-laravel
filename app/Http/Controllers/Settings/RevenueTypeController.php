@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RevenueType;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class RevenueTypeController extends Controller
 {
@@ -69,7 +70,7 @@ class RevenueTypeController extends Controller
     public function toggleStatus(RevenueType $revenueType)
     {
         try {
-            \Log::info('Toggle revenue type status called', [
+            Log::info('Toggle revenue type status called', [
                 'id' => $revenueType->id,
                 'current_status' => $revenueType->is_active,
                 'new_status' => !$revenueType->is_active
@@ -77,29 +78,29 @@ class RevenueTypeController extends Controller
 
             $oldStatus = $revenueType->is_active;
             $revenueType->update(['is_active' => !$revenueType->is_active]);
-            
+
             // Reload to get the updated status
             $revenueType->refresh();
-            
+
             $status = $revenueType->is_active ? 'تم تفعيل' : 'تم إلغاء تفعيل';
-            
-            \Log::info('Toggle revenue type status completed', [
+
+            Log::info('Toggle revenue type status completed', [
                 'id' => $revenueType->id,
                 'old_status' => $oldStatus,
                 'new_status' => $revenueType->is_active
             ]);
 
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => $status . ' نوع الإيراد بنجاح',
                 'new_status' => $revenueType->is_active
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error toggling revenue type status', [
+            Log::error('Error toggling revenue type status', [
                 'id' => $revenueType->id,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ أثناء تغيير الحالة: ' . $e->getMessage()
