@@ -112,13 +112,6 @@
                     'color' => 'from-pink-600 to-pink-700',
                 ],
                 [
-                    'id' => 'my-tasks',
-                    'title' => 'المعاملات الخاصة',
-                    'icon' => 'ri-task-line',
-                    'route' => 'my-tasks.index',
-                    'color' => 'from-teal-600 to-teal-700',
-                ],
-                [
                     'id' => 'warehouses',
                     'title' => 'إدارة المستودعات',
                     'icon' => 'ri-store-3-line',
