@@ -122,6 +122,8 @@ class AuthController extends Controller
             'password.confirmed' => 'تأكيد كلمة المرور غير متطابق.',
         ]);
 
+        {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // التحقق من كلمة المرور الحالية
@@ -137,5 +139,6 @@ class AuthController extends Controller
         ]);
 
         return redirect('/dashboard')->with('success', 'تم تغيير كلمة المرور بنجاح!');
+    }
     }
 }

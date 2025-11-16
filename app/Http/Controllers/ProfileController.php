@@ -16,7 +16,11 @@ class ProfileController extends Controller
      */
     public function show()
     {
-        $user = Auth::user()->load(['employee', 'role']);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($user) {
+            $user->load(['employee', 'role']);
+        }
 
         return view('profile.show', compact('user'));
     }

@@ -78,7 +78,7 @@ class LocationSeeder extends Seeder
                 'city' => 'الرياض',
                 'region' => 'منطقة الرياض',
                 'address' => 'العنوان تلقائي - ' . $location['name'],
-                'area_size' => rand(1000, 10000) . '.00',
+                'area_size' => number_format(1000 + (crc32($location['name']) % 9000), 2),
             ]);
         }
 
@@ -136,7 +136,7 @@ class LocationSeeder extends Seeder
                     'region' => $warehouseData['region'],
                     'address' => $warehouseData['address'],
                     'area_size' => $warehouseData['area_size'],
-                    'contact_phone' => '0' . rand(500000000, 599999999),
+                    'contact_phone' => '0' . (500000000 + abs(crc32($warehouseData['name']) % 100000000)),
                     'description' => 'مستودع مخصص لتخزين المواد والمعدات اللازمة للمشاريع',
                 ]);
             }

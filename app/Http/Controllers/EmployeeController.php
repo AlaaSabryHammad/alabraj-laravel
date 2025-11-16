@@ -1791,6 +1791,7 @@ class EmployeeController extends Controller
      */
     public function activate(Employee $employee)
     {
+        /** @var \App\Models\User|null $authUser */
         $authUser = Auth::user();
         if (!$authUser || !$authUser->isGeneralManager()) {
             return redirect()->back()->with('error', 'غير مصرح لك بتفعيل الموظفين. يسمح فقط للمدير العام.');
@@ -1805,6 +1806,7 @@ class EmployeeController extends Controller
      */
     public function deactivate(Employee $employee)
     {
+        /** @var \App\Models\User|null $authUser */
         $authUser = Auth::user();
         if (!$authUser || !$authUser->isGeneralManager()) {
             return redirect()->back()->with('error', 'غير مصرح لك بإلغاء تفعيل الموظفين. يسمح فقط للمدير العام.');
