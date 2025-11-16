@@ -19,8 +19,13 @@ class CheckPasswordChanged
     {
         $user = Auth::user();
 
-        // Skip check for change password routes
+        // Skip check for change password routes and API requests
         if ($request->routeIs('change-password') || $request->routeIs('change-password.update')) {
+            return $next($request);
+        }
+
+        // Skip API requests (they should not be redirected for password change)
+        if ($request->is('api/*')) {
             return $next($request);
         }
 

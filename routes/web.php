@@ -6,49 +6,6 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentHistoryController;
 use App\Http\Controllers\EquipmentMaintenanceController;
-// ...existing use statements...
-
-// Revenue Entities Management (جهات الإيرادات)
-Route::resource('settings/revenue-entities', App\Http\Controllers\RevenueEntityController::class)->names([
-    'index' => 'settings.revenue-entities.index',
-    'create' => 'settings.revenue-entities.create',
-    'store' => 'settings.revenue-entities.store',
-    'show' => 'settings.revenue-entities.show',
-    'edit' => 'settings.revenue-entities.edit',
-    'update' => 'settings.revenue-entities.update',
-    'destroy' => 'settings.revenue-entities.destroy',
-]);
-// Finance Module Routes
-Route::group(['prefix' => 'finance', 'as' => 'finance.'], function () {
-    // Main Finance Routes
-    Route::get('/', [App\Http\Controllers\FinanceController::class, 'index'])->name('index');
-    Route::get('/all-transactions', [App\Http\Controllers\FinanceController::class, 'allTransactions'])->name('all-transactions');
-    Route::get('/daily-report', [App\Http\Controllers\FinanceController::class, 'dailyReport'])->name('daily-report');
-
-    // Custody Routes
-    Route::group(['prefix' => 'custodies', 'as' => 'custodies.'], function () {
-        Route::post('/', [App\Http\Controllers\CustodyController::class, 'store'])->name('store');
-        Route::get('/{custody}', [App\Http\Controllers\CustodyController::class, 'show'])->name('show');
-        Route::patch('/{custody}/approve', [App\Http\Controllers\CustodyController::class, 'approve'])->name('approve');
-        Route::get('/{custody}/print', [App\Http\Controllers\CustodyController::class, 'print'])->name('print');
-    });
-
-    // Employee Financial Report
-    Route::get('/employee-report/{employee}', [App\Http\Controllers\FinanceController::class, 'employeeReport'])
-        ->name('employee-report');
-});
-
-// Revenue Vouchers Management
-Route::resource('revenue-vouchers', App\Http\Controllers\RevenueVoucherController::class);
-
-// Revenue Voucher Actions
-Route::patch('/revenue-vouchers/{revenue_voucher}/approve', [App\Http\Controllers\RevenueVoucherController::class, 'approve'])
-    ->name('revenue-vouchers.approve');
-Route::patch('/revenue-vouchers/{revenue_voucher}/mark-received', [App\Http\Controllers\RevenueVoucherController::class, 'markAsReceived'])
-    ->name('revenue-vouchers.mark-received');
-Route::get('/revenue-vouchers/{revenue_voucher}/print', [App\Http\Controllers\RevenueVoucherController::class, 'print'])
-    ->name('revenue-vouchers.print');
-
 use App\Http\Controllers\EquipmentFuelConsumptionController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\DocumentController;
@@ -91,6 +48,52 @@ Route::middleware('auth')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change-password.update');
     // Logout should also be accessible without password check
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// Password Reset Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', function () {
+        return view('auth.forgot-password');
+    })->name('password.request');
+
+    Route::post('/forgot-password', function (\Illuminate\Http\Request $request) {
+        $request->validate(['email' => 'required|email']);
+
+        $status = \Illuminate\Support\Facades\Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
+            ? back()->with(['status' => __($status)])
+            : back()->withErrors(['email' => __($status)]);
+    })->name('password.email');
+
+    Route::get('/reset-password/{token}', function ($token) {
+        return view('auth.reset-password', ['token' => $token]);
+    })->name('password.reset');
+
+    Route::post('/reset-password', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = \Illuminate\Support\Facades\Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => \Illuminate\Support\Facades\Hash::make($password)
+                ])->save();
+
+                // Optional: Send notification to user that password was reset
+            }
+        );
+
+        return $status === \Illuminate\Support\Facades\Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', __($status))
+            : back()->withErrors(['email' => [__($status)]]);
+    })->name('password.update');
 });
 
 // Protected Routes (Require Authentication)
@@ -292,6 +295,15 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
 
 
 
+    // Finance Management Routes
+    Route::prefix('finance')->group(function () {
+        Route::get('/', [FinanceController::class, 'index'])->name('finance.index');
+        Route::get('/all-transactions', [FinanceController::class, 'allTransactions'])->name('finance.all-transactions');
+        Route::get('/daily-report', [FinanceController::class, 'dailyReport'])->name('finance.daily-report');
+        Route::get('/employee-report/{employee}', [FinanceController::class, 'employeeReport'])->name('finance.employee-report');
+        Route::get('/{id}', [FinanceController::class, 'show'])->name('finance.show');
+    });
+
     // Expense Voucher Management Routes
     Route::prefix('expense-vouchers')->name('expense-vouchers.')->group(function () {
         Route::get('/', [App\Http\Controllers\ExpenseVoucherController::class, 'index'])->name('index');
@@ -390,8 +402,14 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
     // Settings Management Routes
     Route::prefix('settings')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
+
+        // Equipment Types Routes - Both AJAX content and full page
         Route::get('/equipment-types', [SettingsController::class, 'equipmentTypes'])->name('settings.equipment-types');
         Route::get('/equipment-types/content', [SettingsController::class, 'equipmentTypesContent'])->name('settings.equipment-types.content');
+        Route::get('/equipment-types/show', function () {
+            $equipmentTypes = \App\Models\EquipmentType::paginate(15);
+            return view('settings.show.equipment-types', compact('equipmentTypes'));
+        })->name('settings.equipment-types.show');
         Route::get('/equipment-types-simple', function () {
             $equipmentTypes = \App\Models\EquipmentType::withCount('equipment')->orderBy('name')->get();
             return view('settings.equipment-types-simple', compact('equipmentTypes'));
@@ -403,6 +421,10 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         // Location Types Routes
         Route::get('/location-types', [SettingsController::class, 'locationTypes'])->name('settings.location-types');
         Route::get('/location-types/content', [SettingsController::class, 'locationTypesContent'])->name('settings.location-types.content');
+        Route::get('/location-types/show', function () {
+            $locationTypes = \App\Models\LocationType::paginate(15);
+            return view('settings.show.location-types', compact('locationTypes'));
+        })->name('settings.location-types.show');
         Route::post('/location-types', [SettingsController::class, 'storeLocationType'])->name('settings.location-types.store');
         Route::put('/location-types/{locationType}', [SettingsController::class, 'updateLocationType'])->name('settings.location-types.update');
         Route::delete('/location-types/{locationType}', [SettingsController::class, 'destroyLocationType'])->name('settings.location-types.destroy');
@@ -416,6 +438,10 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         // Materials Management Routes
         Route::get('/materials', [SettingsController::class, 'materials'])->name('settings.materials');
         Route::get('/materials/content', [SettingsController::class, 'materialsContent'])->name('settings.materials.content');
+        Route::get('/materials/show', function () {
+            $materials = \App\Models\Material::paginate(15);
+            return view('settings.show.materials', compact('materials'));
+        })->name('settings.materials.show');
         Route::get('/materials/create', [MaterialController::class, 'create'])->name('settings.materials.create');
         Route::post('/materials', [MaterialController::class, 'store'])->name('settings.materials.store');
         Route::get('/materials/{material}/edit', [MaterialController::class, 'edit'])->name('settings.materials.edit');
@@ -433,6 +459,10 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
 
         // Expense Categories Routes
         Route::get('/expense-categories/content', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'content'])->name('settings.expense-categories.content');
+        Route::get('/expense-categories/show', function () {
+            $categories = \App\Models\ExpenseCategory::paginate(15);
+            return view('settings.show.expense-categories', compact('categories'));
+        })->name('settings.expense-categories.show');
         Route::post('/expense-categories', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'store'])->name('settings.expense-categories.store');
         Route::put('/expense-categories/{expenseCategory}', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'update'])->name('settings.expense-categories.update');
         Route::patch('/expense-categories/{expenseCategory}/toggle-status', [App\Http\Controllers\Settings\ExpenseCategoryController::class, 'toggleStatus'])->name('settings.expense-categories.toggle-status');
@@ -440,6 +470,10 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
 
         // Revenue Types Routes
         Route::get('/revenue-types/content', [App\Http\Controllers\Settings\RevenueTypeController::class, 'content'])->name('settings.revenue-types.content');
+        Route::get('/revenue-types/show', function () {
+            $types = \App\Models\RevenueType::paginate(15);
+            return view('settings.show.revenue-types', compact('types'));
+        })->name('settings.revenue-types.show');
         Route::post('/revenue-types', [App\Http\Controllers\Settings\RevenueTypeController::class, 'store'])->name('settings.revenue-types.store');
         Route::put('/revenue-types/{revenueType}', [App\Http\Controllers\Settings\RevenueTypeController::class, 'update'])->name('settings.revenue-types.update');
         Route::patch('/revenue-types/{revenueType}/toggle-status', [App\Http\Controllers\Settings\RevenueTypeController::class, 'toggleStatus'])->name('settings.revenue-types.toggle-status');
@@ -447,15 +481,34 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
 
         // Expense Entities Routes
         Route::get('/expense-entities/content', [App\Http\Controllers\ExpenseEntityController::class, 'getContent'])->name('settings.expense-entities.content');
+        Route::get('/expense-entities/show', function () {
+            $entities = \App\Models\ExpenseEntity::paginate(15);
+            return view('settings.show.expense-entities', compact('entities'));
+        })->name('settings.expense-entities.show');
 
         // Revenue Entities Routes
+        Route::get('/revenue-entities', [App\Http\Controllers\RevenueEntityController::class, 'index'])->name('settings.revenue-entities.index');
         Route::get('/revenue-entities/content', [App\Http\Controllers\RevenueEntityController::class, 'getContent'])->name('settings.revenue-entities.content');
+        Route::get('/revenue-entities/show', function () {
+            $entities = \App\Models\RevenueEntity::paginate(15);
+            return view('settings.show.revenue-entities', compact('entities'));
+        })->name('settings.revenue-entities.show');
+        Route::get('/revenue-entities/create', [App\Http\Controllers\RevenueEntityController::class, 'create'])->name('settings.revenue-entities.create');
+        Route::post('/revenue-entities', [App\Http\Controllers\RevenueEntityController::class, 'store'])->name('settings.revenue-entities.store');
+        Route::get('/revenue-entities/{revenueEntity}', [App\Http\Controllers\RevenueEntityController::class, 'show'])->name('revenue-entities.show');
+        Route::get('/revenue-entities/{revenueEntity}/edit', [App\Http\Controllers\RevenueEntityController::class, 'edit'])->name('settings.revenue-entities.edit');
+        Route::put('/revenue-entities/{revenueEntity}', [App\Http\Controllers\RevenueEntityController::class, 'update'])->name('settings.revenue-entities.update');
+        Route::delete('/revenue-entities/{revenueEntity}', [App\Http\Controllers\RevenueEntityController::class, 'destroy'])->name('settings.revenue-entities.destroy');
     });
 
     // Supplier Management Routes
     Route::prefix('suppliers')->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('suppliers.index');
         Route::get('/content', [SupplierController::class, 'content'])->name('suppliers.content');
+        Route::get('/show', function () {
+            $suppliers = \App\Models\Supplier::paginate(15);
+            return view('settings.show.suppliers', compact('suppliers'));
+        })->name('suppliers.show-page');
         Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');
         Route::post('/', [SupplierController::class, 'store'])->name('suppliers.store');
         Route::get('/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');

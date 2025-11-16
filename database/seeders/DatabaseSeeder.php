@@ -18,8 +18,14 @@ class DatabaseSeeder extends Seeder
             // إنشاء أنواع المواقع فقط
             LocationTypeSeeder::class,
 
+            // إنشاء أنواع المعدات
+            EquipmentTypeSeeder::class,
+
             // إنشاء المستخدم الوحيد محمد الشهراني
             MinimalUserSeeder::class,
+
+            // إنشاء المعدات
+            EquipmentSeeder::class,
         ]);
     }
 }
