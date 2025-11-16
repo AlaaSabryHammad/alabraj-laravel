@@ -120,25 +120,23 @@ class AuthController extends Controller
             'password.different' => 'كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية.',
             'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
             'password.confirmed' => 'تأكيد كلمة المرور غير متطابق.',
-        ]);
+        ]); {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
 
-        {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+            // التحقق من كلمة المرور الحالية
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors([
+                    'current_password' => 'كلمة المرور الحالية غير صحيحة.',
+                ]);
+            }
 
-        // التحقق من كلمة المرور الحالية
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors([
-                'current_password' => 'كلمة المرور الحالية غير صحيحة.',
+            // تحديث كلمة المرور
+            $user->update([
+                'password' => Hash::make($request->password),
             ]);
+
+            return redirect('/dashboard')->with('success', 'تم تغيير كلمة المرور بنجاح!');
         }
-
-        // تحديث كلمة المرور
-        $user->update([
-            'password' => Hash::make($request->password),
-        ]);
-
-        return redirect('/dashboard')->with('success', 'تم تغيير كلمة المرور بنجاح!');
-    }
     }
 }
