@@ -966,7 +966,8 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 border text-center">
-                                        <button onclick="editDeliveryRequest({{ $request->id }}, '{{ $request->request_number }}')"
+                                        <button
+                                            onclick="editDeliveryRequest({{ $request->id }}, '{{ $request->request_number }}')"
                                             class="inline-flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs font-medium transition-colors">
                                             <i class="ri-edit-line"></i>
                                             تعديل الرقم
@@ -1018,8 +1019,9 @@
                                     </td>
                                     <td class="px-4 py-3 border text-center font-medium">
                                         <div class="text-sm">
-                                            <div class="font-medium">{{ number_format($extract->total_amount, 2) }} ر.س</div>
-                                            @if($extract->tax_amount > 0)
+                                            <div class="font-medium">{{ number_format($extract->total_amount, 2) }} ر.س
+                                            </div>
+                                            @if ($extract->tax_amount > 0)
                                                 <div class="text-xs text-gray-500">
                                                     + ضريبة: {{ number_format($extract->tax_amount, 2) }} ر.س
                                                 </div>
@@ -2700,17 +2702,17 @@
                         </div>
                         <div class="text-right">
                             ${employee.phone ? `
-                                                            <p class="text-sm text-gray-600 flex items-center gap-1">
-                                                                <i class="ri-phone-line text-xs"></i>
-                                                                ${employee.phone}
-                                                            </p>
-                                                        ` : ''}
+                                                                <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                                    <i class="ri-phone-line text-xs"></i>
+                                                                    ${employee.phone}
+                                                                </p>
+                                                            ` : ''}
                             ${employee.email ? `
-                                                            <p class="text-sm text-gray-600 flex items-center gap-1">
-                                                                <i class="ri-mail-line text-xs"></i>
-                                                                ${employee.email}
-                                                            </p>
-                                                        ` : ''}
+                                                                <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                                    <i class="ri-mail-line text-xs"></i>
+                                                                    ${employee.email}
+                                                                </p>
+                                                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -2822,29 +2824,29 @@
                         historyHtml = `
                             <div class="space-y-3 max-h-96 overflow-y-auto">
                                 ${data.map(movement => `
-                                                                <div class="border-r-4 border-indigo-500 pr-4 py-3 bg-gray-50 rounded-lg">
-                                                                    <div class="flex justify-between items-start">
-                                                                        <div class="flex-1">
-                                                                            <p class="text-sm font-medium text-gray-900 mb-1">
-                                                                                <i class="ri-arrow-left-right-line text-indigo-600 ml-1"></i>
-                                                                                انتقلت من: ${movement.from_location || 'غير محدد'}
-                                                                            </p>
-                                                                            <p class="text-sm text-gray-600 mb-1">
-                                                                                <i class="ri-map-pin-line text-green-600 ml-1"></i>
-                                                                                إلى: ${movement.to_location || 'غير محدد'}
-                                                                            </p>
-                                                                            <p class="text-xs text-gray-500">
-                                                                                <i class="ri-user-line text-blue-600 ml-1"></i>
-                                                                                بواسطة: ${movement.moved_by || 'غير محدد'}
-                                                                            </p>
+                                                                    <div class="border-r-4 border-indigo-500 pr-4 py-3 bg-gray-50 rounded-lg">
+                                                                        <div class="flex justify-between items-start">
+                                                                            <div class="flex-1">
+                                                                                <p class="text-sm font-medium text-gray-900 mb-1">
+                                                                                    <i class="ri-arrow-left-right-line text-indigo-600 ml-1"></i>
+                                                                                    انتقلت من: ${movement.from_location || 'غير محدد'}
+                                                                                </p>
+                                                                                <p class="text-sm text-gray-600 mb-1">
+                                                                                    <i class="ri-map-pin-line text-green-600 ml-1"></i>
+                                                                                    إلى: ${movement.to_location || 'غير محدد'}
+                                                                                </p>
+                                                                                <p class="text-xs text-gray-500">
+                                                                                    <i class="ri-user-line text-blue-600 ml-1"></i>
+                                                                                    بواسطة: ${movement.moved_by || 'غير محدد'}
+                                                                                </p>
+                                                                            </div>
+                                                                            <div class="text-left">
+                                                                                <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                                                                                    ${new Date(movement.moved_at).toLocaleDateString('ar-SA')}
+                                                                                </span>
+                                                                            </div>
                                                                         </div>
-                                                                        <div class="text-left">
-                                                                            <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                                                                                ${new Date(movement.moved_at).toLocaleDateString('ar-SA')}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                    ${movement.notes ? `
+                                                                        ${movement.notes ? `
                                             <div class="mt-2 pt-2 border-t border-gray-200">
                                                 <p class="text-sm text-gray-600">
                                                     <i class="ri-file-text-line text-orange-600 ml-1"></i>
@@ -2852,8 +2854,8 @@
                                                 </p>
                                             </div>
                                         ` : ''}
-                                                                </div>
-                                                            `).join('')}
+                                                                    </div>
+                                                                `).join('')}
                             </div>
                         `;
                     } else {
@@ -3028,11 +3030,11 @@
                             </div>
                         </div>
                         ${data.notes ? `
-                                                        <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
-                                                            <h4 class="font-medium text-gray-900 mb-2">ملاحظات</h4>
-                                                            <p class="text-sm text-gray-700">${data.notes}</p>
-                                                        </div>
-                                                    ` : ''}
+                                                            <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
+                                                                <h4 class="font-medium text-gray-900 mb-2">ملاحظات</h4>
+                                                                <p class="text-sm text-gray-700">${data.notes}</p>
+                                                            </div>
+                                                        ` : ''}
                     `;
 
                     document.getElementById('employee-details-content').innerHTML = detailsHtml;
@@ -3075,34 +3077,135 @@
 
         // إرسال إشعار للموظف
         window.sendNotification = function(employeeId) {
-            const message = prompt('أدخل نص الإشعار:');
-            if (message && message.trim()) {
-                // إرسال الإشعار عبر AJAX
-                fetch('/employees/send-notification', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                                'content')
-                        },
-                        body: JSON.stringify({
-                            employee_id: employeeId,
-                            message: message.trim()
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('تم إرسال الإشعار بنجاح');
-                        } else {
-                            alert('فشل في إرسال الإشعار');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('حدث خطأ في إرسال الإشعار');
-                    });
+            // جلب بيانات الموظف أولاً
+            fetch(`/employees/${employeeId}/details`)
+                .then(response => response.json())
+                .then(data => {
+                    // عرض modal الإشعار
+                    showNotificationModal(employeeId, data.name);
+                })
+                .catch(error => {
+                    console.error('Error loading employee:', error);
+                    alert('فشل في تحميل بيانات الموظف');
+                });
+        }
+
+        window.showNotificationModal = function(employeeId, employeeName) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.dir = 'rtl';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl max-w-md w-full animate-in">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 rounded-t-xl">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="ri-notification-2-line"></i>
+                            إرسال إشعار
+                        </h3>
+                    </div>
+                    
+                    <div class="p-6 space-y-4">
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                            <p class="text-sm text-orange-800">
+                                <strong>الموظف:</strong> ${employeeName}
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label for="notificationMessage" class="block text-sm font-medium text-gray-700 mb-2">
+                                نص الإشعار <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="notificationMessage" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                                rows="4"
+                                placeholder="اكتب نص الإشعار هنا..."
+                                required></textarea>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button onclick="submitNotification(${employeeId}, this)" 
+                                class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="ri-send-plane-line"></i>
+                                إرسال
+                            </button>
+                            <button onclick="closeNotificationModal(this)" 
+                                class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors">
+                                إلغاء
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // إغلاق عند النقر خارج الموديال
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+            
+            // التركيز على حقل الإدخال
+            setTimeout(() => {
+                document.getElementById('notificationMessage').focus();
+            }, 100);
+        }
+
+        window.submitNotification = function(employeeId, button) {
+            const message = document.getElementById('notificationMessage').value.trim();
+            
+            if (!message) {
+                alert('الرجاء إدخال نص الإشعار');
+                return;
             }
+
+            // إضافة حالة التحميل
+            button.disabled = true;
+            button.innerHTML = '<i class="ri-loader-4-line animate-spin"></i> جاري الإرسال...';
+            
+            // إرسال الإشعار عبر AJAX
+            fetch('/employees/send-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                },
+                body: JSON.stringify({
+                    employee_id: employeeId,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // إغلاق الموديال والعرض رسالة نجاح
+                    const modal = button.closest('.fixed');
+                    modal.remove();
+                    
+                    // عرض رسالة نجاح
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-in z-50 flex items-center gap-2';
+                    successMsg.innerHTML = '<i class="ri-check-line text-xl"></i> تم إرسال الإشعار بنجاح';
+                    document.body.appendChild(successMsg);
+                    
+                    setTimeout(() => successMsg.remove(), 3000);
+                } else {
+                    alert('خطأ: ' + (data.message || 'فشل في إرسال الإشعار'));
+                    button.disabled = false;
+                    button.innerHTML = '<i class="ri-send-plane-line"></i> إرسال';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في إرسال الإشعار');
+                button.disabled = false;
+                button.innerHTML = '<i class="ri-send-plane-line"></i> إرسال';
+            });
+        }
+
+        window.closeNotificationModal = function(button) {
+            const modal = button.closest('.fixed');
+            modal.remove();
         }
 
         // تعيين موظفين للمشروع
@@ -4309,14 +4412,15 @@
     </script>
 
     <!-- موديال تعديل رقم الطلب -->
-    <div id="editDeliveryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+    <div id="editDeliveryModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
         <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
             <h3 class="text-lg font-bold text-gray-900 mb-4">تعديل رقم الطلب</h3>
             <form id="editDeliveryForm" onsubmit="submitEditDelivery(event)" class="space-y-4">
                 @csrf
                 @method('PUT')
                 <input type="hidden" id="deliveryRequestId" name="delivery_request_id">
-                
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">رقم الطلب الجديد</label>
                     <input type="text" id="requestNumberInput" name="request_number" required
@@ -4325,10 +4429,12 @@
                 </div>
 
                 <div class="flex gap-3">
-                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    <button type="submit"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
                         حفظ
                     </button>
-                    <button type="button" onclick="closeEditDeliveryModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors">
+                    <button type="button" onclick="closeEditDeliveryModal()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors">
                         إلغاء
                     </button>
                 </div>
@@ -4383,6 +4489,33 @@
             opacity: 0.5;
             filter: blur(2px);
         }
+
+        /* Notification Modal Animation */
+        .animate-in {
+            animation: slideInUp 0.3s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Spin animation for loader */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
     </style>
 
     <script>
@@ -4405,33 +4538,33 @@
             const projectId = {{ $project->id }};
 
             fetch(`/projects/${projectId}/delivery-requests/${requestId}/update`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                },
-                body: JSON.stringify({
-                    request_number: requestNumber
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify({
+                        request_number: requestNumber
+                    })
                 })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('فشل التحديث');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('تم التحديث بنجاح');
-                    closeEditDeliveryModal();
-                    location.reload();
-                } else {
-                    alert('خطأ: ' + (data.message || 'فشل التحديث'));
-                }
-            })
-            .catch(error => {
-                alert('حدث خطأ: ' + error.message);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('فشل التحديث');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('تم التحديث بنجاح');
+                        closeEditDeliveryModal();
+                        location.reload();
+                    } else {
+                        alert('خطأ: ' + (data.message || 'فشل التحديث'));
+                    }
+                })
+                .catch(error => {
+                    alert('حدث خطأ: ' + error.message);
+                });
         }
 
         // إغلاق الموديال عند النقر خارجه
