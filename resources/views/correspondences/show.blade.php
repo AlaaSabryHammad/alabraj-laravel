@@ -209,13 +209,13 @@
                                         
                                         <!-- Reply Type Badge -->
                                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                                            @if(($reply->reply_type ?? 'internal') === 'on_behalf')
+                                            @if(($reply->reply_type ?? 'reply') === 'forward')
                                                 bg-blue-100 text-blue-800
                                             @else
                                                 bg-gray-100 text-gray-800
                                             @endif">
-                                            <i class="ri-{{ ($reply->reply_type ?? 'internal') === 'on_behalf' ? 'user-shared-line' : 'user-line' }}"></i>
-                                            {{ $reply->reply_type_display ?? 'رد داخلي' }}
+                                            <i class="ri-{{ ($reply->reply_type ?? 'reply') === 'forward' ? 'share-forward-line' : 'reply-line' }}"></i>
+                                            {{ $reply->reply_type_display ?? 'رد' }}
                                         </span>
                                         
                                         <!-- Status Badge -->
@@ -566,13 +566,13 @@
                             </label>
                             <div class="space-y-3">
                                 <label class="flex items-center">
-                                    <input type="radio" name="reply_type" value="internal" class="mr-3" checked onchange="updateReplyPlaceholder()">
-                                    <span class="text-sm font-medium">رد داخلي من الموظف</span>
+                                    <input type="radio" name="reply_type" value="reply" class="mr-3" checked onchange="updateReplyPlaceholder()">
+                                    <span class="text-sm font-medium">رد من الموظف</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input type="radio" name="reply_type" value="on_behalf" class="mr-3" onchange="updateReplyPlaceholder()">
+                                    <input type="radio" name="reply_type" value="forward" class="mr-3" onchange="updateReplyPlaceholder()">
                                     <span class="text-sm font-medium">
-                                        رد نيابة عن 
+                                        إعادة توجيه إلى
                                         @if($correspondence->type === 'incoming')
                                             <span class="text-blue-600 font-semibold">{{ $correspondence->from_entity }}</span>
                                         @else
@@ -673,8 +673,8 @@
             document.getElementById('replyModal').classList.remove('flex');
             document.getElementById('replyForm').reset();
             clearReplyFile();
-            // Reset to internal reply type
-            document.querySelector('input[name="reply_type"][value="internal"]').checked = true;
+            // Reset to reply type
+            document.querySelector('input[name="reply_type"][value="reply"]').checked = true;
             updateReplyPlaceholder();
         }
 
@@ -682,14 +682,14 @@
             const replyType = document.querySelector('input[name="reply_type"]:checked').value;
             const replyContent = document.getElementById('reply_content');
             
-            if (replyType === 'on_behalf') {
+            if (replyType === 'forward') {
                 @if($correspondence->type === 'incoming')
-                    replyContent.placeholder = 'نص الرد نيابة عن {{ $correspondence->from_entity }}...';
+                    replyContent.placeholder = 'نص إعادة التوجيه إلى {{ $correspondence->from_entity }}...';
                 @else
-                    replyContent.placeholder = 'نص الرد نيابة عن {{ $correspondence->to_entity }}...';
+                    replyContent.placeholder = 'نص إعادة التوجيه إلى {{ $correspondence->to_entity }}...';
                 @endif
             } else {
-                replyContent.placeholder = 'اكتب محتوى الرد الداخلي هنا...';
+                replyContent.placeholder = 'اكتب محتوى الرد هنا...';
             }
         }
 

@@ -64,10 +64,11 @@ class CorrespondenceReply extends Model
 
     public function getReplyTypeDisplayAttribute()
     {
-        return match($this->reply_type ?? 'internal') {
-            'internal' => 'رد داخلي',
-            'on_behalf' => 'رد نيابة عن الجهة',
-            default => 'رد داخلي'
+        return match($this->reply_type ?? 'reply') {
+            'reply' => 'رد',
+            'forward' => 'إعادة توجيه',
+            'note' => 'ملاحظة',
+            default => 'رد'
         };
     }
 }

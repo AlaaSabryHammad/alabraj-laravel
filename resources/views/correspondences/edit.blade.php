@@ -276,13 +276,13 @@
                                 
                                 <!-- Reply Type Badge -->
                                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                                    @if(($reply->reply_type ?? 'internal') === 'on_behalf')
+                                    @if(($reply->reply_type ?? 'reply') === 'forward')
                                         bg-blue-100 text-blue-800
                                     @else
                                         bg-gray-100 text-gray-800
                                     @endif">
-                                    <i class="ri-{{ ($reply->reply_type ?? 'internal') === 'on_behalf' ? 'user-shared-line' : 'user-line' }}"></i>
-                                    {{ $reply->reply_type_display ?? 'رد داخلي' }}
+                                    <i class="ri-{{ ($reply->reply_type ?? 'reply') === 'forward' ? 'share-forward-line' : 'reply-line' }}"></i>
+                                    {{ $reply->reply_type_display ?? 'رد' }}
                                 </span>
                                 
                                 <!-- Status Badge -->

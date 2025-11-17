@@ -309,7 +309,7 @@ class CorrespondenceController extends Controller
     {
         $validated = $request->validate([
             'reply_content' => 'required|string',
-            'reply_type' => 'required|in:internal,on_behalf',
+            'reply_type' => 'required|in:reply,forward,note',
             'status' => 'required|in:draft,sent',
             'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
         ], [
