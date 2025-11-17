@@ -130,7 +130,8 @@
             </div>
 
             <!-- Notifications -->
-            <a href="javascript:void(0)" onclick="scrollToNotifications()" class="bg-gradient-to-r from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200 hover:border-rose-300 hover:shadow-md transition-all duration-200 cursor-pointer">
+            <button onclick="openNotificationsModal()"
+                class="bg-gradient-to-r from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200 hover:border-rose-300 hover:shadow-md transition-all duration-200 cursor-pointer w-full text-right">
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-rose-600 text-sm font-medium mb-1">الإشعارات</p>
@@ -141,10 +142,12 @@
                     </div>
                     <div class="bg-gradient-to-r from-rose-500 to-rose-600 p-3 rounded-xl relative">
                         <i class="ri-notification-fill text-white text-xl"></i>
-                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center" id="notificationBadge" style="display: none;">0</span>
+                        <span
+                            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center"
+                            id="notificationBadge" style="display: none;">0</span>
                     </div>
                 </div>
-            </a>
+            </button>
         </div>
 
         <!-- Charts and Recent Activity -->
@@ -270,21 +273,37 @@
         </div>
         </div>
 
-        <!-- Notifications Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6" id="notificationsSection">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <i class="ri-notification-fill text-rose-500"></i>
-                    الإشعارات والتنبيهات
-                </h2>
-                <button onclick="refreshNotifications()" class="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-lg" title="تحديث">
-                    <i class="ri-refresh-line text-xl"></i>
-                </button>
-            </div>
-            <div id="notificationsList" class="space-y-3 max-h-96 overflow-y-auto">
-                <div class="text-center py-8">
-                    <i class="ri-loader-4-line text-2xl text-gray-300 animate-spin"></i>
-                    <p class="text-gray-500 mt-2">جاري تحميل الإشعارات...</p>
+        <!-- Notifications Modal -->
+        <div id="notificationsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold text-gray-900">الإشعارات والتنبيهات</h3>
+                        <button onclick="closeNotificationsModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="ri-close-line text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 overflow-y-auto max-h-[70vh]">
+                    <div id="notificationsModalList" class="space-y-3">
+                        <div class="text-center py-8">
+                            <i class="ri-loader-4-line text-2xl text-gray-300 animate-spin"></i>
+                            <p class="text-gray-500 mt-2">جاري تحميل الإشعارات...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-200 bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <button onclick="refreshNotificationsModal()"
+                            class="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                            title="تحديث">
+                            <i class="ri-refresh-line text-xl"></i>
+                        </button>
+                        <button onclick="closeNotificationsModal()"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            إغلاق
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -346,7 +365,7 @@
                 function loadNotifications() {
                     // Get current user's employee ID
                     const currentUser = @json(Auth::user());
-                    
+
                     if (!currentUser || !currentUser.employee_id) {
                         // No employee associated with current user, show empty state
                         const notificationsList = document.getElementById('notificationsList');
@@ -373,9 +392,9 @@
                             if (data.success && data.data && data.data.length > 0) {
                                 const notifications = data.data;
                                 const unreadCount = notifications.filter(n => !n.read_at).length;
-                                
+
                                 notificationCount.textContent = unreadCount;
-                                
+
                                 if (unreadCount > 0) {
                                     notificationBadge.textContent = unreadCount;
                                     notificationBadge.style.display = 'flex';
@@ -388,7 +407,7 @@
                                     const sentAt = new Date(notification.sent_at);
                                     const now = new Date();
                                     const diffMinutes = Math.floor((now - sentAt) / 60000);
-                                    
+
                                     let timeText = 'منذ للتو';
                                     if (diffMinutes < 60) {
                                         timeText = `منذ ${diffMinutes} دقيقة`;
@@ -401,7 +420,7 @@
                                     }
 
                                     const colorClass = 'bg-blue-100 text-blue-600 border-blue-200';
-                                    
+
                                     notificationsHTML += `
                                         <div class="flex items-start space-x-3 space-x-reverse p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 ${!notification.read_at ? 'bg-gray-50 border-l-4 border-l-rose-500' : 'bg-white'} hover:shadow-sm">
                                             <div class="flex-shrink-0">
@@ -418,13 +437,13 @@
                                         </div>
                                     `;
                                 });
-                                
+
                                 notificationsList.innerHTML = notificationsHTML;
                             } else {
                                 const notificationBadge = document.getElementById('notificationBadge');
                                 notificationBadge.style.display = 'none';
                                 notificationCount.textContent = '0';
-                                
+
                                 notificationsList.innerHTML = `
                                     <div class="text-center py-12">
                                         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -459,12 +478,114 @@
                     loadNotifications();
                 }
 
-                // Scroll to notifications section
-                function scrollToNotifications() {
-                    const notificationsSection = document.getElementById('notificationsSection');
-                    if (notificationsSection) {
-                        notificationsSection.scrollIntoView({ behavior: 'smooth' });
+                // Open Notifications Modal
+                function openNotificationsModal() {
+                    document.getElementById('notificationsModal').classList.remove('hidden');
+                    document.getElementById('notificationsModal').classList.add('flex');
+                    document.body.style.overflow = 'hidden';
+                    loadNotificationsModal();
+                }
+
+                // Close Notifications Modal
+                function closeNotificationsModal() {
+                    document.getElementById('notificationsModal').classList.add('hidden');
+                    document.getElementById('notificationsModal').classList.remove('flex');
+                    document.body.style.overflow = 'auto';
+                }
+
+                // Load notifications in modal
+                function loadNotificationsModal() {
+                    const currentUser = @json(Auth::user());
+
+                    if (!currentUser || !currentUser.employee_id) {
+                        const notificationsModalList = document.getElementById('notificationsModalList');
+                        notificationsModalList.innerHTML = `
+                            <div class="text-center py-12">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="ri-notification-off-line text-2xl text-gray-400"></i>
+                                </div>
+                                <p class="text-gray-500 text-lg font-medium">لا توجد إشعارات</p>
+                                <p class="text-gray-400 text-sm mt-1">ستظهر الإشعارات الجديدة هنا</p>
+                            </div>
+                        `;
+                        return;
                     }
+
+                    fetch(`/employees/${currentUser.employee_id}/notifications`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const notificationsModalList = document.getElementById('notificationsModalList');
+
+                            if (data.success && data.data && data.data.length > 0) {
+                                const notifications = data.data;
+
+                                let notificationsHTML = '';
+                                notifications.forEach(notification => {
+                                    const sentAt = new Date(notification.sent_at);
+                                    const now = new Date();
+                                    const diffMinutes = Math.floor((now - sentAt) / 60000);
+
+                                    let timeText = 'منذ للتو';
+                                    if (diffMinutes < 60) {
+                                        timeText = `منذ ${diffMinutes} دقيقة`;
+                                    } else if (diffMinutes < 1440) {
+                                        const hours = Math.floor(diffMinutes / 60);
+                                        timeText = `منذ ${hours} ساعة`;
+                                    } else {
+                                        const days = Math.floor(diffMinutes / 1440);
+                                        timeText = `منذ ${days} يوم`;
+                                    }
+
+                                    const colorClass = 'bg-blue-100 text-blue-600 border-blue-200';
+
+                                    notificationsHTML += `
+                                        <div class="flex items-start space-x-3 space-x-reverse p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 ${!notification.read_at ? 'bg-gray-50 border-l-4 border-l-rose-500' : 'bg-white'} hover:shadow-sm">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-sm border">
+                                                    <i class="ri-notification-line text-lg"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-900">إشعار من ${notification.sent_by || 'النظام'}</p>
+                                                <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+                                                <span class="text-xs text-gray-500 mt-2 inline-block">${timeText}</span>
+                                            </div>
+                                            ${!notification.read_at ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-rose-500 rounded-full"></div></div>' : ''}
+                                        </div>
+                                    `;
+                                });
+
+                                notificationsModalList.innerHTML = notificationsHTML;
+                            } else {
+                                notificationsModalList.innerHTML = `
+                                    <div class="text-center py-12">
+                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i class="ri-notification-off-line text-2xl text-gray-400"></i>
+                                        </div>
+                                        <p class="text-gray-500 text-lg font-medium">لا توجد إشعارات</p>
+                                        <p class="text-gray-400 text-sm mt-1">ستظهر الإشعارات الجديدة هنا</p>
+                                    </div>
+                                `;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('خطأ في جلب الإشعارات:', error);
+                            const notificationsModalList = document.getElementById('notificationsModalList');
+                            notificationsModalList.innerHTML = `
+                                <div class="text-center py-12">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="ri-alert-line text-2xl text-gray-400"></i>
+                                    </div>
+                                    <p class="text-gray-500 text-lg font-medium">حدث خطأ في جلب الإشعارات</p>
+                                    <p class="text-gray-400 text-sm mt-1">يرجى محاولة التحديث مرة أخرى</p>
+                                </div>
+                            `;
+                        });
+                }
+
+                // Refresh notifications in modal
+                function refreshNotificationsModal() {
+                    loadNotificationsModal();
                 }
 
                 // Financial Chart
@@ -631,6 +752,14 @@
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         closeActivitiesModal();
+                        closeNotificationsModal();
+                    }
+                });
+
+                // Close notifications modal when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (e.target === document.getElementById('notificationsModal')) {
+                        closeNotificationsModal();
                     }
                 });
             </script>
