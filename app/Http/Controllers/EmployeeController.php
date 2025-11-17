@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Services\EmailService;
+use App\Notifications\EmployeeNotification;
 
 class EmployeeController extends Controller
 {
@@ -1843,6 +1844,45 @@ class EmployeeController extends Controller
     }
 
     /**
+     * جلب إشعارات الموظف
+     */
+    public function getNotifications(Employee $employee)
+    {
+        try {
+            // Get unread notifications
+            $notifications = $employee->notifications()
+                ->where('read_at', null)
+                ->latest()
+                ->get()
+                ->map(function ($notification) {
+                    return [
+                        'id' => $notification->id,
+                        'message' => $notification->data['message'] ?? '',
+                        'sent_by' => $notification->data['sent_by'] ?? 'نظام',
+                        'sent_at' => $notification->created_at,
+                        'read_at' => $notification->read_at
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $notifications,
+                'count' => $notifications->count()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('خطأ في جلب إشعارات الموظف', [
+                'employee_id' => $employee->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => 'فشل في جلب الإشعارات',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * إرسال إشعار للموظف
      */
     public function sendNotification(Request $request)
@@ -1861,18 +1901,22 @@ class EmployeeController extends Controller
 
             $employee = Employee::findOrFail($validated['employee_id']);
             $currentUser = Auth::user();
+            $senderName = $currentUser ? $currentUser->name : 'نظام';
+
+            // Save the notification to database using Notifiable trait
+            $employee->notify(new EmployeeNotification(
+                $validated['message'],
+                $senderName
+            ));
 
             // Log the notification
             Log::info('تم إرسال إشعار للموظف', [
                 'employee_id' => $employee->id,
                 'employee_name' => $employee->name,
                 'message' => $validated['message'],
-                'sent_by' => $currentUser ? $currentUser->name : 'نظام',
+                'sent_by' => $senderName,
                 'timestamp' => now()
             ]);
-
-            // TODO: يمكن إضافة حفظ الإشعار في جدول في قاعدة البيانات
-            // أو إرساله عبر البريد الإلكتروني أو SMS
 
             return response()->json([
                 'success' => true,
@@ -1883,7 +1927,6 @@ class EmployeeController extends Controller
                     'sent_at' => now()->toDateTimeString()
                 ]
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -1903,4 +1946,3 @@ class EmployeeController extends Controller
         }
     }
 }
-
