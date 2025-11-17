@@ -128,6 +128,23 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Notifications -->
+            <a href="javascript:void(0)" onclick="scrollToNotifications()" class="bg-gradient-to-r from-rose-50 to-rose-100 rounded-2xl p-6 border border-rose-200 hover:border-rose-300 hover:shadow-md transition-all duration-200 cursor-pointer">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-rose-600 text-sm font-medium mb-1">الإشعارات</p>
+                        <div class="flex items-end space-x-2 space-x-reverse">
+                            <h3 class="text-3xl font-bold text-gray-900" id="notificationCount">0</h3>
+                            <span class="text-rose-600 text-sm font-medium">جديد</span>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-rose-500 to-rose-600 p-3 rounded-xl relative">
+                        <i class="ri-notification-fill text-white text-xl"></i>
+                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center" id="notificationBadge" style="display: none;">0</span>
+                    </div>
+                </div>
+            </a>
         </div>
 
         <!-- Charts and Recent Activity -->
@@ -253,6 +270,25 @@
         </div>
         </div>
 
+        <!-- Notifications Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6" id="notificationsSection">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <i class="ri-notification-fill text-rose-500"></i>
+                    الإشعارات والتنبيهات
+                </h2>
+                <button onclick="refreshNotifications()" class="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-lg" title="تحديث">
+                    <i class="ri-refresh-line text-xl"></i>
+                </button>
+            </div>
+            <div id="notificationsList" class="space-y-3 max-h-96 overflow-y-auto">
+                <div class="text-center py-8">
+                    <i class="ri-loader-4-line text-2xl text-gray-300 animate-spin"></i>
+                    <p class="text-gray-500 mt-2">جاري تحميل الإشعارات...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- All Activities Modal -->
         <div id="activitiesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
             <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
@@ -305,6 +341,113 @@
 
                 updateDateTime();
                 setInterval(updateDateTime, 1000);
+
+                // Load notifications
+                function loadNotifications() {
+                    // Simulate notifications - في المستقبل سيتم جلبها من قاعدة البيانات
+                    const sampleNotifications = [
+                        {
+                            id: 1,
+                            title: 'إشعار بصيانة معدة',
+                            message: 'المعدة #5 تحتاج إلى صيانة دورية',
+                            type: 'maintenance',
+                            time: 'منذ 5 دقائق',
+                            icon: 'ri-tools-line',
+                            color: 'orange',
+                            read: false
+                        },
+                        {
+                            id: 2,
+                            title: 'موظف جديد انضم',
+                            message: 'الموظف أحمد محمد انضم إلى فريق المشروع',
+                            type: 'employee',
+                            time: 'منذ ساعة',
+                            icon: 'ri-user-add-line',
+                            color: 'green',
+                            read: false
+                        },
+                        {
+                            id: 3,
+                            title: 'مستند جديد تم رفعه',
+                            message: 'تم رفع مستند جديد في المشروع الأساسي',
+                            type: 'document',
+                            time: 'منذ 2 ساعة',
+                            icon: 'ri-file-add-line',
+                            color: 'purple',
+                            read: true
+                        }
+                    ];
+
+                    const notificationsList = document.getElementById('notificationsList');
+                    const notificationCount = document.getElementById('notificationCount');
+                    const notificationBadge = document.getElementById('notificationBadge');
+
+                    if (sampleNotifications.length > 0) {
+                        const unreadCount = sampleNotifications.filter(n => !n.read).length;
+                        notificationCount.textContent = unreadCount;
+                        
+                        if (unreadCount > 0) {
+                            notificationBadge.textContent = unreadCount;
+                            notificationBadge.style.display = 'flex';
+                        }
+
+                        let notificationsHTML = '';
+                        sampleNotifications.forEach(notification => {
+                            const colorClasses = {
+                                'orange': 'bg-orange-100 text-orange-600 border-orange-200',
+                                'green': 'bg-green-100 text-green-600 border-green-200',
+                                'purple': 'bg-purple-100 text-purple-600 border-purple-200',
+                                'blue': 'bg-blue-100 text-blue-600 border-blue-200',
+                                'red': 'bg-red-100 text-red-600 border-red-200',
+                            };
+                            const colorClass = colorClasses[notification.color] || 'bg-blue-100 text-blue-600 border-blue-200';
+                            
+                            notificationsHTML += `
+                                <div class="flex items-start space-x-3 space-x-reverse p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-${notification.read ? 'white' : 'gray-50'} hover:shadow-sm ${!notification.read ? 'border-l-4 border-l-rose-500' : ''}">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-sm border">
+                                            <i class="${notification.icon} text-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900">${notification.title}</p>
+                                        <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+                                        <span class="text-xs text-gray-500 mt-2 inline-block">${notification.time}</span>
+                                    </div>
+                                    ${!notification.read ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-rose-500 rounded-full"></div></div>' : ''}
+                                </div>
+                            `;
+                        });
+                        
+                        notificationsList.innerHTML = notificationsHTML;
+                    } else {
+                        notificationsList.innerHTML = `
+                            <div class="text-center py-12">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="ri-notification-off-line text-2xl text-gray-400"></i>
+                                </div>
+                                <p class="text-gray-500 text-lg font-medium">لا توجد إشعارات</p>
+                                <p class="text-gray-400 text-sm mt-1">ستظهر الإشعارات الجديدة هنا</p>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Load notifications on page load
+                loadNotifications();
+
+                // Refresh notifications
+                function refreshNotifications() {
+                    loadNotifications();
+                }
+
+                // Scroll to notifications section
+                function scrollToNotifications() {
+                    const notificationsSection = document.getElementById('notificationsSection');
+                    if (notificationsSection) {
+                        notificationsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
 
                 // Financial Chart
                 const ctx = document.getElementById('financialChart').getContext('2d');
