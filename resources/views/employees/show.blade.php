@@ -102,6 +102,11 @@
                         <i class="ri-lock-password-line"></i>
                         تغيير كلمة السر
                     </button>
+                    <button type="button" onclick="openNotificationModal()"
+                        class="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors">
+                        <i class="ri-notification-badge-line"></i>
+                        إرسال إشعار
+                    </button>
                     <button onclick="openReportModal()"
                         class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                         <i class="ri-file-lock-line"></i>
@@ -1978,5 +1983,160 @@
                 </div>
             </div>
         </div>
+
+        <!-- Notification Modal -->
+        <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <i class="ri-notification-badge-line text-rose-600"></i>
+                                إرسال إشعار
+                            </h3>
+                            <button onclick="closeNotificationModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="ri-close-line text-xl"></i>
+                            </button>
+                        </div>
+
+                        <form id="notificationForm">
+                            @csrf
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">نص الإشعار</label>
+                                    <textarea name="message" rows="4" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                        placeholder="أدخل نص الإشعار (بحد أقصى 500 حرف)"
+                                        maxlength="500"></textarea>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        <span id="charCount">0</span> / 500 حرف
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-3 mt-6">
+                                <button type="button" onclick="closeNotificationModal()"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">
+                                    إلغاء
+                                </button>
+                                <button type="submit"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-rose-600 border border-transparent rounded-lg hover:bg-rose-700 flex items-center gap-2"
+                                    id="sendNotificationBtn">
+                                    <i class="ri-send-plane-line"></i>
+                                    إرسال الإشعار
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @push('scripts')
+            <script>
+                // Notification Modal Functions
+                function openNotificationModal() {
+                    document.getElementById('notificationModal').classList.remove('hidden');
+                    document.getElementById('notificationForm').reset();
+                    document.getElementById('charCount').textContent = '0';
+                }
+
+                function closeNotificationModal() {
+                    document.getElementById('notificationModal').classList.add('hidden');
+                }
+
+                // Character counter for notification
+                document.getElementById('notificationForm')?.addEventListener('input', function(e) {
+                    if (e.target.name === 'message') {
+                        document.getElementById('charCount').textContent = e.target.value.length;
+                    }
+                });
+
+                // Send notification
+                document.getElementById('notificationForm')?.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const message = document.querySelector('[name="message"]').value;
+                    const btn = document.getElementById('sendNotificationBtn');
+                    const originalText = btn.innerHTML;
+
+                    // Show loading state
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i> جاري الإرسال...';
+
+                    fetch('{{ route("employees.send-notification") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value
+                        },
+                        body: JSON.stringify({
+                            employee_id: {{ $employee->id }},
+                            message: message
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            showSuccessAlert('تم إرسال الإشعار بنجاح للموظف: ' + data.data.employee_name);
+                            closeNotificationModal();
+                        } else {
+                            showErrorAlert('فشل في إرسال الإشعار: ' + (data.message || 'خطأ غير معروف'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showErrorAlert('حدث خطأ في إرسال الإشعار');
+                    })
+                    .finally(() => {
+                        // Restore button state
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    });
+                });
+
+                // Helper function to show success alert
+                function showSuccessAlert(message) {
+                    const alert = document.createElement('div');
+                    alert.className = 'fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-[9999] flex items-center gap-3';
+                    alert.innerHTML = `
+                        <i class="ri-check-circle-line text-green-600 text-xl"></i>
+                        <span class="text-green-800 font-medium">${message}</span>
+                    `;
+                    document.body.appendChild(alert);
+
+                    setTimeout(() => {
+                        alert.style.opacity = '0';
+                        alert.style.transition = 'opacity 0.3s ease-out';
+                        setTimeout(() => alert.remove(), 300);
+                    }, 4000);
+                }
+
+                // Helper function to show error alert
+                function showErrorAlert(message) {
+                    const alert = document.createElement('div');
+                    alert.className = 'fixed top-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-[9999] flex items-center gap-3';
+                    alert.innerHTML = `
+                        <i class="ri-error-warning-line text-red-600 text-xl"></i>
+                        <span class="text-red-800 font-medium">${message}</span>
+                    `;
+                    document.body.appendChild(alert);
+
+                    setTimeout(() => {
+                        alert.style.opacity = '0';
+                        alert.style.transition = 'opacity 0.3s ease-out';
+                        setTimeout(() => alert.remove(), 300);
+                    }, 4000);
+                }
+
+                // Close modal when clicking outside
+                document.getElementById('notificationModal')?.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeNotificationModal();
+                    }
+                });
+            </script>
+        @endpush
 
     @endsection
