@@ -46,10 +46,31 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * Attributes to append to model output
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'employee_id',
+    ];
+
     // Employee relationship
     public function employee()
     {
         return $this->hasOne(Employee::class);
+    }
+
+    /**
+     * Get employee ID for notifications and other features
+     * Loads the employee relationship if needed
+     */
+    public function getEmployeeIdAttribute()
+    {
+        if (!$this->relationLoaded('employee')) {
+            $this->load('employee');
+        }
+        return $this->employee?->id;
     }
 
     // Single role relationship (for role_id column)
