@@ -114,6 +114,7 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/create', [EmployeeController::class, 'create'])->name('employees.create');
         Route::post('/', [EmployeeController::class, 'store'])->name('employees.store');
         Route::get('/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+        Route::get('/{employee}/details', [EmployeeController::class, 'getDetails'])->name('employees.details');
         Route::post('/{employee}/assign-manager', [EmployeeController::class, 'assignManager'])->name('employees.assign-manager');
         Route::delete('/{employee}/remove-manager', [EmployeeController::class, 'removeManager'])->name('employees.remove-manager');
         Route::get('/{employee}/print', [EmployeeController::class, 'print'])->name('employees.print');

@@ -1815,4 +1815,30 @@ class EmployeeController extends Controller
 
         return redirect()->back()->with('success', 'تم إلغاء تفعيل الموظف بنجاح');
     }
+
+    /**
+     * جلب تفاصيل الموظف كـ JSON (للاستخدام في AJAX)
+     */
+    public function getDetails(Employee $employee)
+    {
+        try {
+            return response()->json([
+                'id' => $employee->id,
+                'name' => $employee->name,
+                'email' => $employee->email,
+                'phone' => $employee->phone,
+                'status' => $employee->status,
+                'department' => $employee->department,
+                'position' => $employee->position,
+                'hire_date' => $employee->hire_date,
+                'salary' => $employee->salary,
+                'notes' => $employee->notes,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'فشل في جلب بيانات الموظف',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

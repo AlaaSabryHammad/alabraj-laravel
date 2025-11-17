@@ -3079,10 +3079,15 @@
         window.sendNotification = function(employeeId) {
             // جلب بيانات الموظف أولاً
             fetch(`/employees/${employeeId}/details`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch employee details');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     // عرض modal الإشعار
-                    showNotificationModal(employeeId, data.name);
+                    window.showNotificationModal(employeeId, data.name);
                 })
                 .catch(error => {
                     console.error('Error loading employee:', error);
@@ -3122,12 +3127,12 @@
                         </div>
 
                         <div class="flex gap-3">
-                            <button onclick="submitNotification(${employeeId}, this)" 
+                            <button onclick="window.submitNotification(${employeeId}, this)" 
                                 class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
                                 <i class="ri-send-plane-line"></i>
                                 إرسال
                             </button>
-                            <button onclick="closeNotificationModal(this)" 
+                            <button onclick="window.closeNotificationModal(this)" 
                                 class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors">
                                 إلغاء
                             </button>
