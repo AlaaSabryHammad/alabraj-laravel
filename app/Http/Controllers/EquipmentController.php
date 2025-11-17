@@ -41,7 +41,7 @@ class EquipmentController extends Controller
 
         // Handle category filter
         if ($request->filled('category') && $request->get('category') != 'all') {
-            $query->where('category', $request->get('category'));
+            $query->where('type', $request->get('category'));
         }
 
         $equipment = $query->latest()->paginate(10)->withQueryString();
@@ -55,12 +55,11 @@ class EquipmentController extends Controller
             'total' => Equipment::count()
         ];
 
-        // Get unique categories for filter dropdown
-        $categories = Equipment::select('category')
-            ->distinct()
-            ->whereNotNull('category')
-            ->pluck('category')
-            ->sort();
+        // Get equipment types for filter dropdown
+        $categories = EquipmentType::where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
 
         return view('equipment.index', compact('equipment', 'stats', 'categories'));
     }
