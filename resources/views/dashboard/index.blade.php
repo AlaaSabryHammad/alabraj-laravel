@@ -344,83 +344,12 @@
 
                 // Load notifications
                 function loadNotifications() {
-                    // Simulate notifications - في المستقبل سيتم جلبها من قاعدة البيانات
-                    const sampleNotifications = [
-                        {
-                            id: 1,
-                            title: 'إشعار بصيانة معدة',
-                            message: 'المعدة #5 تحتاج إلى صيانة دورية',
-                            type: 'maintenance',
-                            time: 'منذ 5 دقائق',
-                            icon: 'ri-tools-line',
-                            color: 'orange',
-                            read: false
-                        },
-                        {
-                            id: 2,
-                            title: 'موظف جديد انضم',
-                            message: 'الموظف أحمد محمد انضم إلى فريق المشروع',
-                            type: 'employee',
-                            time: 'منذ ساعة',
-                            icon: 'ri-user-add-line',
-                            color: 'green',
-                            read: false
-                        },
-                        {
-                            id: 3,
-                            title: 'مستند جديد تم رفعه',
-                            message: 'تم رفع مستند جديد في المشروع الأساسي',
-                            type: 'document',
-                            time: 'منذ 2 ساعة',
-                            icon: 'ri-file-add-line',
-                            color: 'purple',
-                            read: true
-                        }
-                    ];
-
-                    const notificationsList = document.getElementById('notificationsList');
-                    const notificationCount = document.getElementById('notificationCount');
-                    const notificationBadge = document.getElementById('notificationBadge');
-
-                    if (sampleNotifications.length > 0) {
-                        const unreadCount = sampleNotifications.filter(n => !n.read).length;
-                        notificationCount.textContent = unreadCount;
-                        
-                        if (unreadCount > 0) {
-                            notificationBadge.textContent = unreadCount;
-                            notificationBadge.style.display = 'flex';
-                        }
-
-                        let notificationsHTML = '';
-                        sampleNotifications.forEach(notification => {
-                            const colorClasses = {
-                                'orange': 'bg-orange-100 text-orange-600 border-orange-200',
-                                'green': 'bg-green-100 text-green-600 border-green-200',
-                                'purple': 'bg-purple-100 text-purple-600 border-purple-200',
-                                'blue': 'bg-blue-100 text-blue-600 border-blue-200',
-                                'red': 'bg-red-100 text-red-600 border-red-200',
-                            };
-                            const colorClass = colorClasses[notification.color] || 'bg-blue-100 text-blue-600 border-blue-200';
-                            
-                            notificationsHTML += `
-                                <div class="flex items-start space-x-3 space-x-reverse p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-${notification.read ? 'white' : 'gray-50'} hover:shadow-sm ${!notification.read ? 'border-l-4 border-l-rose-500' : ''}">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-sm border">
-                                            <i class="${notification.icon} text-lg"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-900">${notification.title}</p>
-                                        <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
-                                        <span class="text-xs text-gray-500 mt-2 inline-block">${notification.time}</span>
-                                    </div>
-                                    ${!notification.read ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-rose-500 rounded-full"></div></div>' : ''}
-                                </div>
-                            `;
-                        });
-                        
-                        notificationsList.innerHTML = notificationsHTML;
-                    } else {
+                    // Get current user's employee ID
+                    const currentUser = @json(Auth::user());
+                    
+                    if (!currentUser || !currentUser.employee_id) {
+                        // No employee associated with current user, show empty state
+                        const notificationsList = document.getElementById('notificationsList');
                         notificationsList.innerHTML = `
                             <div class="text-center py-12">
                                 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -430,7 +359,96 @@
                                 <p class="text-gray-400 text-sm mt-1">ستظهر الإشعارات الجديدة هنا</p>
                             </div>
                         `;
+                        return;
                     }
+
+                    // Fetch notifications from the API
+                    fetch(`/employees/${currentUser.employee_id}/notifications`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const notificationsList = document.getElementById('notificationsList');
+                            const notificationCount = document.getElementById('notificationCount');
+                            const notificationBadge = document.getElementById('notificationBadge');
+
+                            if (data.success && data.data && data.data.length > 0) {
+                                const notifications = data.data;
+                                const unreadCount = notifications.filter(n => !n.read_at).length;
+                                
+                                notificationCount.textContent = unreadCount;
+                                
+                                if (unreadCount > 0) {
+                                    notificationBadge.textContent = unreadCount;
+                                    notificationBadge.style.display = 'flex';
+                                } else {
+                                    notificationBadge.style.display = 'none';
+                                }
+
+                                let notificationsHTML = '';
+                                notifications.forEach(notification => {
+                                    const sentAt = new Date(notification.sent_at);
+                                    const now = new Date();
+                                    const diffMinutes = Math.floor((now - sentAt) / 60000);
+                                    
+                                    let timeText = 'منذ للتو';
+                                    if (diffMinutes < 60) {
+                                        timeText = `منذ ${diffMinutes} دقيقة`;
+                                    } else if (diffMinutes < 1440) {
+                                        const hours = Math.floor(diffMinutes / 60);
+                                        timeText = `منذ ${hours} ساعة`;
+                                    } else {
+                                        const days = Math.floor(diffMinutes / 1440);
+                                        timeText = `منذ ${days} يوم`;
+                                    }
+
+                                    const colorClass = 'bg-blue-100 text-blue-600 border-blue-200';
+                                    
+                                    notificationsHTML += `
+                                        <div class="flex items-start space-x-3 space-x-reverse p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 ${!notification.read_at ? 'bg-gray-50 border-l-4 border-l-rose-500' : 'bg-white'} hover:shadow-sm">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-sm border">
+                                                    <i class="ri-notification-line text-lg"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-900">إشعار من ${notification.sent_by || 'النظام'}</p>
+                                                <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+                                                <span class="text-xs text-gray-500 mt-2 inline-block">${timeText}</span>
+                                            </div>
+                                            ${!notification.read_at ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-rose-500 rounded-full"></div></div>' : ''}
+                                        </div>
+                                    `;
+                                });
+                                
+                                notificationsList.innerHTML = notificationsHTML;
+                            } else {
+                                const notificationBadge = document.getElementById('notificationBadge');
+                                notificationBadge.style.display = 'none';
+                                notificationCount.textContent = '0';
+                                
+                                notificationsList.innerHTML = `
+                                    <div class="text-center py-12">
+                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i class="ri-notification-off-line text-2xl text-gray-400"></i>
+                                        </div>
+                                        <p class="text-gray-500 text-lg font-medium">لا توجد إشعارات</p>
+                                        <p class="text-gray-400 text-sm mt-1">ستظهر الإشعارات الجديدة هنا</p>
+                                    </div>
+                                `;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('خطأ في جلب الإشعارات:', error);
+                            const notificationsList = document.getElementById('notificationsList');
+                            notificationsList.innerHTML = `
+                                <div class="text-center py-12">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="ri-alert-line text-2xl text-gray-400"></i>
+                                    </div>
+                                    <p class="text-gray-500 text-lg font-medium">حدث خطأ في جلب الإشعارات</p>
+                                    <p class="text-gray-400 text-sm mt-1">يرجى محاولة التحديث مرة أخرى</p>
+                                </div>
+                            `;
+                        });
                 }
 
                 // Load notifications on page load
