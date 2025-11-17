@@ -1841,4 +1841,66 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * إرسال إشعار للموظف
+     */
+    public function sendNotification(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'employee_id' => 'required|exists:employees,id',
+                'message' => 'required|string|min:1|max:500'
+            ], [
+                'employee_id.required' => 'معرف الموظف مطلوب',
+                'employee_id.exists' => 'الموظف غير موجود',
+                'message.required' => 'نص الإشعار مطلوب',
+                'message.min' => 'نص الإشعار لا يمكن أن يكون فارغاً',
+                'message.max' => 'نص الإشعار لا يزيد عن 500 حرف'
+            ]);
+
+            $employee = Employee::findOrFail($validated['employee_id']);
+            $currentUser = Auth::user();
+
+            // Log the notification
+            Log::info('تم إرسال إشعار للموظف', [
+                'employee_id' => $employee->id,
+                'employee_name' => $employee->name,
+                'message' => $validated['message'],
+                'sent_by' => $currentUser ? $currentUser->name : 'نظام',
+                'timestamp' => now()
+            ]);
+
+            // TODO: يمكن إضافة حفظ الإشعار في جدول في قاعدة البيانات
+            // أو إرساله عبر البريد الإلكتروني أو SMS
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إرسال الإشعار بنجاح',
+                'data' => [
+                    'employee_id' => $employee->id,
+                    'employee_name' => $employee->name,
+                    'sent_at' => now()->toDateTimeString()
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'فشل في التحقق من البيانات',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('خطأ في إرسال الإشعار', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ في إرسال الإشعار: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
