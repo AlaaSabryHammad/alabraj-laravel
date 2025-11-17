@@ -23,6 +23,8 @@
     <style>
         body {
             font-family: 'Tajawal', sans-serif;
+            background-color: white !important;
+            color: #000 !important;
         }
 
         /* Print Optimizations */
@@ -46,12 +48,6 @@
                 margin: 0 !important;
                 font-size: 11pt !important;
                 line-height: 1.4 !important;
-            }
-
-            .max-w-4xl {
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
             }
 
             .print-break {
@@ -161,11 +157,12 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-white min-h-screen">
     <!-- Watermark -->
     <div class="watermark">شركة الأبراج</div>
 
-    <div class="max-w-4xl mx-auto p-0">
+    <div class="max-w-4xl mx-auto p-0" style="background-color: white !important;">
+        <!-- Content will render here -->
         <!-- Print Header -->
         <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white p-3 rounded-t-xl employee-card avoid-break">
             <div class="text-center mb-3">
@@ -940,12 +937,22 @@
                 }, 500);
             });
         @else
-            // Normal print behavior
+            // Normal print behavior - trigger after page fully loads
             window.addEventListener('load', function() {
+                console.log('Page fully loaded, triggering print...');
+                // Ensure all images and resources are loaded
                 setTimeout(function() {
                     window.print();
-                }, 3000); // Increased delay to allow QR code generation
+                }, 800);
             });
+            
+            // Fallback: if page doesn't load after 5 seconds, still print
+            setTimeout(function() {
+                if (document.readyState !== 'complete') {
+                    console.log('Timeout: forcing print after 5 seconds');
+                    window.print();
+                }
+            }, 5000);
         @endif
 
         // Hide non-printable elements and optimize for print
