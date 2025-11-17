@@ -920,6 +920,7 @@
                                 <th class="px-4 py-3 border">الوصف</th>
                                 <th class="px-4 py-3 border">تاريخ الإنشاء</th>
                                 <th class="px-4 py-3 border">الملف</th>
+                                <th class="px-4 py-3 border">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -927,10 +928,10 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 border text-center font-medium">{{ $index + 1 }}</td>
                                     <td class="px-4 py-3 border">
-                                        @if ($request->number)
+                                        @if ($request->request_number)
                                             <span
                                                 class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                                {{ $request->number }}
+                                                {{ $request->request_number }}
                                             </span>
                                         @else
                                             <span class="text-gray-400">غير محدد</span>
@@ -963,6 +964,13 @@
                                         @else
                                             <span class="text-gray-400">لا يوجد ملف</span>
                                         @endif
+                                    </td>
+                                    <td class="px-4 py-3 border text-center">
+                                        <button onclick="editDeliveryRequest({{ $request->id }}, '{{ $request->request_number }}')"
+                                            class="inline-flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs font-medium transition-colors">
+                                            <i class="ri-edit-line"></i>
+                                            تعديل الرقم
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -4300,6 +4308,34 @@
         }
     </script>
 
+    <!-- موديال تعديل رقم الطلب -->
+    <div id="editDeliveryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">تعديل رقم الطلب</h3>
+            <form id="editDeliveryForm" onsubmit="submitEditDelivery(event)" class="space-y-4">
+                @csrf
+                @method('PUT')
+                <input type="hidden" id="deliveryRequestId" name="delivery_request_id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">رقم الطلب الجديد</label>
+                    <input type="text" id="requestNumberInput" name="request_number" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="أدخل رقم الطلب">
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        حفظ
+                    </button>
+                    <button type="button" onclick="closeEditDeliveryModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <style>
         /* Image Modal Styles */
         #imageModal {
@@ -4348,4 +4384,61 @@
             filter: blur(2px);
         }
     </style>
+
+    <script>
+        function editDeliveryRequest(id, currentNumber) {
+            document.getElementById('deliveryRequestId').value = id;
+            document.getElementById('requestNumberInput').value = currentNumber || '';
+            document.getElementById('editDeliveryModal').classList.remove('hidden');
+            document.getElementById('requestNumberInput').focus();
+        }
+
+        function closeEditDeliveryModal() {
+            document.getElementById('editDeliveryModal').classList.add('hidden');
+            document.getElementById('editDeliveryForm').reset();
+        }
+
+        function submitEditDelivery(event) {
+            event.preventDefault();
+            const requestId = document.getElementById('deliveryRequestId').value;
+            const requestNumber = document.getElementById('requestNumberInput').value;
+            const projectId = {{ $project->id }};
+
+            fetch(`/projects/${projectId}/delivery-requests/${requestId}/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify({
+                    request_number: requestNumber
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('فشل التحديث');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('تم التحديث بنجاح');
+                    closeEditDeliveryModal();
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + (data.message || 'فشل التحديث'));
+                }
+            })
+            .catch(error => {
+                alert('حدث خطأ: ' + error.message);
+            });
+        }
+
+        // إغلاق الموديال عند النقر خارجه
+        document.getElementById('editDeliveryModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditDeliveryModal();
+            }
+        });
+    </script>
 @endsection

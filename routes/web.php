@@ -384,6 +384,9 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::put('/{project}/loan/{loan}', [ProjectController::class, 'updateLoan'])->name('projects.loan.update');
         Route::delete('/{project}/loan/{loan}', [ProjectController::class, 'destroyLoan'])->name('projects.loan.destroy');
 
+        // Project Delivery Request Routes
+        Route::put('/{project}/delivery-requests/{deliveryRequest}/update', [ProjectController::class, 'updateDeliveryRequest'])->name('projects.delivery-request.update');
+
         // Project Extract Routes
         Route::get('/{project}/extract/create', [ProjectController::class, 'createExtract'])->name('projects.extract.create');
         Route::post('/projects/{project}/items', [ProjectController::class, 'storeItems'])->name('projects.items.store');

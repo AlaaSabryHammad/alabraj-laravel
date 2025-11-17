@@ -12,6 +12,7 @@ use App\Models\ProjectExtension;
 use App\Models\ProjectVisit;
 use App\Models\ProjectRentalEquipment;
 use App\Models\ProjectLoan;
+use App\Models\ProjectDeliveryRequest;
 use Carbon\Carbon;
 
 class ProjectController extends Controller
@@ -1300,5 +1301,42 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project)
             ->with('error', 'فشل في رفع الصور. يرجى المحاولة مرة أخرى.');
+    }
+
+    /**
+     * Update delivery request
+     */
+    public function updateDeliveryRequest(Request $request, Project $project, $deliveryRequest)
+    {
+        try {
+            $validated = $request->validate([
+                'request_number' => 'required|string|max:255'
+            ]);
+
+            // Find the delivery request
+            $delivery = $project->deliveryRequests()->findOrFail($deliveryRequest);
+
+            // Update the request number
+            $delivery->update(['request_number' => $validated['request_number']]);
+
+            Log::info('تم تحديث رقم طلب الاستلام', [
+                'project_id' => $project->id,
+                'delivery_id' => $delivery->id,
+                'request_number' => $validated['request_number']
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث رقم الطلب بنجاح',
+                'data' => $delivery
+            ]);
+        } catch (\Exception $e) {
+            Log::error('خطأ في تحديث رقم الطلب', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'فشل في تحديث رقم الطلب: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
