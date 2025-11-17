@@ -2110,6 +2110,7 @@
                                 <th class="px-3 py-2 border">النوع</th>
                                 <th class="px-3 py-2 border">الملاحظات</th>
                                 <th class="px-3 py-2 border">المُسجل</th>
+                                <th class="px-3 py-2 border text-center">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2160,12 +2161,19 @@
                                             {{ $visit->created_at ? $visit->created_at->format('Y/m/d H:i') : '' }}
                                         </div>
                                     </td>
+                                    <td class="px-3 py-2 border text-center">
+                                        <button onclick="openVisitDetailsModal({{ $visit->id }}, '{{ $visit->visitor_name }}', '{{ $visit->visit_date }}', '{{ $visit->visit_time ?? '' }}', '{{ $typeLabels[$visit->visit_type] ?? $visit->visit_type }}', '{{ addslashes($visit->visit_notes) }}', '{{ $visit->duration_hours ?? 'N/A' }}', '{{ $visit->purpose ?? '-' }}', '{{ $visit->notes ?? '-' }}')"
+                                            class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 px-2 py-1 rounded text-xs font-medium transition-colors">
+                                            <i class="ri-eye-line"></i>
+                                            عرض
+                                        </button>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-100 font-medium">
                             <tr>
-                                <td colspan="7" class="px-3 py-2 border text-left text-xs text-gray-500">
+                                <td colspan="8" class="px-3 py-2 border text-left text-xs text-gray-500">
                                     آخر تحديث للسجل: {{ now()->format('Y/m/d H:i') }}
                                 </td>
                             </tr>
@@ -2702,17 +2710,17 @@
                         </div>
                         <div class="text-right">
                             ${employee.phone ? `
-                                                                <p class="text-sm text-gray-600 flex items-center gap-1">
-                                                                    <i class="ri-phone-line text-xs"></i>
-                                                                    ${employee.phone}
-                                                                </p>
-                                                            ` : ''}
+                                                                    <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                                        <i class="ri-phone-line text-xs"></i>
+                                                                        ${employee.phone}
+                                                                    </p>
+                                                                ` : ''}
                             ${employee.email ? `
-                                                                <p class="text-sm text-gray-600 flex items-center gap-1">
-                                                                    <i class="ri-mail-line text-xs"></i>
-                                                                    ${employee.email}
-                                                                </p>
-                                                            ` : ''}
+                                                                    <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                                        <i class="ri-mail-line text-xs"></i>
+                                                                        ${employee.email}
+                                                                    </p>
+                                                                ` : ''}
                         </div>
                     </div>
                 </div>
@@ -2824,29 +2832,29 @@
                         historyHtml = `
                             <div class="space-y-3 max-h-96 overflow-y-auto">
                                 ${data.map(movement => `
-                                                                    <div class="border-r-4 border-indigo-500 pr-4 py-3 bg-gray-50 rounded-lg">
-                                                                        <div class="flex justify-between items-start">
-                                                                            <div class="flex-1">
-                                                                                <p class="text-sm font-medium text-gray-900 mb-1">
-                                                                                    <i class="ri-arrow-left-right-line text-indigo-600 ml-1"></i>
-                                                                                    انتقلت من: ${movement.from_location || 'غير محدد'}
-                                                                                </p>
-                                                                                <p class="text-sm text-gray-600 mb-1">
-                                                                                    <i class="ri-map-pin-line text-green-600 ml-1"></i>
-                                                                                    إلى: ${movement.to_location || 'غير محدد'}
-                                                                                </p>
-                                                                                <p class="text-xs text-gray-500">
-                                                                                    <i class="ri-user-line text-blue-600 ml-1"></i>
-                                                                                    بواسطة: ${movement.moved_by || 'غير محدد'}
-                                                                                </p>
+                                                                        <div class="border-r-4 border-indigo-500 pr-4 py-3 bg-gray-50 rounded-lg">
+                                                                            <div class="flex justify-between items-start">
+                                                                                <div class="flex-1">
+                                                                                    <p class="text-sm font-medium text-gray-900 mb-1">
+                                                                                        <i class="ri-arrow-left-right-line text-indigo-600 ml-1"></i>
+                                                                                        انتقلت من: ${movement.from_location || 'غير محدد'}
+                                                                                    </p>
+                                                                                    <p class="text-sm text-gray-600 mb-1">
+                                                                                        <i class="ri-map-pin-line text-green-600 ml-1"></i>
+                                                                                        إلى: ${movement.to_location || 'غير محدد'}
+                                                                                    </p>
+                                                                                    <p class="text-xs text-gray-500">
+                                                                                        <i class="ri-user-line text-blue-600 ml-1"></i>
+                                                                                        بواسطة: ${movement.moved_by || 'غير محدد'}
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div class="text-left">
+                                                                                    <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                                                                                        ${new Date(movement.moved_at).toLocaleDateString('ar-SA')}
+                                                                                    </span>
+                                                                                </div>
                                                                             </div>
-                                                                            <div class="text-left">
-                                                                                <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                                                                                    ${new Date(movement.moved_at).toLocaleDateString('ar-SA')}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                        ${movement.notes ? `
+                                                                            ${movement.notes ? `
                                             <div class="mt-2 pt-2 border-t border-gray-200">
                                                 <p class="text-sm text-gray-600">
                                                     <i class="ri-file-text-line text-orange-600 ml-1"></i>
@@ -2854,8 +2862,8 @@
                                                 </p>
                                             </div>
                                         ` : ''}
-                                                                    </div>
-                                                                `).join('')}
+                                                                        </div>
+                                                                    `).join('')}
                             </div>
                         `;
                     } else {
@@ -3030,11 +3038,11 @@
                             </div>
                         </div>
                         ${data.notes ? `
-                                                            <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
-                                                                <h4 class="font-medium text-gray-900 mb-2">ملاحظات</h4>
-                                                                <p class="text-sm text-gray-700">${data.notes}</p>
-                                                            </div>
-                                                        ` : ''}
+                                                                <div class="mt-4 bg-yellow-50 p-4 rounded-lg">
+                                                                    <h4 class="font-medium text-gray-900 mb-2">ملاحظات</h4>
+                                                                    <p class="text-sm text-gray-700">${data.notes}</p>
+                                                                </div>
+                                                            ` : ''}
                     `;
 
                     document.getElementById('employee-details-content').innerHTML = detailsHtml;
@@ -3140,16 +3148,16 @@
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
-            
+
             // إغلاق عند النقر خارج الموديال
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
                     modal.remove();
                 }
             });
-            
+
             // التركيز على حقل الإدخال
             setTimeout(() => {
                 document.getElementById('notificationMessage').focus();
@@ -3158,7 +3166,7 @@
 
         window.submitNotification = function(employeeId, button) {
             const message = document.getElementById('notificationMessage').value.trim();
-            
+
             if (!message) {
                 alert('الرجاء إدخال نص الإشعار');
                 return;
@@ -3167,45 +3175,46 @@
             // إضافة حالة التحميل
             button.disabled = true;
             button.innerHTML = '<i class="ri-loader-4-line animate-spin"></i> جاري الإرسال...';
-            
+
             // إرسال الإشعار عبر AJAX
             fetch('/employees/send-notification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                },
-                body: JSON.stringify({
-                    employee_id: employeeId,
-                    message: message
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        employee_id: employeeId,
+                        message: message
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // إغلاق الموديال والعرض رسالة نجاح
-                    const modal = button.closest('.fixed');
-                    modal.remove();
-                    
-                    // عرض رسالة نجاح
-                    const successMsg = document.createElement('div');
-                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-in z-50 flex items-center gap-2';
-                    successMsg.innerHTML = '<i class="ri-check-line text-xl"></i> تم إرسال الإشعار بنجاح';
-                    document.body.appendChild(successMsg);
-                    
-                    setTimeout(() => successMsg.remove(), 3000);
-                } else {
-                    alert('خطأ: ' + (data.message || 'فشل في إرسال الإشعار'));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // إغلاق الموديال والعرض رسالة نجاح
+                        const modal = button.closest('.fixed');
+                        modal.remove();
+
+                        // عرض رسالة نجاح
+                        const successMsg = document.createElement('div');
+                        successMsg.className =
+                            'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-in z-50 flex items-center gap-2';
+                        successMsg.innerHTML = '<i class="ri-check-line text-xl"></i> تم إرسال الإشعار بنجاح';
+                        document.body.appendChild(successMsg);
+
+                        setTimeout(() => successMsg.remove(), 3000);
+                    } else {
+                        alert('خطأ: ' + (data.message || 'فشل في إرسال الإشعار'));
+                        button.disabled = false;
+                        button.innerHTML = '<i class="ri-send-plane-line"></i> إرسال';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ في إرسال الإشعار');
                     button.disabled = false;
                     button.innerHTML = '<i class="ri-send-plane-line"></i> إرسال';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('حدث خطأ في إرسال الإشعار');
-                button.disabled = false;
-                button.innerHTML = '<i class="ri-send-plane-line"></i> إرسال';
-            });
+                });
         }
 
         window.closeNotificationModal = function(button) {
@@ -3627,6 +3636,85 @@
         </div>
     </div>
 
+    <!-- Modal عرض تفاصيل الزيارة -->
+    <div id="visitDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeVisitDetailsModal()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="ri-eye-line"></i>
+                            تفاصيل الزيارة
+                        </h3>
+                        <button onclick="closeVisitDetailsModal()" class="text-white hover:text-blue-200 transition-colors">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-6">
+                        <!-- معلومات أساسية -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">تاريخ الزيارة</p>
+                                <p class="text-lg font-semibold text-gray-900" id="visitDate">-</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">وقت الزيارة</p>
+                                <p class="text-lg font-semibold text-gray-900" id="visitTime">-</p>
+                            </div>
+                        </div>
+
+                        <!-- الزائر ونوع الزيارة -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">اسم الزائر</p>
+                                <p class="text-lg font-semibold text-gray-900" id="visitVisitor">-</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">نوع الزيارة</p>
+                                <p class="text-lg font-semibold text-gray-900" id="visitType">-</p>
+                            </div>
+                        </div>
+
+                        <!-- المدة والغرض -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">مدة الزيارة (ساعات)</p>
+                                <p class="text-lg font-semibold text-gray-900" id="visitDuration">-</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-1">الغرض من الزيارة</p>
+                                <p class="text-lg font-semibold text-gray-900" id="visitPurpose">-</p>
+                            </div>
+                        </div>
+
+                        <!-- الملاحظات والمزيد -->
+                        <div>
+                            <p class="text-sm text-gray-600 mb-2 font-medium">تفاصيل الزيارة</p>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <p class="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed" id="visitNotes">-</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-600 mb-2 font-medium">ملاحظات إضافية</p>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <p class="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed" id="visitAdditionalNotes">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end">
+                    <button type="button" onclick="closeVisitDetailsModal()"
+                        class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal تسجيل معدة مستأجرة -->
     <div id="rentalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeRentalModal()">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -3927,6 +4015,35 @@
         function closeVisitModal() {
             document.getElementById('visitModal').classList.add('hidden');
         }
+
+        function openVisitDetailsModal(visitId, visitorName, visitDate, visitTime, visitType, visitNotes, durationHours, purpose, additionalNotes) {
+            // Populate modal fields with visit data
+            document.getElementById('visitDate').textContent = visitDate || '-';
+            document.getElementById('visitTime').textContent = visitTime || '-';
+            document.getElementById('visitVisitor').textContent = visitorName || '-';
+            document.getElementById('visitType').textContent = visitType || '-';
+            document.getElementById('visitDuration').textContent = durationHours || 'N/A';
+            document.getElementById('visitPurpose').textContent = purpose || '-';
+            document.getElementById('visitNotes').textContent = visitNotes || '-';
+            document.getElementById('visitAdditionalNotes').textContent = additionalNotes || '-';
+
+            // Show the modal
+            document.getElementById('visitDetailsModal').classList.remove('hidden');
+        }
+
+        function closeVisitDetailsModal() {
+            document.getElementById('visitDetailsModal').classList.add('hidden');
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const visitDetailsModal = document.getElementById('visitDetailsModal');
+                if (visitDetailsModal && !visitDetailsModal.classList.contains('hidden')) {
+                    closeVisitDetailsModal();
+                }
+            }
+        });
 
         function openRentalModal() {
             document.getElementById('rentalModal').classList.remove('hidden');
@@ -4505,6 +4622,7 @@
                 opacity: 0;
                 transform: translateY(30px) scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
