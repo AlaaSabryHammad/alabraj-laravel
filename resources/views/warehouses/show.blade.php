@@ -1148,31 +1148,47 @@
                         };
 
                         // جمع بيانات قطع الغيار
-                        const sparePartsContainer = document.getElementById('sparePartsContainer');
-                        const sparePartRows = sparePartsContainer.querySelectorAll('.spare-part-row');
+                        try {
+                            const sparePartsContainer = document.getElementById('sparePartsContainer');
+                            const sparePartRows = sparePartsContainer.querySelectorAll('.spare-part-row');
 
-                        sparePartRows.forEach((row, index) => {
-                            const nameSelect = row.querySelector(`select[name="spare_parts[${index}][name]"]`);
-                            const codeInput = row.querySelector(`input[id="sparePartCode_${index}"]`);
-                            const quantityInput = row.querySelector(`input[id="quantity_${index}"]`);
-                            const priceInput = row.querySelector(`input[id="unitPrice_${index}"]`);
-                            const descInput = row.querySelector(`input[id="description_${index}"]`);
+                            sparePartRows.forEach((row, index) => {
+                                const nameSelect = row.querySelector(`select[name="spare_parts[${index}][name]"]`);
+                                const quantityInput = row.querySelector(`input[name="spare_parts[${index}][quantity]"]`);
+                                const priceInput = row.querySelector(`input[name="spare_parts[${index}][unit_price]"]`);
+                                const descInput = row.querySelector(`textarea[name="spare_parts[${index}][description]"]`);
 
-                            if (nameSelect && nameSelect.value) {
+                                // Validate required fields
+                                if (!nameSelect || !nameSelect.value) {
+                                    throw new Error(`الرجاء اختيار اسم قطعة غيار في الصف ${index + 1}`);
+                                }
+                                if (!quantityInput || !quantityInput.value) {
+                                    throw new Error(`الرجاء إدخال الكمية في الصف ${index + 1}`);
+                                }
+                                if (!priceInput || !priceInput.value) {
+                                    throw new Error(`الرجاء إدخال السعر في الصف ${index + 1}`);
+                                }
+
+                                // Get or use category from option
+                                const selectedOption = nameSelect.querySelector(`option[value="${nameSelect.value}"]`);
+                                const category = selectedOption?.getAttribute('data-category') || 'GEN';
+
                                 data.items.push({
                                     name: nameSelect.value,
-                                    spare_part_type_id: 1, // سيحتاج إلى تحديد نوع قطعة غيار صحيح
-                                    quantity: parseInt(quantityInput?.value || 1),
-                                    unit_price: parseFloat(priceInput?.value || 0),
+                                    spare_part_type_id: 1, // Default ID - will be matched by name if needed
+                                    quantity: parseInt(quantityInput.value),
+                                    unit_price: parseFloat(priceInput.value),
                                     description: descInput?.value || '',
                                     notes: ''
                                 });
-                            }
-                        });
+                            });
 
-                        // التحقق من وجود عناصر
-                        if (data.items.length === 0) {
-                            showErrorModal('خطأ', 'الرجاء إضافة واحدة على الأقل من قطع الغيار');
+                            // التحقق من وجود عناصر
+                            if (data.items.length === 0) {
+                                throw new Error('الرجاء إضافة واحدة على الأقل من قطع الغيار');
+                            }
+                        } catch (validationError) {
+                            showErrorModal('خطأ في التحقق', validationError.message);
                             submitButton.disabled = false;
                             submitButton.innerHTML = '<i class="ri-save-line"></i> حفظ وإضافة إلى المخزون';
                             return;
