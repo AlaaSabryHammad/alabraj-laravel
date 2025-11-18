@@ -1488,6 +1488,11 @@
 
         // مودال تصدير للمشاريع مع نموذج مفصل
         function openProjectExportModal() {
+            // الحصول على البيانات من الخادم
+            const locationsData = @json($warehouse->location->exists ? [['id' => $warehouse->location->id, 'name' => $warehouse->location->name, 'project_id' => $warehouse->location->project_id]] : []);
+            const employeesData = @json($employees ?? []);
+            const sparePartsData = @json($newInventory->map(fn($inv) => ['id' => $inv->spare_part_id, 'name' => $inv->sparePart->name, 'code' => $inv->sparePart->code, 'stock' => $inv->current_stock])->values() ?? []);
+
             const modalHTML = `
                 <div id="projectExportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                     <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -1495,53 +1500,67 @@
                             <div class="flex items-center justify-between">
                                 <h3 class="text-2xl font-bold flex items-center gap-3">
                                     <i class="ri-truck-line text-3xl"></i>
-                                    تصدير قطع غيار للمشاريع
+                                    تصدير قطع غيار للمواقع
                                 </h3>
-                                <button type="button" onclick="closeProjectExportModal()" 
+                                <button type="button" onclick="closeProjectExportModal()"
                                         class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center hover:bg-opacity-30 transition-colors">
                                     <i class="ri-close-line text-white text-xl"></i>
                                 </button>
                             </div>
                         </div>
-                        
+
                         <form id="projectExportForm" class="p-8">
-                            <!-- معلومات المشروع -->
+                            <!-- معلومات الموقع -->
                             <div class="mb-8">
                                 <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <i class="ri-building-4-line text-green-600"></i>
-                                    معلومات المشروع
+                                    <i class="ri-map-pin-line text-green-600"></i>
+                                    معلومات الموقع
                                 </h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم المشروع *</label>
-                                        <select id="projectName" name="project_id" required
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                            <option value="">اختر المشروع</option>
-                                            <option value="1">مشروع برج الرياض</option>
-                                            <option value="2">مشروع مجمع جدة التجاري</option>
-                                            <option value="3">مشروع فيلا الدمام</option>
-                                            <option value="4">مشروع مكاتب الخبر</option>
-                                        </select>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الموقع/المستودع *</label>
+                                        <div class="relative">
+                                            <input type="text" id="locationSearch" placeholder="ابحث عن الموقع..."
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <select id="locationId" name="location_id" required style="display: none;">
+                                                <option value="">اختر الموقع</option>
+                                            </select>
+                                            <div id="locationDropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg max-h-48 overflow-y-auto hidden z-10"></div>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">رقم طلب الصرف *</label>
-                                        <input type="text" id="requestNumber" name="request_number" required
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               placeholder="رقم طلب الصرف">
+                                        <input type="text" id="requestNumber" name="request_number" readonly
+                                               class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg"
+                                               placeholder="سيتم التوليد تلقائياً">
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">المشروع (تلقائي)</label>
+                                        <input type="text" id="projectName" readonly
+                                               class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg"
+                                               placeholder="سيتم ملؤه تلقائياً">
+                                        <input type="hidden" id="projectId" name="project_id">
+                                    </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ التصدير *</label>
                                         <input type="date" id="exportDate" name="export_date" required
                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                value="${new Date().toISOString().split('T')[0]}">
                                     </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">اسم المستلم *</label>
-                                        <input type="text" id="receiverName" name="receiver_name" required
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               placeholder="اسم المستلم في الموقع">
+                                        <div class="relative">
+                                            <input type="text" id="receiverSearch" placeholder="ابحث عن الموظف..."
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <select id="receiverId" name="receiver_id" required style="display: none;">
+                                                <option value="">اختر الموظف</option>
+                                            </select>
+                                            <div id="receiverDropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg max-h-48 overflow-y-auto hidden z-10"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1553,56 +1572,15 @@
                                         <i class="ri-tools-line text-green-600"></i>
                                         قطع الغيار المطلوبة
                                     </h4>
-                                    <button type="button" onclick="addExportPartRow()" 
+                                    <button type="button" onclick="addExportPartRow(sparePartsData)"
                                             class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                                         <i class="ri-add-line"></i>
                                         إضافة قطعة
                                     </button>
                                 </div>
-                                
+
                                 <div id="exportPartsContainer">
-                                    <div class="export-part-row bg-gray-50 p-4 rounded-lg mb-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">قطعة الغيار *</label>
-                                                <select name="export_parts[0][spare_part_id]" required
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                        onchange="updateAvailableStock(0, this)">
-                                                    <option value="">اختر قطعة الغيار</option>
-                                                    <option value="1" data-stock="25">مضخة المياه - كود: P001</option>
-                                                    <option value="2" data-stock="15">صمام التحكم - كود: V002</option>
-                                                    <option value="3" data-stock="30">محرك كهربائي - كود: M003</option>
-                                                    <option value="4" data-stock="8">حساس الحرارة - كود: S004</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">المتوفر في المخزن</label>
-                                                <input type="text" id="availableStock_0" readonly
-                                                       class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg"
-                                                       placeholder="0">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">الكمية المطلوبة *</label>
-                                                <input type="number" name="export_parts[0][quantity]" required min="1"
-                                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                       placeholder="الكمية المطلوبة">
-                                            </div>
-                                            <div class="flex items-end">
-                                                <button type="button" onclick="removeExportPartRow(this)" 
-                                                        class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
-                                                    <i class="ri-delete-bin-line"></i>
-                                                    حذف
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="mt-4">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات خاصة بهذه القطعة</label>
-                                            <textarea name="export_parts[0][notes]" rows="2"
-                                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                      placeholder="أي ملاحظات خاصة بهذه القطعة"></textarea>
-                                        </div>
-                                    </div>
+                                    <!-- سيتم ملؤه ديناميكياً -->
                                 </div>
                             </div>
 
@@ -1638,29 +1616,159 @@
 
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-            // إضافة معالج النموذج
+            // تهيئة المودال بعد الإنشاء
             setTimeout(() => {
-                const form = document.getElementById('projectExportForm');
-                if (form) {
-                    form.addEventListener('submit', function(e) {
-                        e.preventDefault();
+                initializeExportModal(locationsData, employeesData, sparePartsData);
+            }, 100);
+        }
 
-                        const submitButton = form.querySelector('button[type="submit"]');
+        function initializeExportModal(locationsData, employeesData, sparePartsData) {
+            const form = document.getElementById('projectExportForm');
+            const locationSearch = document.getElementById('locationSearch');
+            const locationId = document.getElementById('locationId');
+            const locationDropdown = document.getElementById('locationDropdown');
+            const requestNumber = document.getElementById('requestNumber');
+            const projectName = document.getElementById('projectName');
+            const projectId = document.getElementById('projectId');
+            const receiverSearch = document.getElementById('receiverSearch');
+            const receiverId = document.getElementById('receiverId');
+            const receiverDropdown = document.getElementById('receiverDropdown');
+            const container = document.getElementById('exportPartsContainer');
 
-                        // تعطيل الزر أثناء الإرسال
-                        submitButton.disabled = true;
-                        submitButton.innerHTML =
-                            '<i class="ri-loader-4-line animate-spin"></i> جاري التصدير...';
+            // توليد رقم طلب صرف تلقائي
+            const generateRequestNumber = () => {
+                const date = new Date();
+                const dateStr = date.getFullYear() + '' + String(date.getMonth() + 1).padStart(2, '0');
+                const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                return 'EXP-' + dateStr + '-' + random;
+            };
 
-                        // محاكاة عملية التصدير
-                        setTimeout(() => {
-                            showSuccessModal('تم التصدير بنجاح',
-                                'تم تصدير قطع الغيار للمشروع بنجاح وتحديث المخزون');
-                            closeProjectExportModal();
-                        }, 2500);
+            // تعيين رقم الطلب عند الفتح
+            requestNumber.value = generateRequestNumber();
+
+            // ** معالج البحث عن المواقع **
+            locationSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                locationDropdown.innerHTML = '';
+
+                if (term.length === 0) {
+                    locationDropdown.classList.add('hidden');
+                    return;
+                }
+
+                const filtered = locationsData.filter(loc =>
+                    loc.name.toLowerCase().includes(term)
+                );
+
+                if (filtered.length === 0) {
+                    locationDropdown.innerHTML = '<div class="p-3 text-gray-500">لا توجد نتائج</div>';
+                } else {
+                    filtered.forEach(loc => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 hover:bg-gray-100 cursor-pointer border-b';
+                        div.textContent = loc.name;
+                        div.onclick = () => {
+                            locationId.value = loc.id;
+                            locationSearch.value = loc.name;
+                            locationDropdown.classList.add('hidden');
+
+                            // استدعاء بيانات المشروع تلقائياً
+                            if (loc.project_id) {
+                                projectId.value = loc.project_id;
+                                fetch(`/projects/${loc.project_id}`)
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data && data.name) {
+                                            projectName.value = data.name;
+                                        }
+                                    })
+                                    .catch(() => {
+                                        projectName.value = 'لم يتم تحميل البيانات';
+                                    });
+                            } else {
+                                projectName.value = '';
+                                projectId.value = '';
+                            }
+                        };
+                        locationDropdown.appendChild(div);
                     });
                 }
-            }, 100);
+
+                locationDropdown.classList.remove('hidden');
+            });
+
+            // إغلاق الـ dropdown عند الضغط خارجه
+            document.addEventListener('click', (e) => {
+                if (!locationSearch.contains(e.target) && !locationDropdown.contains(e.target)) {
+                    locationDropdown.classList.add('hidden');
+                }
+            });
+
+            // ** معالج البحث عن الموظفين (المستلمين) **
+            receiverSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                receiverDropdown.innerHTML = '';
+
+                if (term.length === 0) {
+                    receiverDropdown.classList.add('hidden');
+                    return;
+                }
+
+                const filtered = employeesData.filter(emp =>
+                    emp.name.toLowerCase().includes(term)
+                );
+
+                if (filtered.length === 0) {
+                    receiverDropdown.innerHTML = '<div class="p-3 text-gray-500">لا توجد نتائج</div>';
+                } else {
+                    filtered.forEach(emp => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 hover:bg-gray-100 cursor-pointer border-b';
+                        div.textContent = emp.name + (emp.position ? ' - ' + emp.position : '');
+                        div.onclick = () => {
+                            receiverId.value = emp.id;
+                            receiverSearch.value = emp.name;
+                            receiverDropdown.classList.add('hidden');
+                        };
+                        receiverDropdown.appendChild(div);
+                    });
+                }
+
+                receiverDropdown.classList.remove('hidden');
+            });
+
+            // إغلاق الـ dropdown للموظفين
+            document.addEventListener('click', (e) => {
+                if (!receiverSearch.contains(e.target) && !receiverDropdown.contains(e.target)) {
+                    receiverDropdown.classList.add('hidden');
+                }
+            });
+
+            // إضافة أول صف من قطع الغيار
+            if (container.children.length === 0 && sparePartsData.length > 0) {
+                addExportPartRow(sparePartsData);
+            }
+
+            // معالج النموذج
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const submitButton = form.querySelector('button[type="submit"]');
+
+                    // تعطيل الزر أثناء الإرسال
+                    submitButton.disabled = true;
+                    submitButton.innerHTML =
+                        '<i class="ri-loader-4-line animate-spin"></i> جاري التصدير...';
+
+                    // محاكاة عملية التصدير (يمكن استبدالها برسالة AJAX حقيقية)
+                    setTimeout(() => {
+                        showSuccessModal('تم التصدير بنجاح',
+                            'تم تصدير قطع الغيار بنجاح وتحديث المخزون');
+                        closeProjectExportModal();
+                    }, 2500);
+                });
+            }
         }
 
         function closeProjectExportModal() {
@@ -1671,9 +1779,14 @@
         }
 
         // دوال إدارة قطع الغيار في التصدير
-        function addExportPartRow() {
+        function addExportPartRow(sparePartsData) {
             const container = document.getElementById('exportPartsContainer');
             const rowCount = container.children.length;
+
+            let optionsHTML = '<option value="">اختر قطعة الغيار</option>';
+            sparePartsData.forEach(part => {
+                optionsHTML += `<option value="${part.id}" data-stock="${part.stock}">${part.name} - (${part.code}) - المتوفر: ${part.stock}</option>`;
+            });
 
             const newRowHTML = `
                 <div class="export-part-row bg-gray-50 p-4 rounded-lg mb-4">
@@ -1683,17 +1796,13 @@
                             <select name="export_parts[${rowCount}][spare_part_id]" required
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     onchange="updateAvailableStock(${rowCount}, this)">
-                                <option value="">اختر قطعة الغيار</option>
-                                <option value="1" data-stock="25">مضخة المياه - كود: P001</option>
-                                <option value="2" data-stock="15">صمام التحكم - كود: V002</option>
-                                <option value="3" data-stock="30">محرك كهربائي - كود: M003</option>
-                                <option value="4" data-stock="8">حساس الحرارة - كود: S004</option>
+                                ${optionsHTML}
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">المتوفر في المخزن</label>
                             <input type="text" id="availableStock_${rowCount}" readonly
-                                   class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg"
+                                   class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg font-bold"
                                    placeholder="0">
                         </div>
                         <div>
@@ -1703,14 +1812,14 @@
                                    placeholder="الكمية المطلوبة">
                         </div>
                         <div class="flex items-end">
-                            <button type="button" onclick="removeExportPartRow(this)" 
+                            <button type="button" onclick="removeExportPartRow(this)"
                                     class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
                                 <i class="ri-delete-bin-line"></i>
                                 حذف
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات خاصة بهذه القطعة</label>
                         <textarea name="export_parts[${rowCount}][notes]" rows="2"
@@ -1738,6 +1847,17 @@
             const stockInput = document.getElementById(`availableStock_${rowIndex}`);
             if (stockInput) {
                 stockInput.value = stock;
+                // تغيير اللون بناءً على المخزون
+                if (parseInt(stock) === 0) {
+                    stockInput.classList.add('bg-red-100');
+                    stockInput.classList.remove('bg-gray-100', 'bg-green-100');
+                } else if (parseInt(stock) < 5) {
+                    stockInput.classList.add('bg-yellow-100');
+                    stockInput.classList.remove('bg-gray-100', 'bg-green-100');
+                } else {
+                    stockInput.classList.add('bg-green-100');
+                    stockInput.classList.remove('bg-gray-100', 'bg-yellow-100');
+                }
             }
         }
 
