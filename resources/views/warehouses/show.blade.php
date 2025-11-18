@@ -299,10 +299,11 @@
                         </thead>
                         <tbody class="bg-white">
                             @php
-                                // تجميع قطع الغيار حسب الاسم والكود
+                                // تجميع قطع الغيار حسب الاسم والكود من المخزون الجديد والتالف
                                 $groupedParts = [];
 
-                                foreach ($allSpareParts as $item) {
+                                // إضافة قطع الغيار الجديدة
+                                foreach ($newInventory as $item) {
                                     $partName = $item->sparePart->name;
                                     $partCode = $item->sparePart->code;
                                     $key = $partName . '_' . $partCode;
@@ -311,17 +312,32 @@
                                         $groupedParts[$key] = [
                                             'name' => $partName,
                                             'code' => $partCode,
-                                            'price' => $item->sparePart->price ?? 0,
+                                            'price' => $item->sparePart->unit_price ?? 0,
                                             'new_stock' => 0,
                                             'damaged_stock' => 0,
                                         ];
                                     }
 
-                                    if ($item->type === 'new') {
-                                        $groupedParts[$key]['new_stock'] += $item->current_stock;
-                                    } else {
-                                        $groupedParts[$key]['damaged_stock'] += $item->current_stock;
+                                    $groupedParts[$key]['new_stock'] += $item->current_stock;
+                                }
+
+                                // إضافة قطع الغيار التالفة
+                                foreach ($damagedInventory as $item) {
+                                    $partName = $item->sparePart->name;
+                                    $partCode = $item->sparePart->code;
+                                    $key = $partName . '_' . $partCode;
+
+                                    if (!isset($groupedParts[$key])) {
+                                        $groupedParts[$key] = [
+                                            'name' => $partName,
+                                            'code' => $partCode,
+                                            'price' => $item->sparePart->unit_price ?? 0,
+                                            'new_stock' => 0,
+                                            'damaged_stock' => 0,
+                                        ];
                                     }
+
+                                    $groupedParts[$key]['damaged_stock'] += $item->current_stock;
                                 }
 
                                 // ترتيب حسب الاسم
