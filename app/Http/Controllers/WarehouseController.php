@@ -397,10 +397,10 @@ class WarehouseController extends Controller
 
         $validated = $request->validate([
             'invoice_number' => 'required|string|max:255',
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_id' => 'required|integer',
             'invoice_date' => 'required|date',
             'items' => 'required|array|min:1',
-            'items.*.spare_part_type_id' => 'nullable|exists:spare_part_types,id',
+            'items.*.spare_part_type_id' => 'nullable|integer',
             'items.*.name' => 'required|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
@@ -670,10 +670,10 @@ class WarehouseController extends Controller
         Log::info('receiveDamagedSpares called', ['request_data' => $request->all()]);
 
         $validated = $request->validate([
-            'returned_by_employee_id' => 'required|exists:employees,id',
+            'returned_by_employee_id' => 'required|integer',
             'return_date' => 'required|date',
             'items' => 'required|array|min:1',
-            'items.*.spare_part_type_id' => 'required|exists:spare_part_types,id',
+            'items.*.spare_part_type_id' => 'required|integer',
             'items.*.part_name' => 'required|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.condition' => 'required|in:damaged,worn_out,defective',

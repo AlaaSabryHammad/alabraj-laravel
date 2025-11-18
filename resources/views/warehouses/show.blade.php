@@ -1195,16 +1195,32 @@
                         }
 
                         // إرسال البيانات إلى الخادم
+                        console.log('Sending data:', JSON.stringify(data));
                         fetch(`/warehouses/{{ $warehouse->id }}/receive-new-spares`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                             },
                             body: JSON.stringify(data)
                         })
-                        .then(response => response.json().then(json => ({ status: response.status, json })))
+                        .then(response => {
+                            console.log('Response status:', response.status);
+                            const contentType = response.headers.get('content-type');
+                            console.log('Content-type:', contentType);
+
+                            if (contentType && contentType.includes('application/json')) {
+                                return response.json().then(json => ({ status: response.status, json }));
+                            } else {
+                                return response.text().then(text => {
+                                    console.log('Non-JSON response:', text.substring(0, 200));
+                                    throw new Error('استجابة غير صحيحة من الخادم: ' + text.substring(0, 100));
+                                });
+                            }
+                        })
                         .then(({ status, json }) => {
+                            console.log('Parsed JSON:', json);
                             if (status !== 200 && status !== 201) {
                                 throw new Error(json.message || 'حدث خطأ أثناء معالجة الطلب');
                             }
@@ -1220,7 +1236,7 @@
                             }, 2000);
                         })
                         .catch(error => {
-                            console.error('Error:', error);
+                            console.error('Full error:', error);
                             let errorMessage = 'حدث خطأ أثناء حفظ البيانات';
                             if (error.message) {
                                 errorMessage = error.message;
