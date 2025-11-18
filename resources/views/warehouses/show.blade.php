@@ -862,7 +862,7 @@
         function openNewPartsReceiveModal() {
             const modalHTML = `
                 <div id="newPartsReceiveModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                    <div class="bg-white rounded-2xl max-w-4xl w-full overflow-y-auto shadow-2xl" style="max-height: 90vh;">
                         <div class="bg-gradient-to-r from-blue-600 to-green-600 p-6 text-white rounded-t-2xl">
                             <div class="flex items-center justify-between">
                                 <h3 class="text-2xl font-bold flex items-center gap-3">
@@ -1495,7 +1495,7 @@
 
             const modalHTML = `
                 <div id="projectExportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                    <div class="bg-white rounded-2xl max-w-4xl w-full overflow-y-auto shadow-2xl" style="max-height: 90vh;">
                         <div class="bg-gradient-to-r from-green-600 to-blue-600 p-6 text-white rounded-t-2xl">
                             <div class="flex items-center justify-between">
                                 <h3 class="text-2xl font-bold flex items-center gap-3">
