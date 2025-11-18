@@ -1131,18 +1131,89 @@
                         e.preventDefault();
 
                         const submitButton = form.querySelector('button[type="submit"]');
+                        const formData = new FormData(form);
 
                         // تعطيل الزر أثناء الإرسال
                         submitButton.disabled = true;
                         submitButton.innerHTML =
                             '<i class="ri-loader-4-line animate-spin"></i> جاري الحفظ...';
 
-                        // محاكاة عملية الحفظ
-                        setTimeout(() => {
+                        // تحويل بيانات النموذج إلى صيغة صحيحة للـ API
+                        const data = {
+                            invoice_number: document.getElementById('invoiceNumber').value,
+                            supplier_id: document.getElementById('supplierId').value,
+                            invoice_date: document.getElementById('invoiceDate').value,
+                            notes: document.getElementById('notes').value,
+                            items: []
+                        };
+
+                        // جمع بيانات قطع الغيار
+                        const sparePartsContainer = document.getElementById('sparePartsContainer');
+                        const sparePartRows = sparePartsContainer.querySelectorAll('.spare-part-row');
+
+                        sparePartRows.forEach((row, index) => {
+                            const nameSelect = row.querySelector(`select[name="spare_parts[${index}][name]"]`);
+                            const codeInput = row.querySelector(`input[id="sparePartCode_${index}"]`);
+                            const quantityInput = row.querySelector(`input[id="quantity_${index}"]`);
+                            const priceInput = row.querySelector(`input[id="unitPrice_${index}"]`);
+                            const descInput = row.querySelector(`input[id="description_${index}"]`);
+
+                            if (nameSelect && nameSelect.value) {
+                                data.items.push({
+                                    name: nameSelect.value,
+                                    spare_part_type_id: 1, // سيحتاج إلى تحديد نوع قطعة غيار صحيح
+                                    quantity: parseInt(quantityInput?.value || 1),
+                                    unit_price: parseFloat(priceInput?.value || 0),
+                                    description: descInput?.value || '',
+                                    notes: ''
+                                });
+                            }
+                        });
+
+                        // التحقق من وجود عناصر
+                        if (data.items.length === 0) {
+                            showErrorModal('خطأ', 'الرجاء إضافة واحدة على الأقل من قطع الغيار');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '<i class="ri-save-line"></i> حفظ وإضافة إلى المخزون';
+                            return;
+                        }
+
+                        // إرسال البيانات إلى الخادم
+                        fetch(`/warehouses/{{ $warehouse->id }}/receive-new-spares`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(data => Promise.reject(data));
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
                             showSuccessModal('تم بنجاح',
                                 'تم حفظ البيانات بنجاح وإضافتها إلى المخزون');
                             closeNewPartsReceiveModal();
-                        }, 2000);
+                            // إعادة تحميل الصفحة بعد ثانيتين
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            let errorMessage = 'حدث خطأ أثناء حفظ البيانات';
+                            if (error.message) {
+                                errorMessage = error.message;
+                            } else if (error.errors) {
+                                errorMessage = Object.values(error.errors).flat().join('\n');
+                            }
+                            showErrorModal('خطأ', errorMessage);
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '<i class="ri-save-line"></i> حفظ وإضافة إلى المخزون';
+                        });
                     });
                 }
             }, 100);

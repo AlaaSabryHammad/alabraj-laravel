@@ -246,6 +246,8 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/{warehouse}/create-spare-part', [WarehouseController::class, 'createSparePart'])->name('warehouses.create-spare-part');
         Route::post('/{warehouse}/store-spare-part', [WarehouseController::class, 'storeSparePart'])->name('warehouses.store-spare-part');
         Route::post('/{warehouse}/receive-spares', [WarehouseController::class, 'storeReceive'])->name('warehouses.receive-spares');
+        Route::post('/{warehouse}/receive-new-spares', [WarehouseController::class, 'receiveNewSpares'])->name('warehouses.receive-new-spares');
+        Route::post('/{warehouse}/receive-damaged-spares', [WarehouseController::class, 'receiveDamagedSpares'])->name('warehouses.receive-damaged-spares');
         Route::post('/{warehouse}/export-spares', [WarehouseController::class, 'storeExport'])->name('warehouses.export-spares');
         Route::get('/{warehouse}/reports', [WarehouseController::class, 'reports'])->name('warehouses.reports');
     });
