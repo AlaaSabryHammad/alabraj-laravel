@@ -55,7 +55,7 @@ class CorrespondenceReply extends Model
 
     public function getStatusDisplayAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'draft' => 'مسودة',
             'sent' => 'تم الإرسال',
             default => 'غير محدد'
@@ -64,7 +64,7 @@ class CorrespondenceReply extends Model
 
     public function getReplyTypeDisplayAttribute()
     {
-        return match($this->reply_type ?? 'reply') {
+        return match ($this->reply_type ?? 'reply') {
             'reply' => 'رد',
             'forward' => 'إعادة توجيه',
             'note' => 'ملاحظة',

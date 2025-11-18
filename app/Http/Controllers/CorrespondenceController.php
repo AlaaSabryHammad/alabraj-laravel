@@ -18,8 +18,8 @@ class CorrespondenceController extends Controller
     public function index(Request $request)
     {
         $query = Correspondence::with(['project', 'assignedEmployee', 'user'])
-                                ->withCount('replies')
-                                ->latest();
+            ->withCount('replies')
+            ->latest();
 
         // Filter by type
         if ($request->filled('type')) {
@@ -44,12 +44,12 @@ class CorrespondenceController extends Controller
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('reference_number', 'like', "%{$search}%")
-                  ->orWhere('external_number', 'like', "%{$search}%")
-                  ->orWhere('from_entity', 'like', "%{$search}%")
-                  ->orWhere('to_entity', 'like', "%{$search}%");
+                    ->orWhere('reference_number', 'like', "%{$search}%")
+                    ->orWhere('external_number', 'like', "%{$search}%")
+                    ->orWhere('from_entity', 'like', "%{$search}%")
+                    ->orWhere('to_entity', 'like', "%{$search}%");
             });
         }
 
@@ -146,7 +146,6 @@ class CorrespondenceController extends Controller
 
             return redirect()->route('correspondences.index')
                 ->with('success', 'تم إضافة المراسلة بنجاح');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -244,7 +243,6 @@ class CorrespondenceController extends Controller
 
             return redirect()->route('correspondences.show', $correspondence)
                 ->with('success', 'تم تحديث المراسلة بنجاح');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -267,7 +265,6 @@ class CorrespondenceController extends Controller
 
             return redirect()->route('correspondences.index')
                 ->with('success', 'تم حذف المراسلة بنجاح');
-
         } catch (\Exception $e) {
             return redirect()->route('correspondences.index')
                 ->with('error', 'حدث خطأ أثناء حذف المراسلة: ' . $e->getMessage());
@@ -293,7 +290,7 @@ class CorrespondenceController extends Controller
     public function downloadReply($replyId)
     {
         $reply = \App\Models\CorrespondenceReply::findOrFail($replyId);
-        
+
         if (!$reply->file_path || !Storage::disk('public')->exists($reply->file_path)) {
             return back()->with('error', 'الملف غير موجود');
         }
@@ -365,13 +362,12 @@ class CorrespondenceController extends Controller
                 }
             }
 
-            $message = $validated['status'] === 'sent' 
+            $message = $validated['status'] === 'sent'
                 ? 'تم إضافة الرد وتحديث حالة المراسلة إلى "تم الرد"'
                 : 'تم حفظ الرد كمسودة';
 
             return redirect()->route('correspondences.show', $correspondence)
                 ->with('success', $message);
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
