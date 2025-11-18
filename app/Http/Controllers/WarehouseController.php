@@ -400,7 +400,7 @@ class WarehouseController extends Controller
             'supplier_id' => 'required|exists:suppliers,id',
             'invoice_date' => 'required|date',
             'items' => 'required|array|min:1',
-            'items.*.spare_part_type_id' => 'required|exists:spare_part_types,id',
+            'items.*.spare_part_type_id' => 'nullable|exists:spare_part_types,id',
             'items.*.name' => 'required|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
@@ -414,13 +414,14 @@ class WarehouseController extends Controller
         try {
             foreach ($validated['items'] as $item) {
                 // إنشاء قطعة غيار جديدة أو العثور على موجودة
+                // استخدام الاسم فقط للبحث لتجنب مشاكل spare_part_type_id الفارغة
                 $sparePart = SparePart::firstOrCreate([
                     'name' => $item['name'],
-                    'spare_part_type_id' => $item['spare_part_type_id'],
                 ], [
                     'code' => SparePart::generateCode(),
                     'description' => $item['description'] ?? '',
                     'unit_price' => $item['unit_price'],
+                    'spare_part_type_id' => $item['spare_part_type_id'] ?? 1,
                     'is_active' => true,
                     'source' => 'new', // جديدة من فاتورة
                 ]);
