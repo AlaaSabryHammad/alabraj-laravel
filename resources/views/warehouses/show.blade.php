@@ -1141,7 +1141,7 @@
                         // تحويل بيانات النموذج إلى صيغة صحيحة للـ API
                         const data = {
                             invoice_number: document.getElementById('invoiceNumber').value,
-                            supplier_id: document.getElementById('supplierId').value,
+                            supplier_id: document.getElementById('supplierName').value,
                             invoice_date: document.getElementById('invoiceDate').value,
                             notes: document.getElementById('notes').value,
                             items: []
