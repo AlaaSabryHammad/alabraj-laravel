@@ -483,11 +483,28 @@ class WarehouseController extends Controller
             DB::commit();
             Log::info('Transaction committed successfully');
 
+            // إذا كانت طلب AJAX، أرجع JSON
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم استلام قطع الغيار الجديدة بنجاح وإنتاج الأرقام التسلسلية'
+                ]);
+            }
+
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم استلام قطع الغيار الجديدة بنجاح وإنتاج الأرقام التسلسلية');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error in receiveNewSpares', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+
+            // إذا كانت طلب AJAX، أرجع JSON
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء استلام قطع الغيار: ' . $e->getMessage()
+                ], 422);
+            }
+
             return back()->withInput()
                 ->with('error', 'حدث خطأ أثناء استلام قطع الغيار: ' . $e->getMessage());
         }

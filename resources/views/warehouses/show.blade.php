@@ -1203,15 +1203,16 @@
                             },
                             body: JSON.stringify(data)
                         })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then(data => Promise.reject(data));
+                        .then(response => response.json().then(json => ({ status: response.status, json })))
+                        .then(({ status, json }) => {
+                            if (status !== 200 && status !== 201) {
+                                throw new Error(json.message || 'حدث خطأ أثناء معالجة الطلب');
                             }
-                            return response.json();
-                        })
-                        .then(data => {
+                            if (!json.success) {
+                                throw new Error(json.message || 'فشل الحفظ');
+                            }
                             showSuccessModal('تم بنجاح',
-                                'تم حفظ البيانات بنجاح وإضافتها إلى المخزون');
+                                json.message || 'تم حفظ البيانات بنجاح وإضافتها إلى المخزون');
                             closeNewPartsReceiveModal();
                             // إعادة تحميل الصفحة بعد ثانيتين
                             setTimeout(() => {
