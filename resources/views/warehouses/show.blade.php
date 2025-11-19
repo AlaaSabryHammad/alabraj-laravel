@@ -1533,19 +1533,16 @@
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">المشروع (تلقائي)</label>
-                                        <input type="text" id="projectName" readonly
-                                               class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg"
-                                               placeholder="سيتم ملؤه تلقائياً">
-                                        <input type="hidden" id="projectId" name="project_id">
-                                    </div>
-                                    <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ التصدير *</label>
                                         <input type="date" id="exportDate" name="export_date" required
                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                value="${new Date().toISOString().split('T')[0]}">
                                     </div>
+                                    <div>
+                                        <!-- placeholder -->
+                                    </div>
                                 </div>
+                                <input type="hidden" id="projectId" name="project_id">
                                 <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">اسم المستلم *</label>
@@ -1619,7 +1616,6 @@
             const locationId = document.getElementById('locationId');
             const receiverId = document.getElementById('receiverId');
             const requestNumber = document.getElementById('requestNumber');
-            const projectName = document.getElementById('projectName');
             const projectId = document.getElementById('projectId');
             const container = document.getElementById('exportPartsContainer');
 
@@ -1683,11 +1679,10 @@
                         dropdownParent: jQuery('#projectExportModal')
                     });
 
-                    // معالج تغيير الموقع في Select2
+                    // معالج تغيير الموقع في Select2 - حفظ project_id للموقع المختار
                     jQuery('#locationId').on('change', function() {
                         const selectedLocationId = jQuery(this).val();
                         if (!selectedLocationId) {
-                            projectName.value = '';
                             projectId.value = '';
                             return;
                         }
@@ -1696,20 +1691,7 @@
 
                         if (selectedLocation && selectedLocation.project_id) {
                             projectId.value = selectedLocation.project_id;
-                            fetch(`/projects/${selectedLocation.project_id}`)
-                                .then(r => r.json())
-                                .then(data => {
-                                    if (data && data.name) {
-                                        projectName.value = data.name;
-                                    } else if (data) {
-                                        projectName.value = data.name || 'تم التحميل';
-                                    }
-                                })
-                                .catch((err) => {
-                                    projectName.value = 'لم يتم تحميل البيانات';
-                                });
                         } else {
-                            projectName.value = '';
                             projectId.value = '';
                         }
                     });
