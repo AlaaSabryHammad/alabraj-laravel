@@ -410,10 +410,28 @@ class WarehouseController extends Controller
             }
 
             DB::commit();
+
+            // إذا كان الطلب من AJAX، أعد JSON response
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم تصدير قطع الغيار بنجاح'
+                ]);
+            }
+
             return redirect()->route('warehouses.show', $warehouse)
                 ->with('success', 'تم تصدير قطع الغيار بنجاح');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // إذا كان الطلب من AJAX، أعد JSON response للخطأ
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء تصدير قطع الغيار: ' . $e->getMessage()
+                ], 422);
+            }
+
             return back()->withInput()
                 ->with('error', 'حدث خطأ أثناء تصدير قطع الغيار: ' . $e->getMessage());
         }

@@ -1722,18 +1722,101 @@
                     e.preventDefault();
 
                     const submitButton = form.querySelector('button[type="submit"]');
+                    const locationIdValue = document.getElementById('locationId').value;
+                    const receiverIdValue = document.getElementById('receiverId').value;
+                    const exportDateValue = document.getElementById('exportDate').value;
+                    const generalNotesValue = document.getElementById('generalNotes').value;
+
+                    // التحقق من البيانات المطلوبة
+                    if (!locationIdValue) {
+                        showErrorModal('خطأ', 'يرجى اختيار الموقع');
+                        return;
+                    }
+                    if (!receiverIdValue) {
+                        showErrorModal('خطأ', 'يرجى اختيار المستلم');
+                        return;
+                    }
+                    if (!exportDateValue) {
+                        showErrorModal('خطأ', 'يرجى اختيار تاريخ التصدير');
+                        return;
+                    }
+
+                    // جمع بيانات قطع الغيار
+                    const exportParts = [];
+                    const partRows = form.querySelectorAll('.export-part-row');
+
+                    if (partRows.length === 0) {
+                        showErrorModal('خطأ', 'يرجى إضافة قطعة غيار واحدة على الأقل');
+                        return;
+                    }
+
+                    partRows.forEach((row, index) => {
+                        const partIdSelect = row.querySelector(`select[name="export_parts[${index}][spare_part_id]"]`);
+                        const quantityInput = row.querySelector(`input[name="export_parts[${index}][quantity]"]`);
+                        const notesInput = row.querySelector(`textarea[name="export_parts[${index}][notes]"]`);
+
+                        if (partIdSelect && quantityInput) {
+                            exportParts.push({
+                                spare_part_id: partIdSelect.value,
+                                quantity: parseInt(quantityInput.value),
+                                purpose: 'تصدير لقطع الغيار',
+                                equipment_id: null,
+                                notes: notesInput ? notesInput.value : ''
+                            });
+                        }
+                    });
+
+                    if (exportParts.length === 0) {
+                        showErrorModal('خطأ', 'يرجى ملء بيانات قطع الغيار');
+                        return;
+                    }
 
                     // تعطيل الزر أثناء الإرسال
                     submitButton.disabled = true;
                     submitButton.innerHTML =
                         '<i class="ri-loader-4-line animate-spin"></i> جاري التصدير...';
 
-                    // محاكاة عملية التصدير (يمكن استبدالها برسالة AJAX حقيقية)
-                    setTimeout(() => {
+                    // إرسال البيانات إلى الخادم
+                    const formData = {
+                        recipient_employee_id: receiverIdValue,
+                        export_date: exportDateValue,
+                        items: exportParts,
+                        general_notes: generalNotesValue
+                    };
+
+                    fetch(`/warehouses/${locationIdValue}/export-spares`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(text);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
                         showSuccessModal('تم التصدير بنجاح',
                             'تم تصدير قطع الغيار بنجاح وتحديث المخزون');
                         closeProjectExportModal();
-                    }, 2500);
+                        // إعادة تحميل الصفحة بعد ثانيتين
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    })
+                    .catch(error => {
+                        console.error('خطأ:', error);
+                        const errorMessage = error.message.includes('<') ? 'حدث خطأ في التصدير' : error.message;
+                        showErrorModal('خطأ', errorMessage);
+                        submitButton.disabled = false;
+                        submitButton.innerHTML =
+                            '<i class="ri-check-line"></i> تأكيد التصدير';
+                    });
                 });
             }
         }
