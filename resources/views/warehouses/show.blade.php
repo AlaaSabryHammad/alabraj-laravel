@@ -1489,7 +1489,7 @@
         // مودال تصدير للمشاريع مع نموذج مفصل
         function openProjectExportModal() {
             // الحصول على البيانات من الخادم
-            const locationsData = [{id: {{ $warehouse->id }}, name: "{{ $warehouse->name }}", project_id: {{ $warehouse->project_id ?? 'null' }}}];
+            const locationsData = @json($locationsForJson);
             const employeesData = @json($employeesForJson);
             const sparePartsData = @json($sparePartsForJson);
 

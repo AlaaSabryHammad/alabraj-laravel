@@ -92,6 +92,9 @@ class WarehouseController extends Controller
         // الحصول على الموظفين
         $employees = \App\Models\Employee::where('status', 'active')->get();
 
+        // الحصول على جميع المواقع (للقوائم المنسدلة)
+        $allLocations = Location::select('id', 'name', 'project_id')->get();
+
         // الحصول على جميع المعدات لربطها بالتصدير
         $equipments = Equipment::where('status', 'active')->get();
 
@@ -135,7 +138,16 @@ class WarehouseController extends Controller
             );
         })->values()->toArray();
 
-        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts', 'sparePartsForJson', 'employeesForJson'));
+        // تحضير بيانات المواقع للـ JavaScript
+        $locationsForJson = $allLocations->map(function ($loc) {
+            return array(
+                'id' => $loc->id,
+                'name' => $loc->name,
+                'project_id' => $loc->project_id
+            );
+        })->values()->toArray();
+
+        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts', 'sparePartsForJson', 'employeesForJson', 'locationsForJson'));
     }
 
     /**
