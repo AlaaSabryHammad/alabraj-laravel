@@ -1519,14 +1519,10 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">الموقع/المستودع *</label>
-                                        <div class="relative">
-                                            <input type="text" id="locationSearch" placeholder="ابحث عن الموقع..."
-                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                            <select id="locationId" name="location_id" required style="display: none;">
-                                                <option value="">اختر الموقع</option>
-                                            </select>
-                                            <div id="locationDropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg max-h-48 overflow-y-auto hidden z-10"></div>
-                                        </div>
+                                        <select id="locationId" name="location_id" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">اختر الموقع</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">رقم طلب الصرف *</label>
@@ -1553,14 +1549,10 @@
                                 <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">اسم المستلم *</label>
-                                        <div class="relative">
-                                            <input type="text" id="receiverSearch" placeholder="ابحث عن الموظف..."
-                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                            <select id="receiverId" name="receiver_id" required style="display: none;">
-                                                <option value="">اختر الموظف</option>
-                                            </select>
-                                            <div id="receiverDropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg max-h-48 overflow-y-auto hidden z-10"></div>
-                                        </div>
+                                        <select id="receiverId" name="receiver_id" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">اختر الموظف</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -1624,15 +1616,11 @@
 
         function initializeExportModal(locationsData, employeesData, sparePartsData) {
             const form = document.getElementById('projectExportForm');
-            const locationSearch = document.getElementById('locationSearch');
             const locationId = document.getElementById('locationId');
-            const locationDropdown = document.getElementById('locationDropdown');
+            const receiverId = document.getElementById('receiverId');
             const requestNumber = document.getElementById('requestNumber');
             const projectName = document.getElementById('projectName');
             const projectId = document.getElementById('projectId');
-            const receiverSearch = document.getElementById('receiverSearch');
-            const receiverId = document.getElementById('receiverId');
-            const receiverDropdown = document.getElementById('receiverDropdown');
             const container = document.getElementById('exportPartsContainer');
 
             // توليد رقم طلب صرف تلقائي
@@ -1646,102 +1634,41 @@
             // تعيين رقم الطلب عند الفتح
             requestNumber.value = generateRequestNumber();
 
-            // ** معالج البحث عن المواقع **
-            locationSearch.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                locationDropdown.innerHTML = '';
+            // ملء قائمة المواقع
+            locationsData.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc.id;
+                option.textContent = loc.name;
+                locationId.appendChild(option);
+            });
 
-                if (term.length === 0) {
-                    locationDropdown.classList.add('hidden');
-                    return;
-                }
-
-                const filtered = locationsData.filter(loc =>
-                    loc.name.toLowerCase().includes(term)
-                );
-
-                if (filtered.length === 0) {
-                    locationDropdown.innerHTML = '<div class="p-3 text-gray-500">لا توجد نتائج</div>';
-                } else {
-                    filtered.forEach(loc => {
-                        const div = document.createElement('div');
-                        div.className = 'p-3 hover:bg-gray-100 cursor-pointer border-b';
-                        div.textContent = loc.name;
-                        div.onclick = () => {
-                            locationId.value = loc.id;
-                            locationSearch.value = loc.name;
-                            locationDropdown.classList.add('hidden');
-
-                            // استدعاء بيانات المشروع تلقائياً
-                            if (loc.project_id) {
-                                projectId.value = loc.project_id;
-                                fetch(`/projects/${loc.project_id}`)
-                                    .then(r => r.json())
-                                    .then(data => {
-                                        if (data && data.name) {
-                                            projectName.value = data.name;
-                                        }
-                                    })
-                                    .catch(() => {
-                                        projectName.value = 'لم يتم تحميل البيانات';
-                                    });
-                            } else {
-                                projectName.value = '';
-                                projectId.value = '';
+            // معالج تغيير الموقع لاستدعاء بيانات المشروع تلقائياً
+            locationId.addEventListener('change', () => {
+                const selectedLocation = locationsData.find(loc => loc.id == locationId.value);
+                if (selectedLocation && selectedLocation.project_id) {
+                    projectId.value = selectedLocation.project_id;
+                    fetch(`/projects/${selectedLocation.project_id}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.name) {
+                                projectName.value = data.name;
                             }
-                        };
-                        locationDropdown.appendChild(div);
-                    });
-                }
-
-                locationDropdown.classList.remove('hidden');
-            });
-
-            // إغلاق الـ dropdown عند الضغط خارجه
-            document.addEventListener('click', (e) => {
-                if (!locationSearch.contains(e.target) && !locationDropdown.contains(e.target)) {
-                    locationDropdown.classList.add('hidden');
-                }
-            });
-
-            // ** معالج البحث عن الموظفين (المستلمين) **
-            receiverSearch.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                receiverDropdown.innerHTML = '';
-
-                if (term.length === 0) {
-                    receiverDropdown.classList.add('hidden');
-                    return;
-                }
-
-                const filtered = employeesData.filter(emp =>
-                    emp.name.toLowerCase().includes(term)
-                );
-
-                if (filtered.length === 0) {
-                    receiverDropdown.innerHTML = '<div class="p-3 text-gray-500">لا توجد نتائج</div>';
+                        })
+                        .catch(() => {
+                            projectName.value = 'لم يتم تحميل البيانات';
+                        });
                 } else {
-                    filtered.forEach(emp => {
-                        const div = document.createElement('div');
-                        div.className = 'p-3 hover:bg-gray-100 cursor-pointer border-b';
-                        div.textContent = emp.name + (emp.position ? ' - ' + emp.position : '');
-                        div.onclick = () => {
-                            receiverId.value = emp.id;
-                            receiverSearch.value = emp.name;
-                            receiverDropdown.classList.add('hidden');
-                        };
-                        receiverDropdown.appendChild(div);
-                    });
+                    projectName.value = '';
+                    projectId.value = '';
                 }
-
-                receiverDropdown.classList.remove('hidden');
             });
 
-            // إغلاق الـ dropdown للموظفين
-            document.addEventListener('click', (e) => {
-                if (!receiverSearch.contains(e.target) && !receiverDropdown.contains(e.target)) {
-                    receiverDropdown.classList.add('hidden');
-                }
+            // ملء قائمة الموظفين (المستلمين)
+            employeesData.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = emp.name + (emp.position ? ' - ' + emp.position : '');
+                receiverId.appendChild(option);
             });
 
             // إضافة أول صف من قطع الغيار
