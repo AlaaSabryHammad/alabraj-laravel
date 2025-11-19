@@ -1671,6 +1671,25 @@
                 receiverId.appendChild(option);
             });
 
+            // تفعيل Select2 للبحث في القوائم المنسدلة
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('#locationId').select2({
+                    language: 'ar',
+                    dir: 'rtl',
+                    placeholder: 'اختر الموقع',
+                    allowClear: true,
+                    width: '100%'
+                });
+
+                $('#receiverId').select2({
+                    language: 'ar',
+                    dir: 'rtl',
+                    placeholder: 'اختر الموظف',
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+
             // إضافة أول صف من قطع الغيار
             if (container.children.length === 0 && sparePartsData.length > 0) {
                 addExportPartRow(sparePartsData);
@@ -2251,4 +2270,52 @@
             }, 250);
         }
     </script>
+
+    @push('styles')
+    <style>
+        /* تخصيص Select2 */
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0;
+            min-height: 44px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151;
+            padding-right: 1rem;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+
+        .select2-results__option {
+            padding: 0.75rem 1rem;
+        }
+
+        .select2-results__option--highlighted {
+            background-color: #3b82f6;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            display: none;
+        }
+
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .select2-search__field {
+            font-family: inherit;
+            padding: 0.5rem;
+        }
+    </style>
+    @endpush
 @endsection
