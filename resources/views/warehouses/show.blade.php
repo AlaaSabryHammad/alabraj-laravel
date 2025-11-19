@@ -1799,21 +1799,20 @@
                         body: JSON.stringify(formData)
                     })
                     .then(response => {
-                        // التحقق من نوع المحتوى
-                        const contentType = response.headers.get('content-type');
-                        console.log('نوع المحتوى:', contentType);
-                        console.log('حالة الاستجابة:', response.status);
+                        console.log('Status:', response.status);
+                        console.log('OK:', response.ok);
 
-                        if (!contentType || !contentType.includes('application/json')) {
-                            // إذا لم تكن JSON، اعرض النص الخام
-                            return response.text().then(text => {
-                                console.log('استجابة غير JSON:', text.substring(0, 500));
-                                throw new Error('الخادم أعاد استجابة غير صحيحة: ' + text.substring(0, 200));
-                            });
-                        }
+                        // حاول قراءة الـ response كـ text أولاً للتحقق
+                        return response.text().then(text => {
+                            console.log('الاستجابة الخام (أول 500 حرف):', text.substring(0, 500));
 
-                        return response.json().then(data => {
-                            return { status: response.status, ok: response.ok, data: data };
+                            try {
+                                const data = JSON.parse(text);
+                                return { status: response.status, ok: response.ok, data: data };
+                            } catch (e) {
+                                console.error('خطأ في parsing JSON:', e);
+                                throw new Error(`استجابة غير صحيحة من الخادم (${response.status}): ${text.substring(0, 100)}`);
+                            }
                         });
                     })
                     .then(result => {
