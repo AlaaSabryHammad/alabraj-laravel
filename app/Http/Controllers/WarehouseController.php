@@ -331,6 +331,13 @@ class WarehouseController extends Controller
      */
     public function storeExport(Request $request, Location $warehouse)
     {
+        \Log::info('storeExport called', [
+            'wantsJson' => $request->wantsJson(),
+            'contentType' => $request->header('Content-Type'),
+            'accept' => $request->header('Accept'),
+            'all_data' => $request->all()
+        ]);
+
         try {
             $validated = $request->validate([
                 'recipient_employee_id' => 'required|exists:employees,id',
@@ -343,6 +350,7 @@ class WarehouseController extends Controller
                 'items.*.notes' => 'nullable|string',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', ['errors' => $e->errors()]);
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
