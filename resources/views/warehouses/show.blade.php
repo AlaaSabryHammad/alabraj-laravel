@@ -1486,12 +1486,19 @@
             }
         }
 
+        // متغيرات عام لتخزين البيانات للاستخدام في دوال مختلفة
+        let exportModalData = {
+            locationsData: [],
+            employeesData: [],
+            sparePartsData: []
+        };
+
         // مودال تصدير للمشاريع مع نموذج مفصل
         function openProjectExportModal() {
             // الحصول على البيانات من الخادم
-            const locationsData = @json($locationsForJson);
-            const employeesData = @json($employeesForJson);
-            const sparePartsData = @json($sparePartsForJson);
+            exportModalData.locationsData = @json($locationsForJson);
+            exportModalData.employeesData = @json($employeesForJson);
+            exportModalData.sparePartsData = @json($sparePartsForJson);
 
             const modalHTML = `
                 <div id="projectExportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -1561,7 +1568,7 @@
                                         <i class="ri-tools-line text-green-600"></i>
                                         قطع الغيار المطلوبة
                                     </h4>
-                                    <button type="button" onclick="addExportPartRow(sparePartsData)"
+                                    <button type="button" onclick="addExportPartRow(exportModalData.sparePartsData)"
                                             class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                                         <i class="ri-add-line"></i>
                                         إضافة قطعة
@@ -1607,11 +1614,15 @@
 
             // تهيئة المودال بعد الإنشاء مع انتظار أطول
             setTimeout(() => {
-                initializeExportModal(locationsData, employeesData, sparePartsData);
+                initializeExportModal(exportModalData.locationsData, exportModalData.employeesData, exportModalData.sparePartsData);
             }, 300);
         }
 
         function initializeExportModal(locationsData, employeesData, sparePartsData) {
+            // حفظ البيانات في المتغير العام للوصول إليها من دوال أخرى
+            exportModalData.locationsData = locationsData;
+            exportModalData.employeesData = employeesData;
+            exportModalData.sparePartsData = sparePartsData;
             const form = document.getElementById('projectExportForm');
             const locationId = document.getElementById('locationId');
             const receiverId = document.getElementById('receiverId');
