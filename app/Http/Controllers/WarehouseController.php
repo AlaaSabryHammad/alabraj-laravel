@@ -413,11 +413,14 @@ class WarehouseController extends Controller
                     ->limit($item['quantity'])
                     ->get();
 
+                $exportedById = Auth::user()?->employee?->id;
+
                 foreach ($serialNumbers as $serial) {
                     $serial->update([
-                        'status' => 'exported',
-                        'exported_to_employee_id' => $request->recipient_employee_id,
-                        'exported_date' => $request->export_date,
+                        'status' => 'assigned',
+                        'assigned_to_employee_id' => $request->recipient_employee_id,
+                        'exported_at' => \Carbon\Carbon::parse($request->export_date)->startOfDay(),
+                        'exported_by' => $exportedById,
                     ]);
                 }
 

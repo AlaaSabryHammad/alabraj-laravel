@@ -11,7 +11,7 @@ class SparePartSerial extends Model
 
     protected $fillable = [
         'spare_part_id',
-        'serial_number', 
+        'serial_number',
         'barcode',
         'location_id',
         'status',
@@ -20,6 +20,9 @@ class SparePartSerial extends Model
         'returned_date',
         'exported_to_employee_id',
         'exported_date',
+        'exported_at',
+        'exported_by',
+        'export_notes',
         'notes',
     ];
 
