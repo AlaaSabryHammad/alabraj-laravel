@@ -331,10 +331,15 @@ class WarehouseController extends Controller
      */
     public function storeExport(Request $request, Location $warehouse)
     {
+        // استخدام location_id من الطلب إذا كان موجوداً، وإلا استخدم location من الـ URL
+        $locationId = $request->input('location_id') ?? $warehouse->id;
+        $warehouse = Location::findOrFail($locationId);
+
         \Log::info('storeExport called', [
             'wantsJson' => $request->wantsJson(),
             'contentType' => $request->header('Content-Type'),
             'accept' => $request->header('Accept'),
+            'location_id' => $locationId,
             'all_data' => $request->all()
         ]);
 

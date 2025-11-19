@@ -1782,6 +1782,7 @@
 
                     // إرسال البيانات إلى الخادم
                     const formData = {
+                        location_id: locationIdValue,
                         recipient_employee_id: receiverIdValue,
                         export_date: exportDateValue,
                         items: exportParts,
