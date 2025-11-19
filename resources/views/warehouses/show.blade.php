@@ -1489,9 +1489,9 @@
         // مودال تصدير للمشاريع مع نموذج مفصل
         function openProjectExportModal() {
             // الحصول على البيانات من الخادم
-            const locationsData = @json([['id' => $warehouse->id, 'name' => $warehouse->name, 'project_id' => $warehouse->project_id]]);
-            const employeesData = @json($employees->map(fn($e) => ['id' => $e->id, 'name' => $e->name, 'position' => $e->position ?? ''])->values());
-            const sparePartsData = @json($newInventory->map(fn($inv) => ['id' => $inv->spare_part_id, 'name' => $inv->sparePart->name, 'code' => $inv->sparePart->code, 'stock' => $inv->current_stock])->values());
+            const locationsData = [{id: {{ $warehouse->id }}, name: "{{ $warehouse->name }}", project_id: {{ $warehouse->project_id ?? 'null' }}}];
+            const employeesData = @json($employeesForJson);
+            const sparePartsData = @json($sparePartsForJson);
 
             const modalHTML = `
                 <div id="projectExportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

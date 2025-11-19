@@ -116,7 +116,26 @@ class WarehouseController extends Controller
             ->orderBy('receipt_time', 'desc')
             ->paginate(10);
 
-        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts'));
+        // تحضير بيانات قطع الغيار للـ JavaScript
+        $sparePartsForJson = $newInventory->map(function ($inv) {
+            return array(
+                'id' => $inv->spare_part_id,
+                'name' => $inv->sparePart->name,
+                'code' => $inv->sparePart->code,
+                'stock' => $inv->current_stock
+            );
+        })->values()->toArray();
+
+        // تحضير بيانات الموظفين للـ JavaScript
+        $employeesForJson = $employees->map(function ($e) {
+            return array(
+                'id' => $e->id,
+                'name' => $e->name,
+                'position' => $e->position ?? ''
+            );
+        })->values()->toArray();
+
+        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts', 'sparePartsForJson', 'employeesForJson'));
     }
 
     /**
