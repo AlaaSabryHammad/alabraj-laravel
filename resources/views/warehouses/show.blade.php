@@ -1608,10 +1608,10 @@
 
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-            // تهيئة المودال بعد الإنشاء
+            // تهيئة المودال بعد الإنشاء مع انتظار أطول
             setTimeout(() => {
                 initializeExportModal(locationsData, employeesData, sparePartsData);
-            }, 100);
+            }, 300);
         }
 
         function initializeExportModal(locationsData, employeesData, sparePartsData) {
@@ -1653,45 +1653,69 @@
             });
 
             // تفعيل Select2 للبحث في القوائم المنسدلة
-            if (typeof $ !== 'undefined' && $.fn.select2) {
-                $('#locationId').select2({
-                    language: 'ar',
-                    dir: 'rtl',
-                    placeholder: 'اختر الموقع',
-                    allowClear: true,
-                    width: '100%'
-                });
-
-                $('#receiverId').select2({
-                    language: 'ar',
-                    dir: 'rtl',
-                    placeholder: 'اختر الموظف',
-                    allowClear: true,
-                    width: '100%'
-                });
-
-                // معالج تغيير الموقع في Select2
-                $('#locationId').on('change', function() {
-                    const selectedLocationId = $(this).val();
-                    const selectedLocation = locationsData.find(loc => loc.id == selectedLocationId);
-
-                    if (selectedLocation && selectedLocation.project_id) {
-                        projectId.value = selectedLocation.project_id;
-                        fetch(`/projects/${selectedLocation.project_id}`)
-                            .then(r => r.json())
-                            .then(data => {
-                                if (data && data.name) {
-                                    projectName.value = data.name;
-                                }
-                            })
-                            .catch(() => {
-                                projectName.value = 'لم يتم تحميل البيانات';
-                            });
-                    } else {
-                        projectName.value = '';
-                        projectId.value = '';
+            if (typeof jQuery !== 'undefined' && jQuery.fn.select2) {
+                try {
+                    // قم بتدمير أي instance قديم من Select2 أولاً
+                    if (jQuery('#locationId').data('select2')) {
+                        jQuery('#locationId').select2('destroy');
                     }
-                });
+                    if (jQuery('#receiverId').data('select2')) {
+                        jQuery('#receiverId').select2('destroy');
+                    }
+
+                    // تهيئة Select2 للمواقع
+                    jQuery('#locationId').select2({
+                        language: 'ar',
+                        dir: 'rtl',
+                        placeholder: 'اختر الموقع',
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: jQuery('#projectExportModal')
+                    });
+
+                    // تهيئة Select2 للموظفين
+                    jQuery('#receiverId').select2({
+                        language: 'ar',
+                        dir: 'rtl',
+                        placeholder: 'اختر الموظف',
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: jQuery('#projectExportModal')
+                    });
+
+                    // معالج تغيير الموقع في Select2
+                    jQuery('#locationId').on('change', function() {
+                        const selectedLocationId = jQuery(this).val();
+                        if (!selectedLocationId) {
+                            projectName.value = '';
+                            projectId.value = '';
+                            return;
+                        }
+
+                        const selectedLocation = locationsData.find(loc => String(loc.id) === String(selectedLocationId));
+
+                        if (selectedLocation && selectedLocation.project_id) {
+                            projectId.value = selectedLocation.project_id;
+                            fetch(`/projects/${selectedLocation.project_id}`)
+                                .then(r => r.json())
+                                .then(data => {
+                                    if (data && data.name) {
+                                        projectName.value = data.name;
+                                    } else if (data) {
+                                        projectName.value = data.name || 'تم التحميل';
+                                    }
+                                })
+                                .catch((err) => {
+                                    projectName.value = 'لم يتم تحميل البيانات';
+                                });
+                        } else {
+                            projectName.value = '';
+                            projectId.value = '';
+                        }
+                    });
+                } catch (error) {
+                    console.error('Select2 initialization error:', error);
+                }
             }
 
             // إضافة أول صف من قطع الغيار
