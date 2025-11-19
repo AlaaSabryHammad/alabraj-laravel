@@ -331,16 +331,27 @@ class WarehouseController extends Controller
      */
     public function storeExport(Request $request, Location $warehouse)
     {
-        $request->validate([
-            'recipient_employee_id' => 'required|exists:employees,id',
-            'export_date' => 'required|date',
-            'items' => 'required|array|min:1',
-            'items.*.spare_part_id' => 'required|exists:spare_parts,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.purpose' => 'required|string',
-            'items.*.equipment_id' => 'nullable|exists:equipment,id',
-            'items.*.notes' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'recipient_employee_id' => 'required|exists:employees,id',
+                'export_date' => 'required|date',
+                'items' => 'required|array|min:1',
+                'items.*.spare_part_id' => 'required|exists:spare_parts,id',
+                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.purpose' => 'required|string',
+                'items.*.equipment_id' => 'nullable|exists:equipment,id',
+                'items.*.notes' => 'nullable|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'خطأ في التحقق من البيانات',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        }
 
         DB::beginTransaction();
         try {
@@ -352,15 +363,29 @@ class WarehouseController extends Controller
                     ->first();
 
                 if (!$inventory) {
+                    $errorMsg = 'قطعة الغيار المطلوبة غير موجودة في المخزون';
+                    if ($request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $errorMsg
+                        ], 422);
+                    }
                     return back()->withInput()
-                        ->with('error', 'قطعة الغيار المطلوبة غير موجودة في المخزون');
+                        ->with('error', $errorMsg);
                 }
 
                 // فحص توفر الكمية المطلوبة
                 if ($inventory->current_stock < $item['quantity']) {
                     $sparePart = $inventory->sparePart;
+                    $errorMsg = "الكمية المطلوبة من {$sparePart->name} غير متوفرة في المخزون. المتوفر: {$inventory->current_stock}";
+                    if ($request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $errorMsg
+                        ], 422);
+                    }
                     return back()->withInput()
-                        ->with('error', "الكمية المطلوبة من {$sparePart->name} غير متوفرة في المخزون. المتوفر: {$inventory->current_stock}");
+                        ->with('error', $errorMsg);
                 }
 
                 $totalAmount = $item['quantity'] * $inventory->average_cost;

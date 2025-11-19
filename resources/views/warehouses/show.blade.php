@@ -1793,14 +1793,15 @@
                         body: JSON.stringify(formData)
                     })
                     .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(text => {
-                                throw new Error(text);
-                            });
-                        }
-                        return response.json();
+                        return response.json().then(data => {
+                            return { status: response.status, ok: response.ok, data: data };
+                        });
                     })
-                    .then(data => {
+                    .then(result => {
+                        if (!result.ok) {
+                            const errorMsg = result.data.message || 'حدث خطأ في التصدير';
+                            throw new Error(errorMsg);
+                        }
                         showSuccessModal('تم التصدير بنجاح',
                             'تم تصدير قطع الغيار بنجاح وتحديث المخزون');
                         closeProjectExportModal();
@@ -1810,8 +1811,22 @@
                         }, 2000);
                     })
                     .catch(error => {
-                        console.error('خطأ:', error);
-                        const errorMessage = error.message.includes('<') ? 'حدث خطأ في التصدير' : error.message;
+                        console.error('خطأ كامل:', error);
+                        let errorMessage = 'حدث خطأ في التصدير';
+
+                        // محاولة الحصول على رسالة خطأ أفضل من الخطأ
+                        if (error.message) {
+                            if (error.message.includes('<')) {
+                                // إذا كانت الرسالة HTML، حاول استخراج الرسالة منها
+                                const parser = new DOMParser();
+                                const htmlDoc = parser.parseFromString(error.message, 'text/html');
+                                const errorElement = htmlDoc.querySelector('[class*="error"]') || htmlDoc.body;
+                                errorMessage = errorElement.textContent.trim() || 'حدث خطأ في التصدير';
+                            } else {
+                                errorMessage = error.message;
+                            }
+                        }
+
                         showErrorModal('خطأ', errorMessage);
                         submitButton.disabled = false;
                         submitButton.innerHTML =
