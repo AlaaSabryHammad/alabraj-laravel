@@ -1642,26 +1642,7 @@
                 locationId.appendChild(option);
             });
 
-            // معالج تغيير الموقع لاستدعاء بيانات المشروع تلقائياً
-            locationId.addEventListener('change', () => {
-                const selectedLocation = locationsData.find(loc => loc.id == locationId.value);
-                if (selectedLocation && selectedLocation.project_id) {
-                    projectId.value = selectedLocation.project_id;
-                    fetch(`/projects/${selectedLocation.project_id}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data && data.name) {
-                                projectName.value = data.name;
-                            }
-                        })
-                        .catch(() => {
-                            projectName.value = 'لم يتم تحميل البيانات';
-                        });
-                } else {
-                    projectName.value = '';
-                    projectId.value = '';
-                }
-            });
+            // معالج تغيير الموقع سيتم التعامل معه عبر Select2 أدناه
 
             // ملء قائمة الموظفين (المستلمين)
             employeesData.forEach(emp => {
@@ -1687,6 +1668,29 @@
                     placeholder: 'اختر الموظف',
                     allowClear: true,
                     width: '100%'
+                });
+
+                // معالج تغيير الموقع في Select2
+                $('#locationId').on('change', function() {
+                    const selectedLocationId = $(this).val();
+                    const selectedLocation = locationsData.find(loc => loc.id == selectedLocationId);
+
+                    if (selectedLocation && selectedLocation.project_id) {
+                        projectId.value = selectedLocation.project_id;
+                        fetch(`/projects/${selectedLocation.project_id}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data && data.name) {
+                                    projectName.value = data.name;
+                                }
+                            })
+                            .catch(() => {
+                                projectName.value = 'لم يتم تحميل البيانات';
+                            });
+                    } else {
+                        projectName.value = '';
+                        projectId.value = '';
+                    }
                 });
             }
 
