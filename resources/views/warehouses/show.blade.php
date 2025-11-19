@@ -1750,18 +1750,22 @@
                         return;
                     }
 
-                    partRows.forEach((row, index) => {
-                        const partIdSelect = row.querySelector(`select[name="export_parts[${index}][spare_part_id]"]`);
-                        const quantityInput = row.querySelector(`input[name="export_parts[${index}][quantity]"]`);
-                        const notesInput = row.querySelector(`textarea[name="export_parts[${index}][notes]"]`);
+                    partRows.forEach((row, rowIndex) => {
+                        // استخدم جميع الـ selects والـ inputs في الصف بدلاً من البحث بـ index محدد
+                        const partIdSelect = row.querySelector('select');
+                        const inputs = row.querySelectorAll('input[type="number"]');
+                        const textarea = row.querySelector('textarea');
+                        const quantityInput = inputs.length > 0 ? inputs[0] : null;
 
-                        if (partIdSelect && quantityInput) {
+                        console.log(`Row ${rowIndex}:`, { partIdSelect: partIdSelect?.value, quantityInput: quantityInput?.value });
+
+                        if (partIdSelect && partIdSelect.value && quantityInput && quantityInput.value) {
                             exportParts.push({
-                                spare_part_id: partIdSelect.value,
+                                spare_part_id: parseInt(partIdSelect.value),
                                 quantity: parseInt(quantityInput.value),
                                 purpose: 'تصدير لقطع الغيار',
                                 equipment_id: null,
-                                notes: notesInput ? notesInput.value : ''
+                                notes: textarea ? textarea.value : ''
                             });
                         }
                     });
@@ -1784,6 +1788,8 @@
                         general_notes: generalNotesValue
                     };
 
+                    console.log('البيانات المرسلة:', JSON.stringify(formData, null, 2));
+
                     fetch(`/warehouses/${locationIdValue}/export-spares`, {
                         method: 'POST',
                         headers: {
@@ -1793,6 +1799,19 @@
                         body: JSON.stringify(formData)
                     })
                     .then(response => {
+                        // التحقق من نوع المحتوى
+                        const contentType = response.headers.get('content-type');
+                        console.log('نوع المحتوى:', contentType);
+                        console.log('حالة الاستجابة:', response.status);
+
+                        if (!contentType || !contentType.includes('application/json')) {
+                            // إذا لم تكن JSON، اعرض النص الخام
+                            return response.text().then(text => {
+                                console.log('استجابة غير JSON:', text.substring(0, 500));
+                                throw new Error('الخادم أعاد استجابة غير صحيحة: ' + text.substring(0, 200));
+                            });
+                        }
+
                         return response.json().then(data => {
                             return { status: response.status, ok: response.ok, data: data };
                         });
