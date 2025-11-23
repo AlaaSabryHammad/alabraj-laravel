@@ -356,7 +356,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @if(\App\Models\Material::whereNull('unit_of_measure')->orWhere('unit_of_measure', '')->count() > 0)
+                                @if(\App\Models\Material::whereNull('material_unit_id')->count() > 0)
                                     <div class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                         <div class="flex items-start">
                                             <i class="ri-warning-line text-amber-600 mt-0.5 ml-2"></i>
