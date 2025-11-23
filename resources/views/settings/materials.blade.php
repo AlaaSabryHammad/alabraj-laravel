@@ -239,6 +239,59 @@
         @endif
     </div>
 
+    <!-- Global Functions for Modal -->
+    <script>
+        const existingMaterials = {!! json_encode(\App\Models\Material::pluck('name')->toArray()) !!};
+
+        function openAddMaterialModal() {
+            document.getElementById('add-material-modal').classList.remove('hidden');
+            document.getElementById('modal-title').textContent = 'إضافة مادة جديدة';
+            document.getElementById('submit-text').textContent = 'حفظ المادة';
+            document.getElementById('add-material-form').action = '{{ route('settings.materials.store') }}';
+            document.getElementById('form-method').value = '';
+            clearMaterialForm();
+            clearMaterialErrors();
+        }
+
+        function closeAddMaterialModal() {
+            document.getElementById('add-material-modal').classList.add('hidden');
+            clearMaterialForm();
+            clearMaterialErrors();
+        }
+
+        function clearMaterialForm() {
+            document.getElementById('material-id').value = '';
+            document.getElementById('material-name').value = '';
+            document.getElementById('material-unit').value = '';
+            document.getElementById('material-category').value = '';
+            document.getElementById('material-status').value = 'active';
+            document.getElementById('material-description').value = '';
+        }
+
+        function clearMaterialErrors() {
+            document.querySelectorAll('[id$="-error"]').forEach(el => {
+                el.classList.add('hidden');
+                el.textContent = '';
+            });
+            document.querySelectorAll('.border-red-500').forEach(el => {
+                el.classList.remove('border-red-500');
+                el.classList.add('border-gray-300');
+            });
+        }
+
+        function editMaterial(id, name, unit) {
+            document.getElementById('material-id').value = id;
+            document.getElementById('material-name').value = name;
+            document.getElementById('material-unit').value = unit;
+            document.getElementById('modal-title').textContent = 'تعديل المادة';
+            document.getElementById('submit-text').textContent = 'تحديث المادة';
+            document.getElementById('add-material-form').action = '/settings/materials/' + id;
+            document.getElementById('form-method').value = 'PUT';
+            clearMaterialErrors();
+            document.getElementById('add-material-modal').classList.remove('hidden');
+        }
+    </script>
+
     <!-- Add Material Modal -->
     <div id="add-material-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -351,160 +404,115 @@
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const existingMaterials = {!! json_encode(\App\Models\Material::pluck('name')->toArray()) !!};
+// Form submission
+document.getElementById('add-material-form').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-    window.openAddMaterialModal = function() {
-        document.getElementById('add-material-modal').classList.remove('hidden');
-        document.getElementById('modal-title').textContent = 'إضافة مادة جديدة';
-        document.getElementById('submit-text').textContent = 'حفظ المادة';
-        document.getElementById('add-material-form').action = '{{ route('settings.materials.store') }}';
-        document.getElementById('form-method').value = '';
-        clearMaterialForm();
-        clearMaterialErrors();
-    };
+    const name = document.getElementById('material-name').value.trim();
+    const unit = document.getElementById('material-unit').value;
+    const category = document.getElementById('material-category').value;
+    const status = document.getElementById('material-status').value;
+    const materialId = document.getElementById('material-id').value;
 
-    window.closeAddMaterialModal = function() {
-        document.getElementById('add-material-modal').classList.add('hidden');
-        clearMaterialForm();
-        clearMaterialErrors();
-    };
+    clearMaterialErrors();
+    let isValid = true;
 
-    window.clearMaterialForm = function() {
-        document.getElementById('material-id').value = '';
-        document.getElementById('material-name').value = '';
-        document.getElementById('material-unit').value = '';
-        document.getElementById('material-category').value = '';
-        document.getElementById('material-status').value = 'active';
-        document.getElementById('material-description').value = '';
-    };
+    // Validate name is not empty
+    if (!name) {
+        document.getElementById('name-error').textContent = 'اسم المادة مطلوب';
+        document.getElementById('name-error').classList.remove('hidden');
+        document.getElementById('material-name').classList.add('border-red-500');
+        isValid = false;
+    }
+    // Validate name is unique (for new materials only)
+    else if (!materialId && existingMaterials.includes(name)) {
+        document.getElementById('name-error').textContent = 'هذا الاسم موجود بالفعل، يرجى اختيار اسم مختلف';
+        document.getElementById('name-error').classList.remove('hidden');
+        document.getElementById('material-name').classList.add('border-red-500');
+        isValid = false;
+    }
 
-    window.clearMaterialErrors = function() {
-        document.querySelectorAll('[id$="-error"]').forEach(el => {
-            el.classList.add('hidden');
-            el.textContent = '';
-        });
-        document.querySelectorAll('.border-red-500').forEach(el => {
-            el.classList.remove('border-red-500');
-            el.classList.add('border-gray-300');
-        });
-    };
+    if (!unit) {
+        document.getElementById('unit-error').textContent = 'وحدة القياس مطلوبة';
+        document.getElementById('unit-error').classList.remove('hidden');
+        document.getElementById('material-unit').classList.add('border-red-500');
+        isValid = false;
+    }
 
-    window.editMaterial = function(id, name, unit) {
-        document.getElementById('material-id').value = id;
-        document.getElementById('material-name').value = name;
-        document.getElementById('material-unit').value = unit;
-        document.getElementById('modal-title').textContent = 'تعديل المادة';
-        document.getElementById('submit-text').textContent = 'تحديث المادة';
-        document.getElementById('add-material-form').action = '/settings/materials/' + id;
-        document.getElementById('form-method').value = 'PUT';
-        clearMaterialErrors();
-        document.getElementById('add-material-modal').classList.remove('hidden');
-    };
+    if (!category) {
+        document.getElementById('category-error').textContent = 'الفئة مطلوبة';
+        document.getElementById('category-error').classList.remove('hidden');
+        document.getElementById('material-category').classList.add('border-red-500');
+        isValid = false;
+    }
 
-    document.getElementById('add-material-form').addEventListener('submit', function(e) {
-        e.preventDefault();
+    if (!status) {
+        document.getElementById('status-error').textContent = 'الحالة مطلوبة';
+        document.getElementById('status-error').classList.remove('hidden');
+        document.getElementById('material-status').classList.add('border-red-500');
+        isValid = false;
+    }
 
-        const name = document.getElementById('material-name').value.trim();
-        const unit = document.getElementById('material-unit').value;
-        const category = document.getElementById('material-category').value;
-        const status = document.getElementById('material-status').value;
-        const materialId = document.getElementById('material-id').value;
+    if (!isValid) return;
 
-        clearMaterialErrors();
-        let isValid = true;
+    // Submit form via AJAX
+    const formData = new FormData(this);
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري الحفظ...';
 
-        if (!name) {
-            document.getElementById('name-error').textContent = 'اسم المادة مطلوب';
-            document.getElementById('name-error').classList.remove('hidden');
-            document.getElementById('material-name').classList.add('border-red-500');
-            isValid = false;
-        } else if (!materialId && existingMaterials.includes(name)) {
-            document.getElementById('name-error').textContent = 'هذا الاسم موجود بالفعل';
-            document.getElementById('name-error').classList.remove('hidden');
-            document.getElementById('material-name').classList.add('border-red-500');
-            isValid = false;
+    fetch(this.action, {
+        method: this.getAttribute('method') === 'POST' ? 'POST' : 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
-
-        if (!unit) {
-            document.getElementById('unit-error').textContent = 'وحدة القياس مطلوبة';
-            document.getElementById('unit-error').classList.remove('hidden');
-            document.getElementById('material-unit').classList.add('border-red-500');
-            isValid = false;
-        }
-
-        if (!category) {
-            document.getElementById('category-error').textContent = 'الفئة مطلوبة';
-            document.getElementById('category-error').classList.remove('hidden');
-            document.getElementById('material-category').classList.add('border-red-500');
-            isValid = false;
-        }
-
-        if (!status) {
-            document.getElementById('status-error').textContent = 'الحالة مطلوبة';
-            document.getElementById('status-error').classList.remove('hidden');
-            document.getElementById('material-status').classList.add('border-red-500');
-            isValid = false;
-        }
-
-        if (!isValid) return;
-
-        const formData = new FormData(this);
-        const submitBtn = document.getElementById('submit-btn');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري الحفظ...';
-
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeAddMaterialModal();
-                location.reload();
-            } else if (data.errors) {
-                for (const [field, messages] of Object.entries(data.errors)) {
-                    const errorEl = document.getElementById(field + '-error');
-                    const inputEl = document.getElementById('material-' + field);
-                    if (errorEl && inputEl) {
-                        errorEl.textContent = messages[0];
-                        errorEl.classList.remove('hidden');
-                        inputEl.classList.add('border-red-500');
-                    }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeAddMaterialModal();
+            location.reload();
+        } else if (data.errors) {
+            for (const [field, messages] of Object.entries(data.errors)) {
+                const errorEl = document.getElementById(field + '-error');
+                const inputEl = document.getElementById('material-' + field);
+                if (errorEl && inputEl) {
+                    errorEl.textContent = messages[0];
+                    errorEl.classList.remove('hidden');
+                    inputEl.classList.add('border-red-500');
                 }
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('حدث خطأ في الحفظ');
-        })
-        .finally(() => {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-        });
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('add-material-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                closeAddMaterialModal();
-            }
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في الحفظ');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     });
+});
 
-    document.getElementById('add-material-modal').addEventListener('click', function(e) {
-        if (e.target === this) {
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('add-material-modal');
+        if (modal && !modal.classList.contains('hidden')) {
             closeAddMaterialModal();
         }
-    });
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('add-material-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddMaterialModal();
+    }
 });
 </script>
 @endsection

@@ -5,7 +5,10 @@
       "Bash(php artisan tinker:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nإصلاح عمود unit_of_measure غير الموجود في جدول المواد\n\nالمشكلة:\n- عند الوصول إلى صفحة إنشاء رحلة نقل جديدة (/transport/create)\n- كان يظهر خطأ: SQLSTATE[42S22]: Unknown column ''unit_of_measure''\n- الكود كان يحاول الاستعلام عن عمود unit_of_measure الذي لا يوجد في جدول materials\n\nالحل:\n- تم تعديل الاستعلام في resources/views/transport/create.blade.php\n- تم استبدال whereNull(''unit_of_measure'') بـ whereNull(''material_unit_id'')\n- هذا هو اسم العمود الفعلي الموجود في جدول materials\n\nالنتيجة:\n- صفحة /transport/create الآن تعمل بدون أخطاء\n- جميع المواد تُعرض بشكل صحيح\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(/tmp/materials_full.blade.php)",
+      "Bash(cat:*)",
+      "Bash(c:/xampp/htdocs/abraj-latest/resources/views/settings/materials.blade.php)"
     ],
     "deny": [],
     "ask": [],
