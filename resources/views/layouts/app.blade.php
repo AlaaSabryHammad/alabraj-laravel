@@ -527,11 +527,9 @@
     @include('layouts.sidebar')
 
     <!-- Main Content with Sidebar Space -->
-    <div class="main-content-wrapper" style="margin-right: 16rem; min-height: 100vh;">
-        <div class="p-6">
-            <div class="max-w-7xl mx-auto" style="width: calc(100% - 3rem);">
-                @yield('content')
-            </div>
+    <div class="main-content-wrapper" style="margin-right: 16rem; min-height: 100vh; flex: 1; padding: 1.5rem;">
+        <div style="width: 100%;">
+            @yield('content')
         </div>
     </div>
 
