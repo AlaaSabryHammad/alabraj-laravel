@@ -446,10 +446,6 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         // Materials Management Routes
         Route::get('/materials', [SettingsController::class, 'materials'])->name('settings.materials');
         Route::get('/materials/content', [SettingsController::class, 'materialsContent'])->name('settings.materials.content');
-        Route::get('/materials/show', function () {
-            $materials = \App\Models\Material::paginate(15);
-            return view('settings.show.materials', compact('materials'));
-        })->name('settings.materials.show');
         Route::get('/materials/create', [MaterialController::class, 'create'])->name('settings.materials.create');
         Route::post('/materials', [MaterialController::class, 'store'])->name('settings.materials.store');
         Route::get('/materials/{material}/edit', [MaterialController::class, 'edit'])->name('settings.materials.edit');

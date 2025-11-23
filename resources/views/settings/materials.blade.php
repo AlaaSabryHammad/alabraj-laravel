@@ -200,12 +200,8 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2 space-x-reverse">
-                                <a href="{{ route('settings.materials.show', $material) }}"
+                                <a href="javascript:editMaterial('{{ $material->id }}', '{{ $material->name }}', '{{ $material->unit }}')"
                                    class="text-blue-600 hover:text-blue-900">
-                                    <i class="ri-eye-line"></i>
-                                </a>
-                                <a href="{{ route('settings.materials.edit', $material) }}"
-                                   class="text-indigo-600 hover:text-indigo-900">
                                     <i class="ri-edit-line"></i>
                                 </a>
                                 <form action="{{ route('settings.materials.destroy', $material) }}" method="POST" class="inline"

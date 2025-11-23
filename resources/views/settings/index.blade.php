@@ -79,7 +79,7 @@
 
             <!-- Materials Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="window.location.href='{{ route('settings.materials.show') }}'">
+                onclick="window.location.href='{{ route('settings.materials') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
