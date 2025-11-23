@@ -57,14 +57,29 @@
 
         /* منع تمدد المحتوى تحت القائمة الجانبية */
         .flex-1.mr-64 {
-            max-width: calc(100vw - 16rem);
+            max-width: calc(100% - 16rem);
+            min-width: 0;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         /* تحسين عرض المحتوى */
         .max-w-7xl {
             width: 100%;
+            max-width: none;
+            min-width: 0;
+        }
+
+        /* منع تمدد الجداول */
+        table {
+            table-layout: fixed;
+        }
+
+        /* ضمان عدم تجاوز الحاويات */
+        div[class*="overflow-x-auto"] {
             max-width: 100%;
+            min-width: 0;
         }
 
         /* Print Styles - تحسينات شاملة للطباعة */
