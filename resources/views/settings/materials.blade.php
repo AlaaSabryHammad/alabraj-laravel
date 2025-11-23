@@ -12,11 +12,11 @@
                 <p class="text-gray-600">إدارة شاملة لمخزون المواد والمعدات</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('settings.materials.create') }}"
+                <button onclick="openAddMaterialModal()"
                    class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center">
                     <i class="ri-add-line ml-2"></i>
                     إضافة مادة جديدة
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -231,12 +231,292 @@
             </div>
             <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد مواد مسجلة</h3>
             <p class="text-gray-500 mb-6">ابدأ بإضافة المادة الأولى للمخزون</p>
-            <a href="{{ route('settings.materials.create') }}"
+            <button onclick="openAddMaterialModal()"
                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
                 إضافة مادة جديدة
-            </a>
+            </button>
         </div>
         @endif
     </div>
+
+    <!-- Add Material Modal -->
+    <div id="add-material-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+                    <h3 class="text-lg font-semibold text-gray-900" id="modal-title">إضافة مادة جديدة</h3>
+                    <button onclick="closeAddMaterialModal()"
+                        class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form id="add-material-form" method="POST" action="{{ route('settings.materials.store') }}" class="p-6 space-y-4">
+                    @csrf
+                    <input type="hidden" id="material-id" name="material_id">
+                    <input type="hidden" id="form-method" name="_method" value="">
+
+                    <!-- Name Field -->
+                    <div>
+                        <label for="material-name" class="block text-sm font-medium text-gray-700 mb-2">
+                            اسم المادة <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="material-name" name="name"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            placeholder="أدخل اسم المادة الفريد" required>
+                        <div id="name-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Unit Dropdown -->
+                    <div>
+                        <label for="material-unit" class="block text-sm font-medium text-gray-700 mb-2">
+                            وحدة القياس <span class="text-red-500">*</span>
+                        </label>
+                        <select id="material-unit" name="unit"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            required>
+                            <option value="">اختر وحدة القياس</option>
+                            @foreach(\App\Models\MaterialUnit::all() as $unit)
+                                <option value="{{ $unit->name }}">{{ $unit->name }}</option>
+                            @endforeach
+                        </select>
+                        <div id="unit-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label for="material-category" class="block text-sm font-medium text-gray-700 mb-2">
+                            الفئة <span class="text-red-500">*</span>
+                        </label>
+                        <select id="material-category" name="category"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            required>
+                            <option value="">اختر الفئة</option>
+                            <option value="cement">أسمنت</option>
+                            <option value="steel">حديد</option>
+                            <option value="aggregate">خرسانة</option>
+                            <option value="tools">أدوات</option>
+                            <option value="electrical">كهربائية</option>
+                            <option value="plumbing">سباكة</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                        <div id="category-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="material-status" class="block text-sm font-medium text-gray-700 mb-2">
+                            الحالة <span class="text-red-500">*</span>
+                        </label>
+                        <select id="material-status" name="status"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            required>
+                            <option value="">اختر الحالة</option>
+                            <option value="active">نشط</option>
+                            <option value="inactive">غير نشط</option>
+                            <option value="out_of_stock">نفذ المخزون</option>
+                            <option value="discontinued">متوقف</option>
+                        </select>
+                        <div id="status-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="material-description" class="block text-sm font-medium text-gray-700 mb-2">
+                            الوصف
+                        </label>
+                        <textarea id="material-description" name="description" rows="3"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            placeholder="أدخل وصف المادة (اختياري)"></textarea>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                        <button type="button" onclick="closeAddMaterialModal()"
+                            class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-xl hover:bg-gray-200 transition-colors">
+                            إلغاء
+                        </button>
+                        <button type="submit" id="submit-btn"
+                            class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200">
+                            <span id="submit-text">حفظ المادة</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section('scripts')
+<script>
+// Store existing material names for validation
+const existingMaterials = {!! json_encode(\App\Models\Material::pluck('name')->toArray()) !!};
+
+function openAddMaterialModal() {
+    document.getElementById('add-material-modal').classList.remove('hidden');
+    document.getElementById('modal-title').textContent = 'إضافة مادة جديدة';
+    document.getElementById('submit-text').textContent = 'حفظ المادة';
+    document.getElementById('add-material-form').action = '{{ route('settings.materials.store') }}';
+    document.getElementById('form-method').value = '';
+    clearMaterialForm();
+    clearMaterialErrors();
+}
+
+function closeAddMaterialModal() {
+    document.getElementById('add-material-modal').classList.add('hidden');
+    clearMaterialForm();
+    clearMaterialErrors();
+}
+
+function clearMaterialForm() {
+    document.getElementById('material-id').value = '';
+    document.getElementById('material-name').value = '';
+    document.getElementById('material-unit').value = '';
+    document.getElementById('material-category').value = '';
+    document.getElementById('material-status').value = 'active';
+    document.getElementById('material-description').value = '';
+}
+
+function clearMaterialErrors() {
+    document.querySelectorAll('[id$="-error"]').forEach(el => {
+        if (el.id.includes('name-error') || el.id.includes('unit-error') ||
+            el.id.includes('category-error') || el.id.includes('status-error')) {
+            el.classList.add('hidden');
+            el.textContent = '';
+        }
+    });
+    document.querySelectorAll('.border-red-500').forEach(el => {
+        el.classList.remove('border-red-500');
+        el.classList.add('border-gray-300');
+    });
+}
+
+function editMaterial(id, name, unit) {
+    document.getElementById('material-id').value = id;
+    document.getElementById('material-name').value = name;
+    document.getElementById('material-unit').value = unit;
+    document.getElementById('modal-title').textContent = 'تعديل المادة';
+    document.getElementById('submit-text').textContent = 'تحديث المادة';
+    document.getElementById('add-material-form').action = '/settings/materials/' + id;
+    document.getElementById('form-method').value = 'PUT';
+
+    clearMaterialErrors();
+    document.getElementById('add-material-modal').classList.remove('hidden');
+}
+
+// Form submission
+document.getElementById('add-material-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('material-name').value.trim();
+    const unit = document.getElementById('material-unit').value;
+    const category = document.getElementById('material-category').value;
+    const status = document.getElementById('material-status').value;
+    const materialId = document.getElementById('material-id').value;
+
+    clearMaterialErrors();
+    let isValid = true;
+
+    // Validate name is not empty
+    if (!name) {
+        document.getElementById('name-error').textContent = 'اسم المادة مطلوب';
+        document.getElementById('name-error').classList.remove('hidden');
+        document.getElementById('material-name').classList.add('border-red-500');
+        isValid = false;
+    }
+    // Validate name is unique (for new materials only)
+    else if (!materialId && existingMaterials.includes(name)) {
+        document.getElementById('name-error').textContent = 'هذا الاسم موجود بالفعل، يرجى اختيار اسم مختلف';
+        document.getElementById('name-error').classList.remove('hidden');
+        document.getElementById('material-name').classList.add('border-red-500');
+        isValid = false;
+    }
+
+    if (!unit) {
+        document.getElementById('unit-error').textContent = 'وحدة القياس مطلوبة';
+        document.getElementById('unit-error').classList.remove('hidden');
+        document.getElementById('material-unit').classList.add('border-red-500');
+        isValid = false;
+    }
+
+    if (!category) {
+        document.getElementById('category-error').textContent = 'الفئة مطلوبة';
+        document.getElementById('category-error').classList.remove('hidden');
+        document.getElementById('material-category').classList.add('border-red-500');
+        isValid = false;
+    }
+
+    if (!status) {
+        document.getElementById('status-error').textContent = 'الحالة مطلوبة';
+        document.getElementById('status-error').classList.remove('hidden');
+        document.getElementById('material-status').classList.add('border-red-500');
+        isValid = false;
+    }
+
+    if (!isValid) return;
+
+    // Submit form via AJAX
+    const formData = new FormData(this);
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري الحفظ...';
+
+    fetch(this.action, {
+        method: this.getAttribute('method') === 'POST' ? 'POST' : 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeAddMaterialModal();
+            location.reload();
+        } else if (data.errors) {
+            for (const [field, messages] of Object.entries(data.errors)) {
+                const errorEl = document.getElementById(field + '-error');
+                const inputEl = document.getElementById('material-' + field);
+                if (errorEl && inputEl) {
+                    errorEl.textContent = messages[0];
+                    errorEl.classList.remove('hidden');
+                    inputEl.classList.add('border-red-500');
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في الحفظ');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    });
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('add-material-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeAddMaterialModal();
+        }
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('add-material-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddMaterialModal();
+    }
+});
+</script>
+@endsection
+
 @endsection

@@ -82,8 +82,11 @@ class MaterialController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:materials,name',
                 'unit' => 'required|string|max:255',
+                'category' => 'required|string|max:255',
+                'status' => 'required|in:active,inactive,out_of_stock,discontinued',
+                'description' => 'nullable|string',
             ]);
 
             // Create material unit first if it doesn't exist
@@ -101,25 +104,34 @@ class MaterialController extends Controller
             $materialData = [
                 'name' => $validated['name'],
                 'material_unit_id' => $materialUnit->id,
-                'category' => 'عام', // Default category
+                'category' => $validated['category'],
                 'minimum_stock' => 0,
                 'current_stock' => 0,
-                'status' => 'active'
+                'status' => $validated['status'],
+                'description' => $validated['description'] ?? null
             ];
 
             Material::create($materialData);
 
-            if ($request->wantsJson()) {
+            if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'تم إضافة المادة بنجاح']);
             }
 
             return redirect()->route('settings.materials')
                 ->with('success', 'تم إضافة المادة بنجاح');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json(['errors' => $e->errors()], 422);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors());
         } catch (\Exception $e) {
-            if ($request->wantsJson()) {
+            if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json(['error' => true, 'message' => 'حدث خطأ: ' . $e->getMessage()], 500);
             }
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'حدث خطأ: ' . $e->getMessage());
