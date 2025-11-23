@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-row-reverse items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">إدارة المواد</h1>
                 <p class="text-gray-600">إدارة شاملة لمخزون المواد والمعدات</p>
