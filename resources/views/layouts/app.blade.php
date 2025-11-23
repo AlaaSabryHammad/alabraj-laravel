@@ -56,30 +56,37 @@
         }
 
         /* منع تمدد المحتوى تحت القائمة الجانبية */
-        .flex-1.mr-64 {
-            max-width: calc(100% - 16rem);
-            min-width: 0;
-            overflow-x: hidden;
+        body {
             display: flex;
-            flex-direction: column;
+            flex-direction: row-reverse;
         }
 
-        /* تحسين عرض المحتوى */
-        .max-w-7xl {
-            width: 100%;
-            max-width: none;
-            min-width: 0;
+        .main-content-wrapper {
+            flex: 1;
+            overflow-x: auto;
         }
 
         /* منع تمدد الجداول */
         table {
-            table-layout: fixed;
+            table-layout: auto;
+            width: 100%;
         }
 
         /* ضمان عدم تجاوز الحاويات */
         div[class*="overflow-x-auto"] {
             max-width: 100%;
             min-width: 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .main-content-wrapper {
+                margin-right: 0;
+                margin-bottom: 0;
+            }
         }
 
         /* Print Styles - تحسينات شاملة للطباعة */
@@ -516,13 +523,13 @@
 </head>
 
 <body class="bg-gradient-to-br from-slate-50 to-blue-50 rtl" dir="rtl">
-    <div class="min-h-screen flex relative">
-        <!-- Sidebar -->
-        @include('layouts.sidebar')
+    <!-- Sidebar -->
+    @include('layouts.sidebar')
 
-        <!-- Main Content -->
-        <div class="flex-1 mr-64 p-6">
-            <div class="max-w-7xl mx-auto">
+    <!-- Main Content with Sidebar Space -->
+    <div class="main-content-wrapper" style="margin-right: 16rem; min-height: 100vh;">
+        <div class="p-6">
+            <div class="max-w-7xl mx-auto" style="width: calc(100% - 3rem);">
                 @yield('content')
             </div>
         </div>
