@@ -65,6 +65,8 @@
             flex: 1;
             overflow-x: auto;
             padding: 1.5rem;
+            max-width: calc(100% - 0px);
+            width: calc(100% - 256px);
         }
 
         /* منع تمدد الجداول */
