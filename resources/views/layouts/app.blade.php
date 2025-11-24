@@ -64,6 +64,7 @@
         .main-content-wrapper {
             flex: 1;
             overflow-x: auto;
+            padding: 1.5rem;
         }
 
         /* منع تمدد الجداول */
@@ -527,7 +528,7 @@
     @include('layouts.sidebar')
 
     <!-- Main Content with Sidebar Space -->
-    <div class="main-content-wrapper" style="margin-right: 16rem; min-height: 100vh; flex: 1; padding: 1.5rem;">
+    <div class="main-content-wrapper" style="min-height: 100vh;">
         <div style="width: 100%;">
             @yield('content')
         </div>
