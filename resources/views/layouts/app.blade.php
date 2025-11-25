@@ -63,9 +63,9 @@
 
         .main-content-wrapper {
             overflow-x: auto;
-            padding: 1.5rem;
             width: calc(100% - 256px);
             min-height: 100vh;
+            padding: 1.5rem 1.5rem 1.5rem 0;
         }
 
         /* منع تمدد الجداول */
