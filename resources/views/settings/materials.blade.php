@@ -34,76 +34,54 @@
     </div>
     @endif
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-medium">إجمالي المواد</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $allMaterials->count() ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="ri-box-3-line text-blue-600 text-xl"></i>
-                </div>
+    <!-- Statistics Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-purple-600">{{ $allMaterials->count() ?? 0 }}</div>
+                <div class="text-sm text-gray-600 mt-1">إجمالي المواد</div>
             </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-medium">متوفرة</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $allMaterials->where('status', 'active')->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="ri-check-line text-green-600 text-xl"></i>
-                </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-600">{{ $allMaterials->where('status', 'active')->count() }}</div>
+                <div class="text-sm text-gray-600 mt-1">متوفرة</div>
             </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-medium">مخزون منخفض</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $allMaterials->filter(function($m) { return $m->isLowStock(); })->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <i class="ri-alert-line text-yellow-600 text-xl"></i>
-                </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-yellow-600">{{ $allMaterials->filter(function($m) { return $m->isLowStock(); })->count() }}</div>
+                <div class="text-sm text-gray-600 mt-1">مخزون منخفض</div>
             </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-medium">نفذ المخزون</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $allMaterials->where('current_stock', 0)->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <i class="ri-close-line text-red-600 text-xl"></i>
-                </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-red-600">{{ $allMaterials->where('current_stock', 0)->count() }}</div>
+                <div class="text-sm text-gray-600 mt-1">نفذ المخزون</div>
             </div>
         </div>
     </div>
 
-    <!-- Search and Filters -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <form method="GET" action="{{ route('settings.materials') }}" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <!-- Search Field -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
+    <!-- Materials Table Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Header with Search and Button -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">قائمة المواد</h3>
+                <button type="button" onclick="openAddMaterialModal()"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors">
+                    <i class="ri-add-line text-lg"></i>
+                    <span>إضافة مادة</span>
+                </button>
+            </div>
+
+            <!-- Search and Filters -->
+            <form method="GET" action="{{ route('settings.materials') }}" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <!-- Search Field -->
                     <div class="relative">
                         <input type="text" name="search" value="{{ request('search') }}"
                             placeholder="ابحث عن مادة..."
-                            class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                            class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm">
                         <i class="ri-search-line absolute right-3 top-3 text-gray-400"></i>
                     </div>
-                </div>
 
-                <!-- Category Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الفئة</label>
-                    <select name="category" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
+                    <!-- Category Filter -->
+                    <select name="category" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white text-sm">
                         <option value="">جميع الفئات</option>
                         <option value="cement" {{ request('category') == 'cement' ? 'selected' : '' }}>أسمنت</option>
                         <option value="steel" {{ request('category') == 'steel' ? 'selected' : '' }}>حديد</option>
@@ -113,40 +91,33 @@
                         <option value="plumbing" {{ request('category') == 'plumbing' ? 'selected' : '' }}>سباكة</option>
                         <option value="other" {{ request('category') == 'other' ? 'selected' : '' }}>أخرى</option>
                     </select>
-                </div>
 
-                <!-- Status Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
-                    <select name="status" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
+                    <!-- Status Filter -->
+                    <select name="status" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white text-sm">
                         <option value="">جميع الحالات</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
                         <option value="out_of_stock" {{ request('status') == 'out_of_stock' ? 'selected' : '' }}>نفذ المخزون</option>
                         <option value="discontinued" {{ request('status') == 'discontinued' ? 'selected' : '' }}>متوقف</option>
                     </select>
-                </div>
 
-                <!-- Filter Button -->
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="flex-1 px-4 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
-                        <i class="ri-search-line text-lg"></i>
-                        <span>بحث</span>
-                    </button>
-                    <button type="button" onclick="openAddMaterialModal()" class="px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2" title="إضافة مادة جديدة">
-                        <i class="ri-add-line text-lg"></i>
-                    </button>
+                    <!-- Filter Button -->
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 px-4 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center justify-center gap-2">
+                            <i class="ri-search-line"></i>
+                            <span>بحث</span>
+                        </button>
+                        @if(request()->has(['search', 'category', 'status']) && (request('search') || request('category') || request('status')))
+                        <a href="{{ route('settings.materials') }}" class="px-4 py-2.5 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors text-sm">
+                            <i class="ri-close-line"></i>
+                        </a>
+                        @endif
+                    </div>
                 </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Materials Table -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-900">قائمة المواد</h3>
+            </form>
         </div>
 
+        <!-- Table -->
         @if($materials->count() > 0)
         <div class="overflow-x-auto">
             <table class="w-full">
@@ -156,8 +127,6 @@
                         <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">الفئة</th>
                         <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">المخزون</th>
                         <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">الوحدة</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">المورد</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">السعر</th>
                         <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">الحالة</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wide">الإجراءات</th>
                     </tr>
@@ -172,37 +141,19 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ $material->name }}</p>
-                                    @if($material->brand)
-                                    <p class="text-xs text-gray-500">{{ $material->brand }}</p>
-                                    @endif
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                            <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
                                 {{ $material->getCategoryNameAttribute() }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <span class="font-medium text-gray-900">{{ number_format($material->current_stock) }}</span>
-                                @if($material->isLowStock())
-                                <i class="ri-error-warning-line text-red-500 text-lg" title="مخزون منخفض"></i>
-                                @endif
-                            </div>
+                            <span class="font-medium text-gray-900">{{ number_format($material->current_stock) }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $material->unit ?: 'غير محدد' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $material->supplier_name ?: 'غير محدد' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            @if($material->unit_price)
-                            {{ number_format($material->unit_price, 2) }} ريال
-                            @else
-                            غير محدد
-                            @endif
+                            {{ $material->unit ?: '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
@@ -214,7 +165,7 @@
                                 ];
                                 $statusClass = $statusClasses[$material->status] ?? 'bg-gray-100 text-gray-800';
                             @endphp
-                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full {{ $statusClass }}">
+                            <span class="inline-block px-2 py-1 text-xs font-medium rounded {{ $statusClass }}">
                                 {{ $material->getStatusTextAttribute() }}
                             </span>
                         </td>
@@ -249,13 +200,13 @@
         @else
         <!-- Empty State -->
         <div class="px-6 py-16 text-center">
-            <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <i class="ri-inbox-line text-gray-400 text-4xl"></i>
+            <div class="mx-auto w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="ri-inbox-line text-gray-400 text-3xl"></i>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد مواد مسجلة</h3>
-            <p class="text-gray-500 mb-6">ابدأ بإضافة المادة الأولى لبدء إدارة المخزون</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد مواد</h3>
+            <p class="text-gray-500 mb-6">ابدأ بإضافة المادة الأولى</p>
             <button type="button" onclick="openAddMaterialModal()"
-                class="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors">
+                class="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors">
                 <i class="ri-add-line text-lg"></i>
                 <span>إضافة مادة جديدة</span>
             </button>
@@ -268,7 +219,7 @@
      MODAL - Add/Edit Material
      ============================================ -->
 <div id="add-material-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
             <h2 class="text-xl font-bold text-gray-900" id="modal-title">إضافة مادة جديدة</h2>
@@ -284,14 +235,14 @@
             <input type="hidden" id="material-id" name="material_id">
             <input type="hidden" id="form-method" name="_method" value="">
 
-            <div class="space-y-5">
+            <div class="space-y-4">
                 <!-- Material Name -->
                 <div>
                     <label for="material-name" class="block text-sm font-semibold text-gray-700 mb-2">
                         اسم المادة <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="material-name" name="name" required
-                        placeholder="أدخل اسم المادة الفريد"
+                        placeholder="أدخل اسم المادة"
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
                     <div id="name-error" class="text-red-500 text-sm mt-1 hidden"></div>
                 </div>
@@ -303,7 +254,7 @@
                     </label>
                     <select id="material-unit" name="unit" required
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
-                        <option value="">اختر وحدة القياس</option>
+                        <option value="">اختر وحدة</option>
                         @foreach(\App\Models\MaterialUnit::all() as $unit)
                             <option value="{{ $unit->name }}">{{ $unit->name }}</option>
                         @endforeach
@@ -318,7 +269,7 @@
                     </label>
                     <select id="material-category" name="category" required
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
-                        <option value="">اختر الفئة</option>
+                        <option value="">اختر</option>
                         <option value="cement">أسمنت</option>
                         <option value="steel">حديد</option>
                         <option value="aggregate">خرسانة</option>
@@ -337,7 +288,7 @@
                     </label>
                     <select id="material-status" name="status" required
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
-                        <option value="">اختر الحالة</option>
+                        <option value="">اختر</option>
                         <option value="active">نشط</option>
                         <option value="inactive">غير نشط</option>
                         <option value="out_of_stock">نفذ المخزون</option>
@@ -345,27 +296,17 @@
                     </select>
                     <div id="status-error" class="text-red-500 text-sm mt-1 hidden"></div>
                 </div>
-
-                <!-- Description -->
-                <div>
-                    <label for="material-description" class="block text-sm font-semibold text-gray-700 mb-2">
-                        الوصف <span class="text-gray-500">(اختياري)</span>
-                    </label>
-                    <textarea id="material-description" name="description" rows="3"
-                        placeholder="أدخل وصف المادة..."
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"></textarea>
-                </div>
             </div>
 
             <!-- Modal Footer -->
             <div class="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
                 <button type="button" onclick="closeAddMaterialModal()"
-                    class="px-6 py-2.5 font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    class="px-6 py-2 font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                     إلغاء
                 </button>
                 <button type="submit" id="submit-btn"
-                    class="px-6 py-2.5 font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200">
-                    <span id="submit-text">حفظ المادة</span>
+                    class="px-6 py-2 font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">
+                    <span id="submit-text">حفظ</span>
                 </button>
             </div>
         </form>
@@ -374,30 +315,18 @@
 
 @section('scripts')
 <script>
-// Global material list for validation
 const existingMaterials = {!! json_encode(\App\Models\Material::pluck('name')->toArray()) !!};
-const materialId = document.getElementById('material-id');
-
-// ============================================
-// Modal Control Functions
-// ============================================
 
 function openAddMaterialModal() {
     const modal = document.getElementById('add-material-modal');
     const form = document.getElementById('add-material-form');
-
-    // Reset form
     form.reset();
     document.getElementById('material-id').value = '';
     document.getElementById('form-method').value = '';
     document.getElementById('modal-title').textContent = 'إضافة مادة جديدة';
-    document.getElementById('submit-text').textContent = 'حفظ المادة';
+    document.getElementById('submit-text').textContent = 'حفظ';
     form.action = '{{ route('settings.materials.store') }}';
-
-    // Clear errors
     clearAllErrors();
-
-    // Show modal
     modal.classList.remove('hidden');
 }
 
@@ -410,20 +339,14 @@ function closeAddMaterialModal() {
 function editMaterial(id, name, unit) {
     const form = document.getElementById('add-material-form');
     const modal = document.getElementById('add-material-modal');
-
-    // Set form data
     document.getElementById('material-id').value = id;
     document.getElementById('material-name').value = name;
     document.getElementById('material-unit').value = unit;
     document.getElementById('modal-title').textContent = 'تعديل المادة';
-    document.getElementById('submit-text').textContent = 'تحديث المادة';
+    document.getElementById('submit-text').textContent = 'تحديث';
     form.action = '/settings/materials/' + id;
     document.getElementById('form-method').value = 'PUT';
-
-    // Clear errors
     clearAllErrors();
-
-    // Show modal
     modal.classList.remove('hidden');
 }
 
@@ -432,7 +355,7 @@ function clearAllErrors() {
         el.classList.add('hidden');
         el.textContent = '';
     });
-    document.querySelectorAll('input, select, textarea').forEach(el => {
+    document.querySelectorAll('input, select').forEach(el => {
         if (el.classList.contains('border-red-500')) {
             el.classList.remove('border-red-500');
             el.classList.add('border-gray-300');
@@ -440,84 +363,57 @@ function clearAllErrors() {
     });
 }
 
-// ============================================
-// Form Submission and Validation
-// ============================================
-
 document.getElementById('add-material-form').addEventListener('submit', function(e) {
     e.preventDefault();
-
     const name = document.getElementById('material-name').value.trim();
     const unit = document.getElementById('material-unit').value;
-    const category = document.getElementById('material-category').value;
-    const status = document.getElementById('material-status').value;
     const matId = document.getElementById('material-id').value;
-
     clearAllErrors();
     let isValid = true;
 
-    // Validate name
     if (!name) {
         setError('name', 'اسم المادة مطلوب');
         isValid = false;
     } else if (!matId && existingMaterials.includes(name)) {
-        setError('name', 'هذا الاسم موجود بالفعل، اختر اسم مختلف');
+        setError('name', 'هذا الاسم موجود بالفعل');
         isValid = false;
     }
 
-    // Validate unit
     if (!unit) {
         setError('unit', 'وحدة القياس مطلوبة');
         isValid = false;
     }
 
-    // Validate category
-    if (!category) {
-        setError('category', 'الفئة مطلوبة');
-        isValid = false;
-    }
-
-    // Validate status
-    if (!status) {
-        setError('status', 'الحالة مطلوبة');
-        isValid = false;
-    }
-
     if (!isValid) return;
 
-    // Submit via AJAX
     const submitBtn = document.getElementById('submit-btn');
-    const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'جاري الحفظ...';
-
-    const formData = new FormData(this);
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'جاري...';
 
     fetch(this.action, {
         method: 'POST',
-        body: formData,
+        body: new FormData(this),
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
             closeAddMaterialModal();
             location.reload();
         } else if (data.errors) {
-            Object.entries(data.errors).forEach(([field, messages]) => {
-                setError(field, messages[0]);
-            });
+            Object.entries(data.errors).forEach(([field, msgs]) => setError(field, msgs[0]));
         } else {
-            alert('حدث خطأ في الحفظ، حاول مجددا');
+            alert('حدث خطأ');
         }
     })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('حدث خطأ في الاتصال بالخادم');
+    .catch(e => {
+        console.error(e);
+        alert('خطأ في الاتصال');
     })
     .finally(() => {
         submitBtn.disabled = false;
@@ -528,23 +424,16 @@ document.getElementById('add-material-form').addEventListener('submit', function
 function setError(fieldName, message) {
     const errorEl = document.getElementById(fieldName + '-error');
     const inputEl = document.getElementById('material-' + fieldName);
-
     if (errorEl) {
         errorEl.textContent = message;
         errorEl.classList.remove('hidden');
     }
-
     if (inputEl) {
         inputEl.classList.add('border-red-500');
         inputEl.classList.remove('border-gray-300');
     }
 }
 
-// ============================================
-// Modal Close Events
-// ============================================
-
-// Close modal on Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         const modal = document.getElementById('add-material-modal');
@@ -554,11 +443,8 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Close modal when clicking outside
 document.getElementById('add-material-modal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeAddMaterialModal();
-    }
+    if (e.target === this) closeAddMaterialModal();
 });
 </script>
 @endsection
