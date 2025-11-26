@@ -142,12 +142,18 @@
                         <!-- Internal Vehicles -->
                         <div id="internal-vehicles" class="vehicle-section" data-transport-type="internal">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach(\App\Models\Equipment::where('category', 'شاحنة')->whereNotNull('truck_id')->with(['driver', 'locationDetail', 'internalTruck'])->get() as $vehicle)
+                                @foreach(\App\Models\Equipment::whereIn('category', ['شاحنة', 'شاحنات'])->whereNotNull('truck_id')->with(['driver', 'locationDetail', 'internalTruck'])->get() as $vehicle)
                                 <label class="vehicle-card cursor-pointer group">
                                     <input type="radio" name="internal_vehicle_id" value="{{ $vehicle->id }}" class="sr-only"
-                                           data-driver="{{ $vehicle->driver->name ?? 'غير محدد' }}"
-                                           data-phone="{{ $vehicle->driver->phone ?? 'غير محدد' }}"
-                                           data-location="{{ $vehicle->locationDetail->name ?? 'غير محدد' }}"
+                                           data-driver="{{ $vehicle->internalTruck->driver->name ?? 'غير محدد' }}"
+                                           data-phone="{{ $vehicle->internalTruck->driver->phone ?? 'غير محدد' }}"
+                                           data-location="{{ $vehicle->internalTruck->location->name ?? 'غير محدد' }}"
+                                           data-plate="{{ $vehicle->internalTruck->plate_number ?? 'غير محدد' }}"
+                                           data-brand="{{ $vehicle->internalTruck->brand ?? 'غير محدد' }}"
+                                           data-model="{{ $vehicle->internalTruck->model ?? 'غير محدد' }}"
+                                           data-year="{{ $vehicle->internalTruck->year ?? 'غير محدد' }}"
+                                           data-load-capacity="{{ $vehicle->internalTruck->load_capacity ?? 'غير محدد' }}"
+                                           data-fuel-type="{{ $vehicle->internalTruck->fuel_type ?? 'غير محدد' }}"
                                            onchange="handleVehicleSelection()">
                                     <div class="bg-white border-2 border-gray-200 rounded-xl p-4 transition-all duration-200 group-hover:border-blue-300 group-hover:shadow-md">
                                         <div class="flex items-center justify-between">
@@ -746,7 +752,13 @@ function handleVehicleSelection() {
                 id: input.value,
                 driver: input.dataset.driver,
                 phone: input.dataset.phone,
-                location: input.dataset.location
+                location: input.dataset.location,
+                plate: input.dataset.plate,
+                brand: input.dataset.brand,
+                model: input.dataset.model,
+                year: input.dataset.year,
+                loadCapacity: input.dataset.loadCapacity,
+                fuelType: input.dataset.fuelType
             };
 
             // Update visual state
@@ -801,6 +813,30 @@ function showVehicleDetails() {
         const vehicleInfo = document.getElementById('vehicle-info');
 
         vehicleInfo.innerHTML = `
+            <div class="flex items-center">
+                <i class="ri-numbers-line text-green-600 ml-2"></i>
+                <span><strong>رقم اللوحة:</strong> ${selectedVehicle.plate}</span>
+            </div>
+            <div class="flex items-center">
+                <i class="ri-car-line text-green-600 ml-2"></i>
+                <span><strong>العلامة التجارية:</strong> ${selectedVehicle.brand}</span>
+            </div>
+            <div class="flex items-center">
+                <i class="ri-settings-line text-green-600 ml-2"></i>
+                <span><strong>الموديل:</strong> ${selectedVehicle.model}</span>
+            </div>
+            <div class="flex items-center">
+                <i class="ri-calendar-line text-green-600 ml-2"></i>
+                <span><strong>سنة الصنع:</strong> ${selectedVehicle.year}</span>
+            </div>
+            <div class="flex items-center">
+                <i class="ri-scales-3-line text-green-600 ml-2"></i>
+                <span><strong>الحمولة:</strong> ${selectedVehicle.loadCapacity} طن</span>
+            </div>
+            <div class="flex items-center">
+                <i class="ri-gas-station-line text-green-600 ml-2"></i>
+                <span><strong>نوع الوقود:</strong> ${selectedVehicle.fuelType}</span>
+            </div>
             <div class="flex items-center">
                 <i class="ri-user-line text-green-600 ml-2"></i>
                 <span><strong>السائق:</strong> ${selectedVehicle.driver}</span>
