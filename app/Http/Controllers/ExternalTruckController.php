@@ -104,7 +104,11 @@ class ExternalTruckController extends Controller
     public function show(ExternalTruck $externalTruck)
     {
         $externalTruck->load('supplier');
-        return view('external-trucks.show', compact('externalTruck'));
+        $transports = \App\Models\Transport::where('external_truck_id', $externalTruck->id)
+            ->with(['material', 'loadingLocation', 'unloadingLocation', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('external-trucks.show', compact('externalTruck', 'transports'));
     }
 
     /**

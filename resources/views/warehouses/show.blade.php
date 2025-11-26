@@ -825,7 +825,7 @@
                             </div>
                             
                             <div class="space-y-4">
-                                <button type="button" onclick="showDevelopmentModal('طباعة جميع الباركود', 'سيتم تطوير وظيفة طباعة جميع الباركود قريباً'); closeSerialNumbersModal();" 
+                                <button type="button" onclick="printAllBarcodes();"
                                         class="w-full bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 hover:border-blue-300 p-4 rounded-xl transition-all duration-300 flex items-center gap-3">
                                     <i class="ri-printer-line text-2xl text-blue-600"></i>
                                     <span class="font-semibold text-gray-900">طباعة جميع الباركود</span>
@@ -856,6 +856,227 @@
             if (modal) {
                 modal.remove();
             }
+        }
+
+        // دالة طباعة جميع الباركودات
+        function printAllBarcodes() {
+            closeSerialNumbersModal();
+
+            // إنشاء نافذة طباعة جديدة
+            const printWindow = window.open('', '', 'width=900,height=600');
+
+            // جمع البيانات من الصفحة
+            const warehouse = {
+                name: document.querySelector('h1')?.textContent.replace(/\s+/g, ' ').trim().split(' - ')[1] || 'المستودع',
+                date: new Date().toLocaleDateString('ar-SA')
+            };
+
+            // البحث عن جميع الأرقام التسلسلية في الجدول
+            const serialNumbers = [];
+            const rows = document.querySelectorAll('table tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 3) {
+                    serialNumbers.push({
+                        partName: cells[0]?.textContent.trim() || 'غير محدد',
+                        serialNumber: cells[1]?.textContent.trim() || 'غير محدد',
+                        barcode: cells[2]?.textContent.trim() || 'غير محدد',
+                        quantity: cells[3]?.textContent.trim() || '1'
+                    });
+                }
+            });
+
+            // إذا لم نجد بيانات من الجدول، نستخدم بيانات من المتغيرات العامة
+            if (serialNumbers.length === 0) {
+                // جمع من جميع الصفحة
+                const barcodeElements = document.querySelectorAll('[data-barcode]');
+                barcodeElements.forEach(el => {
+                    serialNumbers.push({
+                        partName: el.getAttribute('data-part-name') || 'غير محدد',
+                        serialNumber: el.getAttribute('data-serial') || 'غير محدد',
+                        barcode: el.getAttribute('data-barcode') || 'غير محدد',
+                        quantity: 1
+                    });
+                });
+            }
+
+            // إذا لم نجد بيانات، نعرض رسالة خطأ
+            if (serialNumbers.length === 0) {
+                showSuccessModal('لا توجد بيانات', 'لم يتم العثور على أي أرقام تسلسلية أو باركود في هذا المستودع');
+                return;
+            }
+
+            // إنشاء محتوى الطباعة
+            const html = `
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>طباعة الباركودات</title>
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        body {
+                            font-family: 'Arial', sans-serif;
+                            direction: rtl;
+                            padding: 20px;
+                            background: #f5f5f5;
+                        }
+                        .print-container {
+                            background: white;
+                            max-width: 900px;
+                            margin: 0 auto;
+                        }
+                        .header {
+                            text-align: center;
+                            padding: 20px;
+                            border-bottom: 2px solid #333;
+                            margin-bottom: 20px;
+                        }
+                        .header h1 {
+                            font-size: 24px;
+                            margin-bottom: 5px;
+                            color: #333;
+                        }
+                        .header p {
+                            color: #666;
+                            font-size: 14px;
+                        }
+                        .barcodes-grid {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 20px;
+                            padding: 20px;
+                        }
+                        .barcode-item {
+                            border: 1px solid #ddd;
+                            padding: 15px;
+                            text-align: center;
+                            page-break-inside: avoid;
+                            border-radius: 4px;
+                        }
+                        .barcode-item h3 {
+                            font-size: 12px;
+                            margin-bottom: 10px;
+                            color: #333;
+                            max-height: 40px;
+                            overflow: hidden;
+                        }
+                        .barcode-image {
+                            margin: 10px 0;
+                            text-align: center;
+                        }
+                        .barcode-image img {
+                            max-width: 100%;
+                            height: auto;
+                        }
+                        .barcode-number {
+                            font-weight: bold;
+                            margin: 10px 0 5px;
+                            font-size: 11px;
+                        }
+                        .serial-number {
+                            font-size: 10px;
+                            color: #666;
+                        }
+                        @media print {
+                            body {
+                                background: white;
+                                padding: 0;
+                            }
+                            .barcodes-grid {
+                                padding: 10px;
+                            }
+                            .barcode-item {
+                                break-inside: avoid;
+                            }
+                            .no-print {
+                                display: none;
+                            }
+                        }
+                        .print-controls {
+                            text-align: center;
+                            padding: 20px;
+                            border-top: 2px solid #ddd;
+                        }
+                        .print-controls button {
+                            padding: 10px 20px;
+                            margin: 0 10px;
+                            font-size: 14px;
+                            cursor: pointer;
+                            border: none;
+                            border-radius: 4px;
+                            background: #007bff;
+                            color: white;
+                        }
+                        .print-controls button:hover {
+                            background: #0056b3;
+                        }
+                        .close-btn {
+                            background: #6c757d;
+                        }
+                        .close-btn:hover {
+                            background: #5a6268;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-container">
+                        <div class="header">
+                            <h1>${warehouse.name}</h1>
+                            <p>قائمة الأرقام التسلسلية والباركود</p>
+                            <p style="margin-top: 10px; font-size: 12px;">التاريخ: ${warehouse.date}</p>
+                        </div>
+
+                        <div class="barcodes-grid">
+                            ${serialNumbers.map((item, index) => `
+                                <div class="barcode-item">
+                                    <h3>${item.partName}</h3>
+                                    <div class="barcode-image" id="barcode-${index}"></div>
+                                    <div class="barcode-number">${item.barcode}</div>
+                                    <div class="serial-number">الرقم: ${item.serialNumber}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="print-controls no-print">
+                            <button onclick="window.print()">طباعة</button>
+                            <button class="close-btn" onclick="window.close()">إغلاق</button>
+                        </div>
+                    </div>
+
+                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+                    <script>
+                        // توليد الباركودات باستخدام JsBarcode
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const serialNumbers = ${JSON.stringify(serialNumbers)};
+
+                            serialNumbers.forEach((item, index) => {
+                                const container = document.getElementById('barcode-' + index);
+                                if (container && item.barcode !== 'غير محدد') {
+                                    JsBarcode("#barcode-" + index, item.barcode, {
+                                        format: "CODE128",
+                                        width: 2,
+                                        height: 50,
+                                        displayValue: false
+                                    });
+                                }
+                            });
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.write(html);
+            printWindow.document.close();
+
+            // إظهار رسالة نجاح
+            showSuccessModal('تم فتح نافذة الطباعة', 'تم إعداد ' + serialNumbers.length + ' باركود للطباعة. استخدم Ctrl+P أو الزر "طباعة" لطباعة البيانات.');
         }
 
         // مودال استلام قطع غيار جديدة مفصل

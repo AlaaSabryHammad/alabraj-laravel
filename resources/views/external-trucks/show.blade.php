@@ -330,6 +330,85 @@
         </button>
     </div>
     @endif
+
+    <!-- Transports Section -->
+    @if($transports && count($transports) > 0)
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                <i class="ri-route-line text-green-600 ml-2"></i>
+                الرحلات والنقل ({{ count($transports) }})
+            </h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-100">
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">التاريخ</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">نوع المادة</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">موقع التحميل</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">موقع التفريغ</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">الكمية</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">المستخدم</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($transports as $transport)
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ $transport->created_at->format('Y/m/d H:i') }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            @if($transport->material)
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                    {{ $transport->material->name }}
+                                </span>
+                            @else
+                                <span class="text-gray-500">غير محدد</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            @if($transport->loadingLocation)
+                                {{ $transport->loadingLocation->name }}
+                            @else
+                                <span class="text-gray-500">غير محدد</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            @if($transport->unloadingLocation)
+                                {{ $transport->unloadingLocation->name }}
+                            @else
+                                <span class="text-gray-500">غير محدد</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ number_format($transport->quantity, 2) }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            @if($transport->user)
+                                <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                                    {{ $transport->user->name }}
+                                </span>
+                            @else
+                                <span class="text-gray-500">غير محدد</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @else
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="text-center py-8">
+            <i class="ri-route-line text-gray-300 text-4xl mb-4 block"></i>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد رحلات</h3>
+            <p class="text-gray-600">لم تتم أي عمليات نقل باستخدام هذه الشاحنة حتى الآن</p>
+        </div>
+    </div>
+    @endif
 </div>
 
 @push('scripts')
