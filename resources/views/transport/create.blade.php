@@ -142,7 +142,7 @@
                         <!-- Internal Vehicles -->
                         <div id="internal-vehicles" class="vehicle-section" data-transport-type="internal">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach(\App\Models\Equipment::where('status', 'available')->where('category', 'شاحنة')->whereNotNull('truck_id')->with(['driver', 'locationDetail', 'internalTruck'])->get() as $vehicle)
+                                @foreach(\App\Models\Equipment::where('category', 'شاحنة')->whereNotNull('truck_id')->with(['driver', 'locationDetail', 'internalTruck'])->get() as $vehicle)
                                 <label class="vehicle-card cursor-pointer group">
                                     <input type="radio" name="internal_vehicle_id" value="{{ $vehicle->id }}" class="sr-only"
                                            data-driver="{{ $vehicle->driver->name ?? 'غير محدد' }}"
