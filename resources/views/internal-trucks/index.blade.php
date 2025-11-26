@@ -53,10 +53,10 @@
                             <select id="statusFilter"
                                 class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
                                 <option value="">جميع الحالات</option>
-                                <option value="متاح">متاحة</option>
-                                <option value="قيد الاستخدام">قيد الاستخدام</option>
-                                <option value="تحت الصيانة">تحت الصيانة</option>
-                                <option value="غير متاح">خارج الخدمة</option>
+                                <option value="available">متاحة</option>
+                                <option value="in_use">قيد الاستخدام</option>
+                                <option value="maintenance">تحت الصيانة</option>
+                                <option value="out_of_service">خارج الخدمة</option>
                             </select>
                         </div>
                         <div class="text-sm text-gray-600">
@@ -139,19 +139,19 @@
                                     </td>
                                     <td class="px-4 py-2 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            @if ($truck->status == 'متاح')
+                                            @if ($truck->status == 'available')
                                                 <span
                                                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                     <div class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1"></div>
                                                     متاحة
                                                 </span>
-                                            @elseif($truck->status == 'قيد الاستخدام')
+                                            @elseif($truck->status == 'in_use')
                                                 <span
                                                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                     <div class="w-1.5 h-1.5 bg-blue-400 rounded-full mr-1"></div>
                                                     قيد الاستخدام
                                                 </span>
-                                            @elseif($truck->status == 'تحت الصيانة')
+                                            @elseif($truck->status == 'maintenance')
                                                 <span
                                                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                                     <div class="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-1"></div>
