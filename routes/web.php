@@ -214,7 +214,8 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/', [InternalTruckController::class, 'index'])->name('internal-trucks.index');
         Route::get('/create', [InternalTruckController::class, 'create'])->name('internal-trucks.create');
         Route::post('/', [InternalTruckController::class, 'store'])->name('internal-trucks.store');
-        Route::post('/link-equipment', [InternalTruckController::class, 'linkEquipment'])->name('internal-trucks.link-equipment');
+        Route::post('/link-equipment', [InternalTruckController::class, 'linkEquipment'])->name('internal-trucks.linkEquipment');
+        Route::post('/unlink-equipment', [InternalTruckController::class, 'unlinkEquipment'])->name('internal-trucks.unlinkEquipment');
         Route::get('/{internalTruck}', [InternalTruckController::class, 'show'])->name('internal-trucks.show');
         Route::get('/{internalTruck}/edit', [InternalTruckController::class, 'edit'])->name('internal-trucks.edit');
         Route::put('/{internalTruck}', [InternalTruckController::class, 'update'])->name('internal-trucks.update');

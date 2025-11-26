@@ -257,4 +257,36 @@ class InternalTruckController extends Controller
         return redirect()->route('internal-trucks.index')
             ->with('success', 'تم تحويل المعدة إلى شاحنة داخلية بنجاح');
     }
+
+    /**
+     * Unlink equipment from internal truck
+     */
+    public function unlinkEquipment(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'equipment_id' => 'required|exists:equipment,id'
+            ]);
+
+            $equipment = \App\Models\Equipment::findOrFail($validated['equipment_id']);
+
+            if (!$equipment->truck_id) {
+                return redirect()->back()->with('error', 'هذه المعدة غير مرتبطة بأي شاحنة');
+            }
+
+            // حفظ معرف الشاحنة
+            $truckId = $equipment->truck_id;
+
+            // فصل المعدة عن الشاحنة
+            $equipment->update(['truck_id' => null]);
+
+            // حذف الشاحنة المرتبطة إذا كانت موجودة
+            InternalTruck::where('id', $truckId)->delete();
+
+            return redirect()->back()->with('success', 'تم إلغاء ربط المعدة من شاحنات النقل الداخلي بنجاح');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error unlinking equipment: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage());
+        }
+    }
 }

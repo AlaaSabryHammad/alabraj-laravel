@@ -277,6 +277,28 @@
                     <i class="ri-gas-station-line"></i>
                     إضافة استهلاك محروقات
                 </button>
+
+                @php
+                    $isTruck = ($equipment->category === 'شاحنات' || $equipment->category === 'شاحنة') ||
+                               (strpos($equipment->name, 'شاحنة') !== false);
+                @endphp
+
+                @if($isTruck)
+                    @if($equipment->truck_id)
+                        <button type="button" onclick="openUnlinkModal()"
+                            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                            <i class="ri-unlink-line"></i>
+                            إلغاء الربط بشاحنات النقل الداخلي
+                        </button>
+                    @else
+                        <button type="button" onclick="openLinkModal()"
+                            class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                            <i class="ri-link-line"></i>
+                            ربط بشاحنات النقل الداخلي
+                        </button>
+                    @endif
+                @endif
+
                 <a href="{{ route('equipment.report', $equipment) }}" target="_blank"
                     class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                     <i class="ri-file-text-line"></i>
@@ -2083,6 +2105,120 @@
         </div>
     </div>
 
+    <!-- Link Equipment Modal -->
+    <div id="linkModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-lg bg-white"
+            dir="rtl">
+            <div class="flex items-center justify-between pb-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">ربط بشاحنات النقل الداخلي</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors"
+                    onclick="closeLinkModal()">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <form id="linkForm" method="POST" action="{{ route('internal-trucks.linkEquipment') }}" class="mt-4">
+                @csrf
+                <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
+
+                <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <div class="flex items-start">
+                        <i class="ri-information-line text-blue-600 text-lg ml-2 mt-0.5"></i>
+                        <div>
+                            <p class="text-blue-800 font-medium">معلومات المعدة</p>
+                            <p class="text-blue-700 text-sm mt-1">{{ $equipment->name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="linkFuelType" class="block text-sm font-medium text-gray-700 mb-2">
+                        نوع المحروقات (اختياري)
+                    </label>
+                    <select id="linkFuelType" name="fuel_type"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
+                        <option value="">اختر نوع المحروقات</option>
+                        <option value="gasoline">بنزين</option>
+                        <option value="diesel">ديزل</option>
+                        <option value="electric">كهربائي</option>
+                        <option value="hybrid">هجين</option>
+                    </select>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-start">
+                        <i class="ri-alert-line text-yellow-600 text-lg ml-2 mt-0.5"></i>
+                        <p class="text-sm text-yellow-800">
+                            <strong>تنبيه:</strong> سيتم إنشاء شاحنة نقل داخلية جديدة وربط هذه المعدة بها.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 space-x-reverse pt-4 border-t">
+                    <button type="button" onclick="closeLinkModal()"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors flex items-center">
+                        <i class="ri-link-line ml-1"></i>
+                        ربط الآن
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Unlink Equipment Modal -->
+    <div id="unlinkModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-lg bg-white"
+            dir="rtl">
+            <div class="flex items-center justify-between pb-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">إلغاء الربط من شاحنات النقل الداخلي</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors"
+                    onclick="closeUnlinkModal()">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <form id="unlinkForm" method="POST" action="{{ route('internal-trucks.unlinkEquipment') }}" class="mt-4">
+                @csrf
+                <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
+
+                <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <div class="flex items-start">
+                        <i class="ri-information-line text-blue-600 text-lg ml-2 mt-0.5"></i>
+                        <div>
+                            <p class="text-blue-800 font-medium">معلومات المعدة</p>
+                            <p class="text-blue-700 text-sm mt-1">{{ $equipment->name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-start">
+                        <i class="ri-alert-line text-red-600 text-lg ml-2 mt-0.5"></i>
+                        <p class="text-sm text-red-800">
+                            <strong>تحذير:</strong> سيتم إلغاء ربط هذه المعدة وحذف شاحنة النقل الداخلية المرتبطة بها.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 space-x-reverse pt-4 border-t">
+                    <button type="button" onclick="closeUnlinkModal()"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors flex items-center">
+                        <i class="ri-unlink-line ml-1"></i>
+                        إلغاء الربط
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Approval Modal -->
     <div id="approvalModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-lg bg-white"
@@ -2262,6 +2398,56 @@
                 alert('سبب الرفض مطلوب');
             }
         }
+
+        // Link equipment modal functions
+        function openLinkModal() {
+            document.getElementById('linkModal').classList.remove('hidden');
+        }
+
+        function closeLinkModal() {
+            document.getElementById('linkModal').classList.add('hidden');
+        }
+
+        function submitLinkForm() {
+            const form = document.getElementById('linkForm');
+            form.submit();
+        }
+
+        // Unlink equipment modal functions
+        function openUnlinkModal() {
+            document.getElementById('unlinkModal').classList.remove('hidden');
+        }
+
+        function closeUnlinkModal() {
+            document.getElementById('unlinkModal').classList.add('hidden');
+        }
+
+        function submitUnlinkForm() {
+            const form = document.getElementById('unlinkForm');
+            form.submit();
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const linkModal = document.getElementById('linkModal');
+            const unlinkModal = document.getElementById('unlinkModal');
+
+            if (linkModal) {
+                linkModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeLinkModal();
+                    }
+                });
+            }
+
+            if (unlinkModal) {
+                unlinkModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeUnlinkModal();
+                    }
+                });
+            }
+        });
     </script>
     </script>
 @endsection
