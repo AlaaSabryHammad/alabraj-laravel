@@ -3,51 +3,6 @@
 @section('title', 'تفاصيل الصيانة')
 
 @section('content')
-    <div class="p-0 bg-transparent" dir="rtl">
-        <div class="max-w-7xl mx-auto px-6 py-8">
-            <div class="flex flex-col lg:flex-row gap-8">
-                <!-- القسم الرئيسي -->
-                <div class="w-full lg:w-2/3 space-y-8">
-                    <!-- ...existing code for main section... -->
-                    @php
-                        /* كل محتوى القسم الرئيسي من الكود الأصلي */
-                    @endphp
-                    <!-- المعلومات الرئيسية -->
-                    <div class="bg-white rounded-xl shadow-sm border mb-6">
-                        ...existing code...
-                    </div>
-                    <!-- تفاصيل الصيانة -->
-                    <div class="bg-white rounded-xl shadow-sm border mb-6">
-                        ...existing code...
-                    </div>
-                    <!-- تفاصيل الصيانة الخارجية -->
-                    @if ($equipmentMaintenance->maintenance_type === 'external')
-                        <div class="bg-white rounded-xl shadow-sm border mb-6">
-                            ...existing code...
-                        </div>
-                    @endif
-                    <!-- الوصف والملاحظات -->
-                    @if ($equipmentMaintenance->description || $equipmentMaintenance->notes)
-                        <div class="bg-white rounded-xl shadow-sm border mb-6">
-                            ...existing code...
-                        </div>
-                    @endif
-                </div>
-                <!-- الشريط الجانبي -->
-                <div class="w-full lg:w-1/3 space-y-8">
-                    <!-- ملخص سريع -->
-                    <div class="bg-white rounded-xl shadow-sm border mb-6">
-                        ...existing code...
-                    </div>
-                    <!-- الإجراءات السريعة -->
-                    <div class="bg-white rounded-xl shadow-sm border mb-6">
-                        ...existing code...
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- مودال الاكتمال ...existing code... -->
-    </div>
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-4">
