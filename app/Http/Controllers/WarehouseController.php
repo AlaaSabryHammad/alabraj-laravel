@@ -371,26 +371,53 @@ class WarehouseController extends Controller
             $recipientEmployee = Employee::find($request->recipient_employee_id);
 
             foreach ($request->items as $item) {
+                // البحث عن السلعة في قائمة المخزون
                 $inventory = WarehouseInventory::where('spare_part_id', $item['spare_part_id'])
                     ->where('location_id', $warehouse->id)
                     ->first();
 
+                // إذا لم تكن موجودة في WarehouseInventory، نتحقق من الأرقام التسلسلية
                 if (!$inventory) {
-                    $errorMsg = 'قطعة الغيار المطلوبة غير موجودة في المخزون';
-                    if ($request->wantsJson()) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => $errorMsg
-                        ], 422);
+                    // التحقق من وجود أرقام تسلسلية متاحة
+                    $availableSerials = SparePartSerial::where('spare_part_id', $item['spare_part_id'])
+                        ->where('location_id', $warehouse->id)
+                        ->where('status', 'available')
+                        ->count();
+
+                    if ($availableSerials === 0) {
+                        $sparePart = SparePart::find($item['spare_part_id']);
+                        $errorMsg = 'قطعة الغيار ' . ($sparePart ? $sparePart->name : 'المطلوبة') . ' غير موجودة في المخزون';
+                        if ($request->wantsJson()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => $errorMsg
+                            ], 422);
+                        }
+                        return back()->withInput()
+                            ->with('error', $errorMsg);
                     }
-                    return back()->withInput()
-                        ->with('error', $errorMsg);
+
+                    // إنشاء سجل في WarehouseInventory إذا لم يكن موجوداً
+                    $inventory = WarehouseInventory::create([
+                        'spare_part_id' => $item['spare_part_id'],
+                        'location_id' => $warehouse->id,
+                        'current_stock' => $availableSerials,
+                        'available_stock' => $availableSerials,
+                        'average_cost' => SparePart::find($item['spare_part_id'])->unit_price ?? 0,
+                        'total_value' => $availableSerials * (SparePart::find($item['spare_part_id'])->unit_price ?? 0)
+                    ]);
                 }
 
                 // فحص توفر الكمية المطلوبة
-                if ($inventory->current_stock < $item['quantity']) {
-                    $sparePart = $inventory->sparePart;
-                    $errorMsg = "الكمية المطلوبة من {$sparePart->name} غير متوفرة في المخزون. المتوفر: {$inventory->current_stock}";
+                if (!$inventory || $inventory->current_stock < $item['quantity']) {
+                    // إذا كان المخزون ناقصاً، نتحقق من الأرقام التسلسلية المتاحة
+                    $availableSerials = SparePartSerial::where('spare_part_id', $item['spare_part_id'])
+                        ->where('location_id', $warehouse->id)
+                        ->where('status', 'available')
+                        ->count();
+
+                    $sparePart = SparePart::find($item['spare_part_id']);
+                    $errorMsg = "الكمية المطلوبة من {$sparePart->name} غير متوفرة في المخزون. المتوفر: {$availableSerials}";
                     if ($request->wantsJson()) {
                         return response()->json([
                             'success' => false,
