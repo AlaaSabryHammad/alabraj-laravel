@@ -2434,21 +2434,37 @@
                             })
                         })
                         .then(response => {
+                            console.log('Response status:', response.status);
+                            console.log('Response ok:', response.ok);
+
                             if (!response.ok) {
-                                return response.json().then(data => {
-                                    // معالجة أخطاء التحقق من الصحة
-                                    if (data.errors) {
-                                        const errors = Object.values(data.errors).flat();
-                                        throw new Error(errors[0] || 'حدث خطأ في إضافة المورد');
+                                return response.text().then(text => {
+                                    console.log('Error response text:', text);
+                                    try {
+                                        const data = JSON.parse(text);
+                                        // معالجة أخطاء التحقق من الصحة
+                                        if (data.errors) {
+                                            const errors = Object.values(data.errors).flat();
+                                            throw new Error(errors[0] || 'حدث خطأ في إضافة المورد');
+                                        }
+                                        throw new Error(data.message || 'حدث خطأ في إضافة المورد');
+                                    } catch (e) {
+                                        throw new Error('خطأ من الخادم: ' + text);
                                     }
-                                    throw new Error(data.message || 'حدث خطأ في إضافة المورد');
-                                }).catch(e => {
-                                    throw e;
                                 });
                             }
-                            return response.json();
+                            return response.text().then(text => {
+                                console.log('Success response text:', text);
+                                try {
+                                    return JSON.parse(text);
+                                } catch (e) {
+                                    console.error('JSON parse error:', e);
+                                    throw new Error('خطأ في قراءة الاستجابة من الخادم');
+                                }
+                            });
                         })
                         .then(data => {
+                            console.log('Parsed data:', data);
                             // إضافة المورد الجديد للقائمة
                             addNewSupplierToList(supplierName, data.id, supplierPhone, supplierEmail, data.id);
 
@@ -2460,7 +2476,7 @@
                                 `تم إضافة المورد "${supplierName}" إلى قاعدة البيانات بنجاح`);
                         })
                         .catch(error => {
-                            console.error('Error:', error);
+                            console.error('Fetch error:', error);
                             showErrorModal('خطأ', error.message || 'حدث خطأ في إضافة المورد');
                         });
                     });
