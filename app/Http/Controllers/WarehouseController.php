@@ -120,6 +120,7 @@ class WarehouseController extends Controller
             ->paginate(10);
 
         // تحضير بيانات قطع الغيار للـ JavaScript
+        // اجمع من WarehouseInventory والـ SparePartSerial معاً
         $sparePartsForJson = $newInventory->map(function ($inv) {
             return array(
                 'id' => $inv->spare_part_id,
@@ -127,7 +128,38 @@ class WarehouseController extends Controller
                 'code' => $inv->sparePart->code,
                 'stock' => $inv->current_stock
             );
-        })->values()->toArray();
+        })->toArray();
+
+        // أضف أيضاً قطع الغيار من SparePartSerial التي لم تكن في WarehouseInventory
+        $availableSerialsByPart = SparePartSerial::where('location_id', $warehouse->id)
+            ->where('status', 'available')
+            ->with('sparePart')
+            ->get()
+            ->groupBy('spare_part_id');
+
+        foreach ($availableSerialsByPart as $partId => $serials) {
+            // تحقق إذا كانت القطعة موجودة بالفعل في sparePartsForJson
+            $existsInJson = false;
+            foreach ($sparePartsForJson as $part) {
+                if ($part['id'] == $partId) {
+                    $existsInJson = true;
+                    break;
+                }
+            }
+
+            // إذا لم تكن موجودة، أضفها
+            if (!$existsInJson && $serials->first()) {
+                $sparePart = $serials->first()->sparePart;
+                $sparePartsForJson[] = array(
+                    'id' => $partId,
+                    'name' => $sparePart->name,
+                    'code' => $sparePart->code,
+                    'stock' => $serials->count()
+                );
+            }
+        }
+
+        $sparePartsForJson = array_values($sparePartsForJson);
 
         // تحضير بيانات الموظفين للـ JavaScript
         $employeesForJson = $employees->map(function ($e) {
