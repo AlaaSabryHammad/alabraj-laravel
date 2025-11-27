@@ -1256,14 +1256,6 @@
                                         <select id="supplierName" name="supplier_id" required onchange="handleSupplierChange(this)"
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             <option value="">اختر المورد</option>
-                                            @foreach($sparePartSuppliers as $supplier)
-                                                <option value="{{ $supplier->id }}"
-                                                        data-code="{{ $supplier->id }}"
-                                                        data-phone="{{ $supplier->phone ?? '' }}"
-                                                        data-email="{{ $supplier->email ?? '' }}">
-                                                    {{ $supplier->name }}
-                                                </option>
-                                            @endforeach
                                             <option value="new" data-code="NEW" data-phone="" data-email="">
                                                 + إضافة مورد جديد
                                             </option>
@@ -1487,6 +1479,22 @@
 
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+            // ملء قائمة الموردين من البيانات المرسلة من الخادم
+            const supplierSelect = document.getElementById('supplierName');
+            if (supplierSelect) {
+                const suppliers = @json($sparePartSuppliers);
+                suppliers.forEach(supplier => {
+                    const option = document.createElement('option');
+                    option.value = supplier.id;
+                    option.setAttribute('data-code', supplier.id);
+                    option.setAttribute('data-phone', supplier.phone || '');
+                    option.setAttribute('data-email', supplier.email || '');
+                    option.textContent = supplier.name;
+                    // أدرج الخيار قبل خيار "إضافة مورد جديد" (آخر خيار)
+                    supplierSelect.insertBefore(option, supplierSelect.lastElementChild);
+                });
+            }
+
             // إضافة معالج النموذج
             setTimeout(() => {
                 // توليد كود تلقائي للصف الأول
@@ -1563,7 +1571,8 @@
 
                         // إرسال البيانات إلى الخادم
                         console.log('Sending data:', JSON.stringify(data));
-                        fetch(`/warehouses/{{ $warehouse->id }}/receive-new-spares`, {
+                        const warehouseId = {{ $warehouse->id }};
+                        fetch(`/warehouses/${warehouseId}/receive-new-spares`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -2142,7 +2151,8 @@
 
                     console.log('البيانات المرسلة:', JSON.stringify(formData, null, 2));
 
-                    fetch(`/warehouses/{{ $warehouse->id }}/export-spares`, {
+                    const warehouseId = {{ $warehouse->id }};
+                    fetch(`/warehouses/${warehouseId}/export-spares`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
