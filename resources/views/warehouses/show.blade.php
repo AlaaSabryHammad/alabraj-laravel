@@ -2807,19 +2807,28 @@
                 <body>
                     <h1>تقرير أنواع قطع الغيار المسجلة</h1>
                     <div class="header-info">
-                        <p>المستودع: {{ $warehouse->name }}</p>
-                        <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</p>
-                        <p>عدد الأنواع المعروضة: ${visibleRows.length}</p>
+                        <p>المستودع: <span class="warehouse-name"></span></p>
+                        <p>تاريخ الطباعة: <span class="print-date"></span></p>
+                        <p>عدد الأنواع المعروضة: <span class="visible-rows"></span></p>
                     </div>
-                    ${tableHTML}
+                    <div class="table-container"></div>
                 </body>
                 </html>
             `);
 
             printWindow.document.close();
-            printWindow.focus();
 
+            // ملء البيانات في HTML
             setTimeout(() => {
+                const warehouseName = document.querySelector('h1')?.textContent.replace(/\s+/g, ' ').trim().split(' - ')[1] || 'المستودع';
+                const visibleRowsCount = document.querySelectorAll('table tbody tr:not([style*="display: none"])').length;
+
+                printWindow.document.querySelector('.warehouse-name').textContent = warehouseName;
+                printWindow.document.querySelector('.print-date').textContent = new Date().toLocaleDateString('ar-EG');
+                printWindow.document.querySelector('.visible-rows').textContent = visibleRowsCount;
+                printWindow.document.querySelector('.table-container').innerHTML = tableHTML;
+
+                printWindow.focus();
                 printWindow.print();
                 printWindow.close();
             }, 250);

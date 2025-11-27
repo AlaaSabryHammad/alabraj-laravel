@@ -8,7 +8,9 @@
       "Bash(git commit:*)",
       "Bash(/tmp/materials_full.blade.php)",
       "Bash(cat:*)",
-      "Bash(c:/xampp/htdocs/abraj-latest/resources/views/settings/materials.blade.php)"
+      "Bash(c:/xampp/htdocs/abraj-latest/resources/views/settings/materials.blade.php)",
+      "Bash(php -l:*)",
+      "Bash(php -r:*)"
     ],
     "deny": [],
     "ask": [],
