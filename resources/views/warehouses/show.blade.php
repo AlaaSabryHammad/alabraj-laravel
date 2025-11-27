@@ -24,7 +24,7 @@
                     <i class="ri-qr-code-line"></i>
                     جميع الأرقام التسلسلية
                 </button>
-                <button type="button" onclick="openReceiveModal()"
+                <button type="button" id="receiveButton" onclick="handleReceiveClick()"
                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                     <i class="ri-add-line"></i>
                     استلام قطع غيار
@@ -748,6 +748,18 @@
     </div>
 
     <script>
+        // دالة مساعدة للتعامل مع زر الاستقبال
+        function handleReceiveClick() {
+            console.log('handleReceiveClick called');
+            console.log('openReceiveModal function exists:', typeof openReceiveModal);
+            try {
+                openReceiveModal();
+            } catch (error) {
+                console.error('Error calling openReceiveModal:', error);
+                alert('خطأ: ' + error.message);
+            }
+        }
+
         // دوال Modals المتطورة
         function showDevelopmentModal(title, message) {
             const modalHTML = `
