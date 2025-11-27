@@ -111,14 +111,20 @@ class SparePart extends Model
     {
         $timestamp = date('Ymd');
 
-        // استخدام microtime للحصول على رقم فريد
-        $microtime = (int)(\microtime(true) * 1000);
-        $lastDigits = $microtime % 10000; // آخر 4 أرقام
+        // استخدام microtime + رقم عشوائي للحصول على رقم فريد
+        // التأكد من أن الرقم فريد في قاعدة البيانات
+        do {
+            $microtime = (int)(\microtime(true) * 1000);
+            $lastDigits = $microtime % 10000; // آخر 4 أرقام
+            // إضافة رقم عشوائي لضمان الفرادة حتى في حالة الإنشاء السريع
+            $randomSuffix = random_int(10000, 99999);
+            $barcode = "BC-{$this->id}-{$timestamp}-{$lastDigits}{$randomSuffix}";
 
-        // في حالة التطابق، إضافة رقم عشوائي بناءً على الوقت
-        $randomSuffix = ($microtime % 900) + 100; // سيعطي رقم بين 100-999
+            // التحقق من أن الرقم غير موجود بالفعل
+            $exists = SparePartSerial::where('barcode', $barcode)->exists();
+        } while ($exists);
 
-        return "BC-{$this->id}-{$timestamp}-{$lastDigits}{$randomSuffix}";
+        return $barcode;
     }
 
     /**
@@ -129,10 +135,19 @@ class SparePart extends Model
         $year = date('Y');
 
         // استخدام microtime + الرقم التعريفي + رقم عشوائي للحصول على رقم فريد
-        $microtime = (int)(\microtime(true) * 1000);
-        $uniqueNumber = ($microtime + $this->id + (($microtime % 999) + 1)) % 1000000;
+        // التأكد من أن الرقم فريد في قاعدة البيانات
+        do {
+            $microtime = (int)(\microtime(true) * 1000);
+            // إضافة رقم عشوائي لضمان الفرادة حتى في حالة الإنشاء السريع
+            $randomSuffix = random_int(0, 999999);
+            $uniqueNumber = ($microtime + $this->id + $randomSuffix) % 1000000;
+            $serialNumber = "SP-{$year}-" . str_pad($uniqueNumber, 6, '0', STR_PAD_LEFT);
 
-        return "SP-{$year}-" . str_pad($uniqueNumber, 6, '0', STR_PAD_LEFT);
+            // التحقق من أن الرقم التسلسلي غير موجود بالفعل
+            $exists = SparePartSerial::where('serial_number', $serialNumber)->exists();
+        } while ($exists);
+
+        return $serialNumber;
     }
 
     /**
