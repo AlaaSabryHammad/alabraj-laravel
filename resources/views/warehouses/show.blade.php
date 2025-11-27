@@ -2404,16 +2404,57 @@
                         const supplierCode = formData.get('code');
                         const supplierPhone = formData.get('phone');
                         const supplierEmail = formData.get('email');
+                        const supplierAddress = formData.get('address');
 
-                        // إضافة المورد الجديد للقائمة
-                        addNewSupplierToList(supplierName, supplierCode, supplierPhone, supplierEmail);
+                        // إرسال البيانات إلى الخادم
+                        fetch('{{ route("spare-part-suppliers.store") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                name: supplierName,
+                                phone: supplierPhone,
+                                email: supplierEmail,
+                                address: supplierAddress,
+                                status: 'نشط',
+                                credit_limit: 0,
+                                company_name: null,
+                                phone_2: null,
+                                city: null,
+                                country: null,
+                                tax_number: null,
+                                cr_number: null,
+                                contact_person: null,
+                                contact_person_phone: null,
+                                notes: null,
+                                payment_terms: null
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'حدث خطأ في إضافة المورد');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // إضافة المورد الجديد للقائمة
+                            addNewSupplierToList(supplierName, data.id, supplierPhone, supplierEmail, data.id);
 
-                        // إغلاق المودال
-                        closeNewSupplierModal();
+                            // إغلاق المودال
+                            closeNewSupplierModal();
 
-                        // رسالة نجاح
-                        showSuccessModal('تمت الإضافة بنجاح',
-                            `تم إضافة المورد "${supplierName}" إلى القائمة بنجاح`);
+                            // رسالة نجاح
+                            showSuccessModal('تمت الإضافة بنجاح',
+                                `تم إضافة المورد "${supplierName}" إلى قاعدة البيانات بنجاح`);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showErrorModal('خطأ', error.message || 'حدث خطأ في إضافة المورد');
+                        });
                     });
                 }
             }, 100);
@@ -2433,17 +2474,16 @@
             }
         }
 
-        function addNewSupplierToList(name, code, phone, email) {
+        function addNewSupplierToList(name, supplierId, phone, email) {
             const supplierSelect = document.getElementById('supplierName');
             if (supplierSelect) {
                 // إنشاء خيار جديد
                 const newOption = document.createElement('option');
-                const newId = Date.now(); // استخدام timestamp كمعرف مؤقت
 
-                newOption.value = newId;
-                newOption.setAttribute('data-code', code);
-                newOption.setAttribute('data-phone', phone);
-                newOption.setAttribute('data-email', email);
+                newOption.value = supplierId;
+                newOption.setAttribute('data-code', supplierId);
+                newOption.setAttribute('data-phone', phone || '');
+                newOption.setAttribute('data-email', email || '');
                 newOption.textContent = name;
 
                 // إضافة الخيار قبل خيار "إضافة مورد جديد"
@@ -2451,7 +2491,7 @@
                 supplierSelect.insertBefore(newOption, newSupplierOption);
 
                 // اختيار المورد الجديد
-                supplierSelect.value = newId;
+                supplierSelect.value = supplierId;
                 handleSupplierChange(supplierSelect);
             }
         }

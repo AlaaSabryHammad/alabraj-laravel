@@ -67,7 +67,17 @@ class SparePartSupplierController extends Controller
         // Ensure credit_limit is never null
         $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
 
-        SparePartSupplier::create($validated);
+        $supplier = SparePartSupplier::create($validated);
+
+        // إذا كان طلب AJAX، أرجع JSON
+        if ($request->wantsJson()) {
+            return response()->json([
+                'id' => $supplier->id,
+                'name' => $supplier->name,
+                'phone' => $supplier->phone,
+                'email' => $supplier->email
+            ], 201);
+        }
 
         return redirect()->route('spare-part-suppliers.index')
             ->with('success', 'تم إضافة المورد بنجاح');
