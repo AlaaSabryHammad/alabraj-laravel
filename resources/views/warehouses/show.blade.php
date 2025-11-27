@@ -2141,7 +2141,7 @@
                         '<i class="ri-loader-4-line animate-spin"></i> جاري التصدير...';
 
                     // إرسال البيانات إلى الخادم
-                    const formData = {
+                    const exportData = {
                         location_id: locationIdValue,
                         recipient_employee_id: receiverIdValue,
                         export_date: exportDateValue,
@@ -2149,7 +2149,7 @@
                         general_notes: generalNotesValue
                     };
 
-                    console.log('البيانات المرسلة:', JSON.stringify(formData, null, 2));
+                    console.log('البيانات المرسلة:', JSON.stringify(exportData, null, 2));
 
                     const warehouseId = {{ $warehouse->id }};
                     fetch(`/warehouses/${warehouseId}/export-spares`, {
@@ -2159,7 +2159,7 @@
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                         },
-                        body: JSON.stringify(formData)
+                        body: JSON.stringify(exportData)
                     })
                     .then(response => {
                         console.log('Status:', response.status);
@@ -2426,12 +2426,12 @@
                     form.addEventListener('submit', function(e) {
                         e.preventDefault();
 
-                        const formData = new FormData(form);
-                        const supplierName = formData.get('name');
-                        const supplierCode = formData.get('code');
-                        const supplierPhone = formData.get('phone');
-                        const supplierEmail = formData.get('email');
-                        const supplierAddress = formData.get('address');
+                        const formDataFromForm = new FormData(form);
+                        const supplierName = formDataFromForm.get('name');
+                        const supplierCode = formDataFromForm.get('code');
+                        const supplierPhone = formDataFromForm.get('phone');
+                        const supplierEmail = formDataFromForm.get('email');
+                        const supplierAddress = formDataFromForm.get('address');
 
                         // إرسال البيانات إلى الخادم
                         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -2440,21 +2440,21 @@
                         console.log('CSRF Token:', csrfToken);
 
                         // استخدام FormData بدلاً من JSON لتجنب مشاكل CSRF
-                        const formData = new FormData();
-                        formData.append('name', supplierName);
-                        formData.append('phone', supplierPhone);
-                        formData.append('email', supplierEmail);
-                        formData.append('address', supplierAddress);
-                        formData.append('status', 'نشط');
-                        formData.append('credit_limit', 0);
-                        formData.append('_token', csrfToken);
+                        const supplierFormData = new FormData();
+                        supplierFormData.append('name', supplierName);
+                        supplierFormData.append('phone', supplierPhone);
+                        supplierFormData.append('email', supplierEmail);
+                        supplierFormData.append('address', supplierAddress);
+                        supplierFormData.append('status', 'نشط');
+                        supplierFormData.append('credit_limit', 0);
+                        supplierFormData.append('_token', csrfToken);
 
                         fetch(url, {
                             method: 'POST',
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
-                            body: formData
+                            body: supplierFormData
                         })
                         .then(response => {
                             console.log('Response status:', response.status);
