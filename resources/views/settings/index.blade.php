@@ -113,18 +113,18 @@
 
             <!-- Suppliers Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onclick="window.location.href='{{ route('suppliers.show-page') }}'">
+                onclick="window.location.href='{{ route('spare-part-suppliers.index') }}'">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div
                             class="w-12 h-12 bg-gradient-to-r from-cyan-100 to-cyan-200 rounded-xl flex items-center justify-center">
-                            <i class="ri-truck-line text-cyan-600 text-xl"></i>
+                            <i class="ri-store-3-line text-cyan-600 text-xl"></i>
                         </div>
                         <span
-                            class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ \App\Models\Supplier::count() }}</span>
+                            class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ \App\Models\SparePartSupplier::count() }}</span>
                     </div>
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">موردي قطع الغيار</h3>
-                    <p class="text-sm text-gray-500">إدارة الموردين والشركات</p>
+                    <p class="text-sm text-gray-500">إدارة موردي قطع الغيار والشركات المزودة</p>
                 </div>
             </div>
 
