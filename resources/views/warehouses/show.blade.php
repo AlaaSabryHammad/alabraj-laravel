@@ -2411,30 +2411,23 @@
                         const url = '{{ route("spare-part-suppliers.store") }}';
                         console.log('Sending request to:', url);
                         console.log('CSRF Token:', csrfToken);
+
+                        // استخدام FormData بدلاً من JSON لتجنب مشاكل CSRF
+                        const formData = new FormData();
+                        formData.append('name', supplierName);
+                        formData.append('phone', supplierPhone);
+                        formData.append('email', supplierEmail);
+                        formData.append('address', supplierAddress);
+                        formData.append('status', 'نشط');
+                        formData.append('credit_limit', 0);
+                        formData.append('_token', csrfToken);
+
                         fetch(url, {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken
+                                'X-Requested-With': 'XMLHttpRequest'
                             },
-                            body: JSON.stringify({
-                                name: supplierName,
-                                phone: supplierPhone,
-                                email: supplierEmail,
-                                address: supplierAddress,
-                                status: 'نشط',
-                                credit_limit: 0,
-                                company_name: null,
-                                phone_2: null,
-                                city: null,
-                                country: null,
-                                tax_number: null,
-                                cr_number: null,
-                                contact_person: null,
-                                contact_person_phone: null,
-                                notes: null,
-                                payment_terms: null
-                            })
+                            body: formData
                         })
                         .then(response => {
                             console.log('Response status:', response.status);
