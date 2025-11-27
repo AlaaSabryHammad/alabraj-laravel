@@ -1239,30 +1239,14 @@
                                         <select id="supplierName" name="supplier_id" required onchange="handleSupplierChange(this)"
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             <option value="">اختر المورد</option>
-                                            <option value="1" data-code="SUP001" data-phone="966501234567" data-email="info@alrajhi-parts.com">
-                                                شركة الراجحي لقطع الغيار
-                                            </option>
-                                            <option value="2" data-code="SUP002" data-phone="966505678901" data-email="sales@almutlaq-supply.com">
-                                                مؤسسة المطلق للتوريدات
-                                            </option>
-                                            <option value="3" data-code="SUP003" data-phone="966512345678" data-email="orders@binladin-parts.com">
-                                                مجموعة بن لادن لقطع الغيار
-                                            </option>
-                                            <option value="4" data-code="SUP004" data-phone="966556789012" data-email="support@alsalamah-trading.com">
-                                                شركة السلامة للتجارة والتوريد
-                                            </option>
-                                            <option value="5" data-code="SUP005" data-phone="966509876543" data-email="info@alothaim-industrial.com">
-                                                العثيم للمعدات الصناعية
-                                            </option>
-                                            <option value="6" data-code="SUP006" data-phone="966534567890" data-email="sales@zamil-parts.com">
-                                                مجموعة الزامل لقطع الغيار
-                                            </option>
-                                            <option value="7" data-code="SUP007" data-phone="966567890123" data-email="orders@aldrees-supply.com">
-                                                شركة الدريس للتوريدات الفنية
-                                            </option>
-                                            <option value="8" data-code="SUP008" data-phone="966578901234" data-email="info@almana-parts.com">
-                                                مؤسسة المانع لقطع الغيار
-                                            </option>
+                                            @foreach($sparePartSuppliers as $supplier)
+                                                <option value="{{ $supplier->id }}"
+                                                        data-code="{{ $supplier->id }}"
+                                                        data-phone="{{ $supplier->phone ?? '' }}"
+                                                        data-email="{{ $supplier->email ?? '' }}">
+                                                    {{ $supplier->name }}
+                                                </option>
+                                            @endforeach
                                             <option value="new" data-code="NEW" data-phone="" data-email="">
                                                 + إضافة مورد جديد
                                             </option>

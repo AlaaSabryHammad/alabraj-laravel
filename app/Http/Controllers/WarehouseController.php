@@ -89,6 +89,9 @@ class WarehouseController extends Controller
         // الحصول على الموردين
         $suppliers = \App\Models\Supplier::all();
 
+        // الحصول على موردي قطع الغيار
+        $sparePartSuppliers = \App\Models\SparePartSupplier::all();
+
         // الحصول على الموظفين
         $employees = \App\Models\Employee::where('status', 'active')->get();
 
@@ -187,7 +190,7 @@ class WarehouseController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts', 'sparePartsForJson', 'employeesForJson', 'locationsForJson', 'exportedParts'));
+        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'sparePartSuppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts', 'sparePartsForJson', 'employeesForJson', 'locationsForJson', 'exportedParts'));
     }
 
     /**
