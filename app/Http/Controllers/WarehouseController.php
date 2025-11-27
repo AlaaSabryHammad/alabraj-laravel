@@ -371,15 +371,17 @@ class WarehouseController extends Controller
      */
     public function storeExport(Request $request, Location $warehouse)
     {
-        // استخدام location_id من الطلب إذا كان موجوداً، وإلا استخدم location من الـ URL
-        $locationId = $request->input('location_id') ?? $warehouse->id;
-        $warehouse = Location::findOrFail($locationId);
+        // warehouse من الـ URL هو المستودع المصدر
+        // location_id من الطلب هو الموقع الهدف للتصدير
+        $sourceWarehouse = $warehouse;
+        $destinationLocationId = $request->input('location_id');
 
         \Log::info('storeExport called', [
             'wantsJson' => $request->wantsJson(),
             'contentType' => $request->header('Content-Type'),
             'accept' => $request->header('Accept'),
-            'location_id' => $locationId,
+            'source_warehouse_id' => $sourceWarehouse->id,
+            'destination_location_id' => $destinationLocationId,
             'all_data' => $request->all()
         ]);
 
@@ -411,16 +413,16 @@ class WarehouseController extends Controller
             $recipientEmployee = Employee::find($request->recipient_employee_id);
 
             foreach ($request->items as $item) {
-                // البحث عن السلعة في قائمة المخزون
+                // البحث عن السلعة في قائمة المخزون في المستودع المصدر
                 $inventory = WarehouseInventory::where('spare_part_id', $item['spare_part_id'])
-                    ->where('location_id', $warehouse->id)
+                    ->where('location_id', $sourceWarehouse->id)
                     ->first();
 
                 // إذا لم تكن موجودة في WarehouseInventory، نتحقق من الأرقام التسلسلية
                 if (!$inventory) {
-                    // التحقق من وجود أرقام تسلسلية متاحة
+                    // التحقق من وجود أرقام تسلسلية متاحة في المستودع المصدر
                     $availableSerials = SparePartSerial::where('spare_part_id', $item['spare_part_id'])
-                        ->where('location_id', $warehouse->id)
+                        ->where('location_id', $sourceWarehouse->id)
                         ->where('status', 'available')
                         ->count();
 
@@ -440,7 +442,7 @@ class WarehouseController extends Controller
                     // إنشاء سجل في WarehouseInventory إذا لم يكن موجوداً
                     $inventory = WarehouseInventory::create([
                         'spare_part_id' => $item['spare_part_id'],
-                        'location_id' => $warehouse->id,
+                        'location_id' => $sourceWarehouse->id,
                         'current_stock' => $availableSerials,
                         'available_stock' => $availableSerials,
                         'average_cost' => SparePart::find($item['spare_part_id'])->unit_price ?? 0,
@@ -450,9 +452,9 @@ class WarehouseController extends Controller
 
                 // فحص توفر الكمية المطلوبة
                 if (!$inventory || $inventory->current_stock < $item['quantity']) {
-                    // إذا كان المخزون ناقصاً، نتحقق من الأرقام التسلسلية المتاحة
+                    // إذا كان المخزون ناقصاً، نتحقق من الأرقام التسلسلية المتاحة في المستودع المصدر
                     $availableSerials = SparePartSerial::where('spare_part_id', $item['spare_part_id'])
-                        ->where('location_id', $warehouse->id)
+                        ->where('location_id', $sourceWarehouse->id)
                         ->where('status', 'available')
                         ->count();
 
@@ -478,9 +480,9 @@ class WarehouseController extends Controller
                     'last_transaction_date' => now(),
                 ]);
 
-                // تحديث حالة الأرقام التسلسلية إلى "مُستخدم"
+                // تحديث حالة الأرقام التسلسلية إلى "مُستخدم" من المستودع المصدر
                 $serialNumbers = SparePartSerial::where('spare_part_id', $item['spare_part_id'])
-                    ->where('location_id', $warehouse->id)
+                    ->where('location_id', $sourceWarehouse->id)
                     ->where('status', 'available')
                     ->limit($item['quantity'])
                     ->get();
@@ -496,10 +498,10 @@ class WarehouseController extends Controller
                     ]);
                 }
 
-                // إنشاء معاملة التصدير
+                // إنشاء معاملة التصدير - تسجيل التصدير من المستودع المصدر
                 SparePartTransaction::create([
                     'spare_part_id' => $item['spare_part_id'],
-                    'location_id' => $warehouse->id,
+                    'location_id' => $sourceWarehouse->id,
                     'transaction_type' => 'تصدير',
                     'quantity' => $item['quantity'],
                     'unit_price' => $inventory->average_cost,
