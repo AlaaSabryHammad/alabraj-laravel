@@ -2408,7 +2408,10 @@
 
                         // إرسال البيانات إلى الخادم
                         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-                        fetch('{{ route("spare-part-suppliers.store") }}', {
+                        const url = '{{ route("spare-part-suppliers.store") }}';
+                        console.log('Sending request to:', url);
+                        console.log('CSRF Token:', csrfToken);
+                        fetch(url, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
