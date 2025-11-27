@@ -2491,7 +2491,7 @@
                         .then(data => {
                             console.log('Parsed data:', data);
                             // إضافة المورد الجديد للقائمة
-                            addNewSupplierToList(supplierName, data.id, supplierPhone, supplierEmail, data.id);
+                            addNewSupplierToList(supplierName, data.id, supplierPhone, supplierEmail);
 
                             // إغلاق المودال
                             closeNewSupplierModal();
