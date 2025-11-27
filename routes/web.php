@@ -160,6 +160,7 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/', [EquipmentController::class, 'index'])->name('equipment.index');
         Route::get('/create', [EquipmentController::class, 'create'])->name('equipment.create');
         Route::post('/', [EquipmentController::class, 'store'])->name('equipment.store');
+        Route::get('/api/next-code', [EquipmentController::class, 'getNextCode'])->name('equipment.getNextCode');
         Route::get('/{equipment}', [EquipmentController::class, 'show'])->name('equipment.show');
         Route::get('/{equipment}/edit', [EquipmentController::class, 'edit'])->name('equipment.edit');
         Route::put('/{equipment}', [EquipmentController::class, 'update'])->name('equipment.update');

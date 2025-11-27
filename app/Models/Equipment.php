@@ -16,6 +16,7 @@ class Equipment extends Model
         'model',
         'manufacturer',
         'serial_number',
+        'code',
         'status',
         'location_id',
         'driver_id',

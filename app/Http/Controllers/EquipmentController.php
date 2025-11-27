@@ -111,6 +111,9 @@ class EquipmentController extends Controller
 
         $validated['status'] = 'available';
 
+        // Generate sequential equipment code
+        $validated['code'] = $this->generateEquipmentCode();
+
         // Set type field based on type_id relationship
         if (!empty($validated['type_id'])) {
             $equipmentType = \App\Models\EquipmentType::find($validated['type_id']);
@@ -625,5 +628,39 @@ class EquipmentController extends Controller
         $equipment->update($validated);
 
         return response()->json(['success' => true, 'message' => 'تم تحديث موقع المعدة بنجاح']);
+    }
+
+    /**
+     * Get next equipment code (for API/preview)
+     */
+    public function getNextCode()
+    {
+        $code = $this->generateEquipmentCode();
+        return response()->json(['code' => $code]);
+    }
+
+    /**
+     * Generate sequential equipment code
+     */
+    private function generateEquipmentCode()
+    {
+        // Get the last equipment code
+        $lastEquipment = Equipment::orderByDesc('id')
+            ->whereNotNull('code')
+            ->first();
+
+        if (!$lastEquipment || !$lastEquipment->code) {
+            // Start from 1 if no equipment with code exists
+            $nextNumber = 1;
+        } else {
+            // Extract number from last code (format: EQ-0001)
+            $lastCode = $lastEquipment->code;
+            preg_match('/(\d+)$/', $lastCode, $matches);
+            $lastNumber = isset($matches[1]) ? intval($matches[1]) : 0;
+            $nextNumber = $lastNumber + 1;
+        }
+
+        // Format code with leading zeros (EQ-0001, EQ-0002, etc.)
+        return 'EQ-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

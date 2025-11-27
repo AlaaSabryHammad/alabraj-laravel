@@ -122,6 +122,24 @@
                         </div>
 
                         <div>
+                            <label for="code" class="block text-sm font-medium text-gray-700 mb-2">كود المعدة</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="code" name="code" readonly
+                                    class="flex-1 px-4 py-3 border border-blue-300 rounded-xl bg-blue-50 text-blue-900 font-semibold cursor-not-allowed"
+                                    placeholder="سيتم توليده تلقائياً">
+                                <button type="button" onclick="generateCode()"
+                                    class="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2">
+                                    <i class="ri-refresh-line"></i>
+                                    توليد
+                                </button>
+                            </div>
+                            <p class="text-blue-600 text-sm mt-1">
+                                <i class="ri-information-line"></i>
+                                سيتم توليد الكود تلقائياً عند حفظ المعدة بشكل متسلسل (مثال: EQ-0001، EQ-0002، إلخ)
+                            </p>
+                        </div>
+
+                        <div>
                             <label for="driver_id" class="block text-sm font-medium text-gray-700 mb-2">السائق
                                 المسؤول</label>
                             <select id="driver_id" name="driver_id"
@@ -374,6 +392,31 @@
     </div>
 
     <script>
+        // Generate equipment code preview
+        function generateCode() {
+            const codeInput = document.getElementById('code');
+
+            // Fetch the next code from the server
+            fetch('{{ route("equipment.getNextCode") }}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                codeInput.value = data.code;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في توليد الكود');
+            });
+        }
+
+        // Auto-generate code when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            generateCode();
+        });
+
         function handleImageUpload(input) {
             const previewArea = document.getElementById('image-preview');
             const uploadArea = document.getElementById('upload-area');
