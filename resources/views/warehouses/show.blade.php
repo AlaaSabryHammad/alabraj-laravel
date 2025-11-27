@@ -19,6 +19,11 @@
                 </div>
             </div>
             <div class="flex gap-3">
+                <a href="{{ route('damaged-parts-receipts.index') }}"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="ri-alert-line"></i>
+                    القطع التالفة
+                </a>
                 <button type="button" onclick="showAllSerialNumbers()"
                     class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                     <i class="ri-qr-code-line"></i>
