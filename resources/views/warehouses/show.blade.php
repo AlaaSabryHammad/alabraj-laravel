@@ -2141,7 +2141,7 @@
 
                     console.log('البيانات المرسلة:', JSON.stringify(formData, null, 2));
 
-                    fetch(`/warehouses/${locationIdValue}/export-spares`, {
+                    fetch(`/warehouses/{{ $warehouse->id }}/export-spares`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
