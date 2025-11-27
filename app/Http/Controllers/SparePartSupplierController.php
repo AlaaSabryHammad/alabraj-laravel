@@ -84,19 +84,23 @@ class SparePartSupplierController extends Controller
                 ->with('success', 'تم إضافة المورد بنجاح');
         } catch (\Illuminate\Validation\ValidationException $e) {
             // معالجة أخطاء التحقق من الصحة
-            if ($request->wantsJson()) {
+            if ($request->wantsJson() || $request->header('Accept') === 'application/json' || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'message' => 'خطأ في التحقق من البيانات',
                     'errors' => $e->errors()
-                ], 422);
+                ], 422)->header('Content-Type', 'application/json; charset=utf-8');
             }
             throw $e;
         } catch (\Exception $e) {
             // معالجة الأخطاء العامة
-            if ($request->wantsJson()) {
+            // تسجيل الخطأ للتصحيح
+            \Log::error('SparePartSupplier store error: ' . $e->getMessage(), ['exception' => $e]);
+
+            if ($request->wantsJson() || $request->header('Accept') === 'application/json' || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
-                    'message' => 'حدث خطأ في إضافة المورد: ' . $e->getMessage()
-                ], 500);
+                    'message' => 'حدث خطأ في إضافة المورد: ' . $e->getMessage(),
+                    'error' => $e->getMessage()
+                ], 500)->header('Content-Type', 'application/json; charset=utf-8');
             }
             throw $e;
         }

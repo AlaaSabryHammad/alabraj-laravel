@@ -2452,7 +2452,8 @@
                         fetch(url, {
                             method: 'POST',
                             headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
                             },
                             body: supplierFormData
                         })
