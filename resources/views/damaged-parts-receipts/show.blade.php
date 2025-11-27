@@ -1,540 +1,553 @@
 @extends('layouts.app')
 
+@section('title', 'تفاصيل استلام القطعة التالفة')
+
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0">
-                            <i class="fas fa-eye me-2"></i>
-                            تفاصيل استلام القطعة التالفة - {{ $damagedPartsReceipt->receipt_number }}
-                        </h4>
-                        <div>
-                            <a href="{{ route('damaged-parts-receipts.edit', $damagedPartsReceipt) }}"
-                                class="btn btn-warning me-2">
-                                <i class="fas fa-edit me-1"></i>
-                                تعديل
-                            </a>
-                            <a href="{{ route('damaged-parts-receipts.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-right me-1"></i>
-                                العودة للقائمة
-                            </a>
-                        </div>
+<div class="p-6" dir="rtl">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('damaged-parts-receipts.index') }}" class="text-gray-600 hover:text-gray-900">
+                <i class="ri-arrow-right-line text-2xl"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <i class="ri-alert-line text-red-600"></i>
+                    تفاصيل الاستلام
+                </h1>
+                <p class="text-gray-600">{{ $damagedPartsReceipt->receipt_number }}</p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-3">
+            <a href="{{ route('damaged-parts-receipts.edit', $damagedPartsReceipt) }}"
+                class="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                <i class="ri-edit-line"></i>
+                تعديل
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Badge -->
+    <div class="mb-6 flex items-center gap-4">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg"
+            :class="{
+                'bg-blue-100 text-blue-700': '{{ $damagedPartsReceipt->processing_status }}' === 'received',
+                'bg-cyan-100 text-cyan-700': '{{ $damagedPartsReceipt->processing_status }}' === 'under_evaluation',
+                'bg-yellow-100 text-yellow-700': '{{ $damagedPartsReceipt->processing_status }}' === 'approved_repair' || '{{ $damagedPartsReceipt->processing_status }}' === 'approved_replace',
+                'bg-red-100 text-red-700': '{{ $damagedPartsReceipt->processing_status }}' === 'disposed',
+                'bg-green-100 text-green-700': '{{ $damagedPartsReceipt->processing_status }}' === 'returned_fixed',
+            }">
+            <i class="ri-checkbox-circle-line"></i>
+            <span class="font-medium">{{ $damagedPartsReceipt->processing_status_text }}</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg"
+            :class="{
+                'bg-green-100 text-green-700': '{{ $damagedPartsReceipt->damage_condition }}' === 'repairable',
+                'bg-red-100 text-red-700': '{{ $damagedPartsReceipt->damage_condition }}' === 'non_repairable',
+                'bg-yellow-100 text-yellow-700': '{{ $damagedPartsReceipt->damage_condition }}' === 'replacement_needed',
+                'bg-blue-100 text-blue-700': '{{ $damagedPartsReceipt->damage_condition }}' === 'for_evaluation',
+            }">
+            <i class="ri-alert-fill"></i>
+            <span class="font-medium">{{ $damagedPartsReceipt->damage_condition_text }}</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="space-y-6">
+        <!-- معلومات الاستلام الأساسية -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3 mb-0">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <i class="ri-info-line text-blue-600 text-lg"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900">معلومات الاستلام الأساسية</h2>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">رقم الإيصال</p>
+                        <p class="text-lg font-bold text-blue-600">{{ $damagedPartsReceipt->receipt_number }}</p>
                     </div>
 
-                    <div class="card-body">
-                        <!-- معلومات الاستلام الأساسية -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h5 class="border-bottom pb-2 mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    معلومات الاستلام الأساسية
-                                </h5>
-                            </div>
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">تاريخ الاستلام</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->receipt_date->format('Y-m-d') }}</p>
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">وقت الاستلام</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->receipt_time }}</p>
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">موظف الاستلام</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->receivedByEmployee->name }}</p>
+                        <p class="text-xs text-gray-600">{{ $damagedPartsReceipt->receivedByEmployee->position }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات المشروع والمعدة -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3 mb-0">
+                    <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                        <i class="ri-building-line text-orange-600 text-lg"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900">معلومات المشروع والمعدة</h2>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">المشروع</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->project->name }}</p>
+                        @if ($damagedPartsReceipt->project->description)
+                            <p class="text-xs text-gray-600 mt-2">{{ $damagedPartsReceipt->project->description }}</p>
+                        @endif
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">المعدة</p>
+                        @if ($damagedPartsReceipt->equipment)
+                            <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->equipment->name }}</p>
+                            <p class="text-xs text-gray-600 mt-2">{{ $damagedPartsReceipt->equipment->serial_number }}</p>
+                        @else
+                            <p class="text-gray-600 italic">غير محددة</p>
+                        @endif
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">موظف الإرسال</p>
+                        @if ($damagedPartsReceipt->sentByEmployee)
+                            <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->sentByEmployee->name }}</p>
+                            <p class="text-xs text-gray-600 mt-2">{{ $damagedPartsReceipt->sentByEmployee->position }}</p>
+                        @else
+                            <p class="text-gray-600 italic">غير محدد</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات قطعة الغيار -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3 mb-0">
+                    <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <i class="ri-settings-line text-purple-600 text-lg"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900">معلومات قطعة الغيار</h2>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 md:col-span-2">
+                        <p class="text-sm text-gray-600 mb-2">قطعة الغيار</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->sparePart->name }}</p>
+                        <p class="text-xs text-gray-600 mt-2">رقم القطعة: {{ $damagedPartsReceipt->sparePart->part_number }}</p>
+                    </div>
+
+                    <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <p class="text-sm text-gray-600 mb-2">الكمية المستلمة</p>
+                        <p class="text-2xl font-bold text-purple-600">{{ $damagedPartsReceipt->quantity_received }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- حالة التلف والمعالجة -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3 mb-0">
+                    <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                        <i class="ri-alert-fill text-red-600 text-lg"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900">تقييم حالة التلف والمعالجة</h2>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Update Status Form -->
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm font-medium text-blue-900 mb-3">تحديث حالة المعالجة</p>
+                    <form method="POST"
+                        action="{{ route('damaged-parts-receipts.update-status', $damagedPartsReceipt) }}"
+                        class="flex flex-col sm:flex-row gap-2">
+                        @csrf
+                        @method('PATCH')
+                        <select name="processing_status" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="received"
+                                {{ $damagedPartsReceipt->processing_status == 'received' ? 'selected' : '' }}>
+                                تم الاستلام</option>
+                            <option value="under_evaluation"
+                                {{ $damagedPartsReceipt->processing_status == 'under_evaluation' ? 'selected' : '' }}>
+                                تحت التقييم</option>
+                            <option value="approved_repair"
+                                {{ $damagedPartsReceipt->processing_status == 'approved_repair' ? 'selected' : '' }}>
+                                موافقة على الإصلاح</option>
+                            <option value="approved_replace"
+                                {{ $damagedPartsReceipt->processing_status == 'approved_replace' ? 'selected' : '' }}>
+                                موافقة على الاستبدال</option>
+                            <option value="disposed"
+                                {{ $damagedPartsReceipt->processing_status == 'disposed' ? 'selected' : '' }}>
+                                تم التخلص منها</option>
+                            <option value="returned_fixed"
+                                {{ $damagedPartsReceipt->processing_status == 'returned_fixed' ? 'selected' : '' }}>
+                                تم إرجاعها بعد الإصلاح</option>
+                        </select>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+                            <i class="ri-check-line"></i>
+                            تحديث
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Condition and Status Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-lg border-2 border-red-200 bg-red-50">
+                        <p class="text-sm text-red-700 font-medium mb-2">حالة التلف</p>
+                        <p class="text-lg font-bold text-red-600">{{ $damagedPartsReceipt->damage_condition_text }}</p>
+                    </div>
+
+                    <div class="p-4 rounded-lg border-2 border-blue-200 bg-blue-50">
+                        <p class="text-sm text-blue-700 font-medium mb-2">حالة المعالجة</p>
+                        <p class="text-lg font-bold text-blue-600">{{ $damagedPartsReceipt->processing_status_text }}</p>
+                    </div>
+
+                    <div class="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
+                        <p class="text-sm text-gray-700 font-medium mb-2">تاريخ الاستقبال</p>
+                        <p class="text-lg font-bold text-gray-900">{{ $damagedPartsReceipt->created_at->format('d/m/Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الأوصاف والملاحظات -->
+        @if (
+            $damagedPartsReceipt->damage_description ||
+                $damagedPartsReceipt->damage_cause ||
+                $damagedPartsReceipt->technician_notes)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center gap-3 mb-0">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                            <i class="ri-file-text-line text-indigo-600 text-lg"></i>
                         </div>
+                        <h2 class="text-lg font-bold text-gray-900">الأوصاف والملاحظات</h2>
+                    </div>
+                </div>
 
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">رقم الإيصال</label>
-                                    <p class="h6 text-primary">{{ $damagedPartsReceipt->receipt_number }}</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">تاريخ الاستلام</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->receipt_date->format('Y-m-d') }}</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">وقت الاستلام</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->receipt_time }}</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">موظف الاستلام</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->receivedByEmployee->name }}</p>
-                                    <small
-                                        class="text-muted">{{ $damagedPartsReceipt->receivedByEmployee->position }}</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- معلومات المشروع والمعدة -->
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <h5 class="border-bottom pb-2 mb-3">
-                                    <i class="fas fa-project-diagram me-2"></i>
-                                    معلومات المشروع والمعدة
-                                </h5>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">المشروع</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->project->name }}</p>
-                                    @if ($damagedPartsReceipt->project->description)
-                                        <small class="text-muted">{{ $damagedPartsReceipt->project->description }}</small>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">المعدة</label>
-                                    @if ($damagedPartsReceipt->equipment)
-                                        <p class="h6">{{ $damagedPartsReceipt->equipment->name }}</p>
-                                        <small
-                                            class="text-muted">{{ $damagedPartsReceipt->equipment->serial_number }}</small>
-                                    @else
-                                        <p class="text-muted">غير محددة</p>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">موظف الإرسال</label>
-                                    @if ($damagedPartsReceipt->sentByEmployee)
-                                        <p class="h6">{{ $damagedPartsReceipt->sentByEmployee->name }}</p>
-                                        <small
-                                            class="text-muted">{{ $damagedPartsReceipt->sentByEmployee->position }}</small>
-                                    @else
-                                        <p class="text-muted">غير محدد</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- معلومات قطعة الغيار -->
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <h5 class="border-bottom pb-2 mb-3">
-                                    <i class="fas fa-cogs me-2"></i>
-                                    معلومات قطعة الغيار
-                                </h5>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">قطعة الغيار</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->sparePart->name }}</p>
-                                    <small class="text-muted">رقم القطعة:
-                                        {{ $damagedPartsReceipt->sparePart->part_number }}</small>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">الكمية المستلمة</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->quantity_received }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- حالة التلف والتقييم -->
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <h5 class="border-bottom pb-2 mb-3">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    تقييم حالة التلف
-                                </h5>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">حالة التلف</label>
-                                    <p>
-                                        <span
-                                            class="badge bg-{{ getDamageConditionColor($damagedPartsReceipt->damage_condition) }} fs-6">
-                                            {{ $damagedPartsReceipt->damage_condition_text }}
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">حالة المعالجة</label>
-                                    <p>
-                                        <span
-                                            class="badge bg-{{ getProcessingStatusColor($damagedPartsReceipt->processing_status) }} fs-6">
-                                            {{ $damagedPartsReceipt->processing_status_text }}
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <!-- نموذج تحديث حالة المعالجة -->
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">تحديث الحالة</label>
-                                    <form method="POST"
-                                        action="{{ route('damaged-parts-receipts.update-status', $damagedPartsReceipt) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <div class="input-group">
-                                            <select name="processing_status" class="form-control form-control-sm">
-                                                <option value="received"
-                                                    {{ $damagedPartsReceipt->processing_status == 'received' ? 'selected' : '' }}>
-                                                    تم الاستلام</option>
-                                                <option value="under_evaluation"
-                                                    {{ $damagedPartsReceipt->processing_status == 'under_evaluation' ? 'selected' : '' }}>
-                                                    تحت التقييم</option>
-                                                <option value="approved_repair"
-                                                    {{ $damagedPartsReceipt->processing_status == 'approved_repair' ? 'selected' : '' }}>
-                                                    موافقة على الإصلاح</option>
-                                                <option value="approved_replace"
-                                                    {{ $damagedPartsReceipt->processing_status == 'approved_replace' ? 'selected' : '' }}>
-                                                    موافقة على الاستبدال</option>
-                                                <option value="disposed"
-                                                    {{ $damagedPartsReceipt->processing_status == 'disposed' ? 'selected' : '' }}>
-                                                    تم التخلص منها</option>
-                                                <option value="returned_fixed"
-                                                    {{ $damagedPartsReceipt->processing_status == 'returned_fixed' ? 'selected' : '' }}>
-                                                    تم إرجاعها بعد الإصلاح</option>
-                                            </select>
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- الأوصاف والملاحظات -->
-                        @if (
-                            $damagedPartsReceipt->damage_description ||
-                                $damagedPartsReceipt->damage_cause ||
-                                $damagedPartsReceipt->technician_notes)
-                            <div class="row mt-4">
-                                <div class="col-md-12">
-                                    <h5 class="border-bottom pb-2 mb-3">
-                                        <i class="fas fa-clipboard-list me-2"></i>
-                                        الأوصاف والملاحظات
-                                    </h5>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                @if ($damagedPartsReceipt->damage_description)
-                                    <div class="col-md-4">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">وصف التلف</label>
-                                            <p class="border p-3 bg-light rounded">
-                                                {{ $damagedPartsReceipt->damage_description }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if ($damagedPartsReceipt->damage_cause)
-                                    <div class="col-md-4">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">سبب التلف</label>
-                                            <p class="border p-3 bg-light rounded">
-                                                {{ $damagedPartsReceipt->damage_cause }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if ($damagedPartsReceipt->technician_notes)
-                                    <div class="col-md-4">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">ملاحظات الفني</label>
-                                            <p class="border p-3 bg-light rounded">
-                                                {{ $damagedPartsReceipt->technician_notes }}</p>
-                                        </div>
-                                    </div>
-                                @endif
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        @if ($damagedPartsReceipt->damage_description)
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 mb-3">وصف التلف</p>
+                                <p class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 text-sm leading-relaxed">
+                                    {{ $damagedPartsReceipt->damage_description }}
+                                </p>
                             </div>
                         @endif
 
-                        <!-- معلومات التخزين -->
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <h5 class="border-bottom pb-2 mb-3">
-                                    <i class="fas fa-warehouse me-2"></i>
-                                    معلومات التخزين
-                                </h5>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">المخزن</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->warehouse->name }}</p>
-                                    <small class="text-muted">كود المخزن:
-                                        {{ $damagedPartsReceipt->warehouse->code }}</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">موقع التخزين</label>
-                                    @if ($damagedPartsReceipt->storage_location)
-                                        <p class="h6">{{ $damagedPartsReceipt->storage_location }}</p>
-                                    @else
-                                        <p class="text-muted">غير محدد</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- التكاليف -->
-                        @if ($damagedPartsReceipt->estimated_repair_cost || $damagedPartsReceipt->replacement_cost)
-                            <div class="row mt-4">
-                                <div class="col-md-12">
-                                    <h5 class="border-bottom pb-2 mb-3">
-                                        <i class="fas fa-dollar-sign me-2"></i>
-                                        التكاليف المقدرة
-                                    </h5>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                @if ($damagedPartsReceipt->estimated_repair_cost)
-                                    <div class="col-md-6">
-                                        <div class="card bg-success text-white">
-                                            <div class="card-body">
-                                                <h6 class="card-title">
-                                                    <i class="fas fa-tools me-2"></i>
-                                                    التكلفة المقدرة للإصلاح
-                                                </h6>
-                                                <h4 class="mb-0">
-                                                    {{ number_format($damagedPartsReceipt->estimated_repair_cost, 2) }} ر.س
-                                                </h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if ($damagedPartsReceipt->replacement_cost)
-                                    <div class="col-md-6">
-                                        <div class="card bg-warning text-white">
-                                            <div class="card-body">
-                                                <h6 class="card-title">
-                                                    <i class="fas fa-exchange-alt me-2"></i>
-                                                    تكلفة الاستبدال
-                                                </h6>
-                                                <h4 class="mb-0">
-                                                    {{ number_format($damagedPartsReceipt->replacement_cost, 2) }} ر.س</h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+                        @if ($damagedPartsReceipt->damage_cause)
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 mb-3">سبب التلف</p>
+                                <p class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 text-sm leading-relaxed">
+                                    {{ $damagedPartsReceipt->damage_cause }}
+                                </p>
                             </div>
                         @endif
 
-                        <!-- التواريخ المهمة -->
-                        @if (
-                            $damagedPartsReceipt->evaluation_date ||
-                                $damagedPartsReceipt->decision_date ||
-                                $damagedPartsReceipt->completion_date)
-                            <div class="row mt-4">
-                                <div class="col-md-12">
-                                    <h5 class="border-bottom pb-2 mb-3">
-                                        <i class="fas fa-calendar me-2"></i>
-                                        التواريخ المهمة
-                                    </h5>
-                                </div>
+                        @if ($damagedPartsReceipt->technician_notes)
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 mb-3">ملاحظات الفني</p>
+                                <p class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 text-sm leading-relaxed">
+                                    {{ $damagedPartsReceipt->technician_notes }}
+                                </p>
                             </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
 
-                            <div class="row">
-                                @if ($damagedPartsReceipt->evaluation_date)
-                                    <div class="col-md-4">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">تاريخ التقييم</label>
-                                            <p class="h6">
-                                                {{ $damagedPartsReceipt->evaluation_date->format('Y-m-d H:i') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
+        <!-- معلومات التخزين -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3 mb-0">
+                    <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+                        <i class="ri-store-2-line text-yellow-600 text-lg"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900">معلومات التخزين</h2>
+                </div>
+            </div>
 
-                                @if ($damagedPartsReceipt->decision_date)
-                                    <div class="col-md-4">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">تاريخ اتخاذ القرار</label>
-                                            <p class="h6">
-                                                {{ $damagedPartsReceipt->decision_date->format('Y-m-d H:i') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">المخزن</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->warehouse->name }}</p>
+                        <p class="text-xs text-gray-600 mt-2">كود: {{ $damagedPartsReceipt->warehouse->code }}</p>
+                    </div>
 
-                                @if ($damagedPartsReceipt->completion_date)
-                                    <div class="col-md-4">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">تاريخ إكمال المعالجة</label>
-                                            <p class="h6">
-                                                {{ $damagedPartsReceipt->completion_date->format('Y-m-d H:i') }}</p>
-                                        </div>
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">موقع التخزين</p>
+                        @if ($damagedPartsReceipt->storage_location)
+                            <p class="text-lg font-semibold text-gray-900">{{ $damagedPartsReceipt->storage_location }}</p>
+                        @else
+                            <p class="text-gray-600 italic">غير محدد</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- التكاليف -->
+        @if ($damagedPartsReceipt->estimated_repair_cost || $damagedPartsReceipt->replacement_cost)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center gap-3 mb-0">
+                        <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                            <i class="ri-money-dollar-circle-line text-green-600 text-lg"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">التكاليف المقدرة</h2>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        @if ($damagedPartsReceipt->estimated_repair_cost)
+                            <div class="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-green-700 font-medium mb-2">التكلفة المقدرة للإصلاح</p>
+                                        <p class="text-3xl font-bold text-green-600">
+                                            {{ number_format($damagedPartsReceipt->estimated_repair_cost, 2) }}
+                                            <span class="text-lg">ر.س</span>
+                                        </p>
                                     </div>
-                                @endif
+                                    <i class="ri-tools-line text-4xl text-green-300"></i>
+                                </div>
                             </div>
                         @endif
 
-                        <!-- المرفقات -->
-                        @if ($damagedPartsReceipt->photos || $damagedPartsReceipt->documents)
-                            <div class="row mt-4">
-                                <div class="col-md-12">
-                                    <h5 class="border-bottom pb-2 mb-3">
-                                        <i class="fas fa-paperclip me-2"></i>
-                                        المرفقات
-                                    </h5>
+                        @if ($damagedPartsReceipt->replacement_cost)
+                            <div class="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-yellow-700 font-medium mb-2">تكلفة الاستبدال</p>
+                                        <p class="text-3xl font-bold text-yellow-600">
+                                            {{ number_format($damagedPartsReceipt->replacement_cost, 2) }}
+                                            <span class="text-lg">ر.س</span>
+                                        </p>
+                                    </div>
+                                    <i class="ri-exchange-line text-4xl text-yellow-300"></i>
                                 </div>
                             </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
 
-                            <div class="row">
-                                @if ($damagedPartsReceipt->photos)
-                                    <div class="col-md-6">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">الصور</label>
-                                            <div class="row">
-                                                @foreach ($damagedPartsReceipt->photos as $photo)
-                                                    <div class="col-md-4 mb-2">
-                                                        <img src="{{ Storage::url($photo) }}"
-                                                            class="img-fluid rounded shadow-sm cursor-pointer"
-                                                            alt="صورة القطعة التالفة"
-                                                            onclick="showImageModal('{{ Storage::url($photo) }}')">
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+        <!-- التواريخ المهمة -->
+        @if (
+            $damagedPartsReceipt->evaluation_date ||
+                $damagedPartsReceipt->decision_date ||
+                $damagedPartsReceipt->completion_date)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center gap-3 mb-0">
+                        <div class="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
+                            <i class="ri-calendar-line text-pink-600 text-lg"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">التواريخ المهمة</h2>
+                    </div>
+                </div>
 
-                                @if ($damagedPartsReceipt->documents)
-                                    <div class="col-md-6">
-                                        <div class="info-box">
-                                            <label class="fw-bold text-muted">المستندات</label>
-                                            <div class="list-group">
-                                                @foreach ($damagedPartsReceipt->documents as $document)
-                                                    <a href="{{ Storage::url($document['path']) }}"
-                                                        class="list-group-item list-group-item-action" target="_blank">
-                                                        <i class="fas fa-file-alt me-2"></i>
-                                                        {{ $document['original_name'] }}
-                                                        <small class="text-muted float-end">
-                                                            {{ formatBytes($document['size']) }}
-                                                        </small>
-                                                    </a>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        @if ($damagedPartsReceipt->evaluation_date)
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <p class="text-sm text-gray-600 mb-2">تاريخ التقييم</p>
+                                <p class="text-lg font-semibold text-gray-900">
+                                    {{ $damagedPartsReceipt->evaluation_date->format('d/m/Y H:i') }}
+                                </p>
                             </div>
                         @endif
 
-                        <!-- معلومات النظام -->
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <h5 class="border-bottom pb-2 mb-3">
-                                    <i class="fas fa-info me-2"></i>
-                                    معلومات النظام
-                                </h5>
+                        @if ($damagedPartsReceipt->decision_date)
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <p class="text-sm text-gray-600 mb-2">تاريخ اتخاذ القرار</p>
+                                <p class="text-lg font-semibold text-gray-900">
+                                    {{ $damagedPartsReceipt->decision_date->format('d/m/Y H:i') }}
+                                </p>
                             </div>
-                        </div>
+                        @endif
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">تاريخ الإنشاء</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->created_at->format('Y-m-d H:i:s') }}</p>
-                                </div>
+                        @if ($damagedPartsReceipt->completion_date)
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <p class="text-sm text-gray-600 mb-2">تاريخ إكمال المعالجة</p>
+                                <p class="text-lg font-semibold text-gray-900">
+                                    {{ $damagedPartsReceipt->completion_date->format('d/m/Y H:i') }}
+                                </p>
                             </div>
-                            <div class="col-md-6">
-                                <div class="info-box">
-                                    <label class="fw-bold text-muted">آخر تحديث</label>
-                                    <p class="h6">{{ $damagedPartsReceipt->updated_at->format('Y-m-d H:i:s') }}</p>
-                                </div>
-                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- المرفقات -->
+        @if ($damagedPartsReceipt->photos || $damagedPartsReceipt->documents)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center gap-3 mb-0">
+                        <div class="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+                            <i class="ri-attachment-2 text-cyan-600 text-lg"></i>
                         </div>
+                        <h2 class="text-lg font-bold text-gray-900">المرفقات</h2>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- الصور -->
+                        @if ($damagedPartsReceipt->photos)
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 mb-4">الصور</p>
+                                <div class="grid grid-cols-3 gap-3">
+                                    @foreach ($damagedPartsReceipt->photos as $photo)
+                                        <div class="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-colors cursor-pointer group"
+                                            onclick="showImageModal('{{ Storage::url($photo) }}')">
+                                            <img src="{{ Storage::url($photo) }}"
+                                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                                                alt="صورة القطعة التالفة">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- المستندات -->
+                        @if ($damagedPartsReceipt->documents)
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 mb-4">المستندات</p>
+                                <div class="space-y-2">
+                                    @foreach ($damagedPartsReceipt->documents as $document)
+                                        <a href="{{ Storage::url($document['path']) }}"
+                                            class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors group"
+                                            target="_blank">
+                                            <i class="ri-file-pdf-line text-lg text-red-500"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 truncate">
+                                                    {{ $document['original_name'] }}
+                                                </p>
+                                                <p class="text-xs text-gray-600">
+                                                    {{ formatBytes($document['size']) }}
+                                                </p>
+                                            </div>
+                                            <i class="ri-download-cloud-line text-gray-400 group-hover:text-blue-600"></i>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- معلومات النظام -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3 mb-0">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <i class="ri-settings-3-line text-gray-600 text-lg"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900">معلومات النظام</h2>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">تاريخ الإنشاء</p>
+                        <p class="text-lg font-semibold text-gray-900">
+                            {{ $damagedPartsReceipt->created_at->format('d/m/Y H:i:s') }}
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">آخر تحديث</p>
+                        <p class="text-lg font-semibold text-gray-900">
+                            {{ $damagedPartsReceipt->updated_at->format('d/m/Y H:i:s') }}
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    @php
-        function getDamageConditionColor($condition)
-        {
-            return match ($condition) {
-                'repairable' => 'success',
-                'non_repairable' => 'danger',
-                'replacement_needed' => 'warning',
-                'for_evaluation' => 'info',
-                default => 'secondary',
-            };
-        }
-
-        function getProcessingStatusColor($status)
-        {
-            return match ($status) {
-                'received' => 'primary',
-                'under_evaluation' => 'info',
-                'approved_repair' => 'warning',
-                'approved_replace' => 'secondary',
-                'disposed' => 'danger',
-                'returned_fixed' => 'success',
-                default => 'secondary',
-            };
-        }
-
-        function formatBytes($size)
-        {
-            $units = ['B', 'KB', 'MB', 'GB'];
-            $i = 0;
-            while ($size >= 1024 && $i < count($units) - 1) {
-                $size /= 1024;
-                $i++;
-            }
-            return round($size, 2) . ' ' . $units[$i];
-        }
-    @endphp
-
-    <!-- Modal لعرض الصور -->
-    <div class="modal fade" id="imageModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">صورة القطعة التالفة</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" class="img-fluid" alt="صورة القطعة">
-                </div>
-            </div>
+<!-- Image Modal -->
+<div id="imageModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+    onclick="event.target === this && closeImageModal()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl max-h-[90vh] overflow-auto">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+            <h3 class="text-lg font-bold text-gray-900">صورة القطعة التالفة</h3>
+            <button onclick="closeImageModal()" class="text-gray-600 hover:text-gray-900">
+                <i class="ri-close-line text-2xl"></i>
+            </button>
+        </div>
+        <div class="p-6 text-center">
+            <img id="modalImage" src="" class="max-w-full h-auto rounded-lg" alt="صورة القطعة">
         </div>
     </div>
+</div>
+
 @endsection
 
-@push('styles')
-    <style>
-        .info-box {
-            margin-bottom: 20px;
+@php
+    function formatBytes($size)
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $i = 0;
+        while ($size >= 1024 && $i < count($units) - 1) {
+            $size /= 1024;
+            $i++;
         }
-
-        .cursor-pointer {
-            cursor: pointer;
-        }
-
-        .cursor-pointer:hover {
-            transform: scale(1.05);
-            transition: transform 0.2s ease-in-out;
-        }
-    </style>
-@endpush
+        return round($size, 2) . ' ' . $units[$i];
+    }
+@endphp
 
 @push('scripts')
     <script>
         function showImageModal(imageSrc) {
-            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
             document.getElementById('modalImage').src = imageSrc;
-            modal.show();
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
+            }
+        });
     </script>
 @endpush
