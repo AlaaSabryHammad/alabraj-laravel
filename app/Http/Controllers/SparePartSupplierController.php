@@ -45,42 +45,61 @@ class SparePartSupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:spare_part_suppliers',
-            'company_name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'phone_2' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'tax_number' => 'nullable|string|max:255',
-            'cr_number' => 'nullable|string|max:255',
-            'contact_person' => 'nullable|string|max:255',
-            'contact_person_phone' => 'nullable|string|max:20',
-            'notes' => 'nullable|string',
-            'status' => 'required|in:نشط,غير نشط',
-            'credit_limit' => 'nullable|numeric|min:0',
-            'payment_terms' => 'nullable|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255|unique:spare_part_suppliers',
+                'company_name' => 'nullable|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'phone' => 'nullable|string|max:20',
+                'phone_2' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'city' => 'nullable|string|max:255',
+                'country' => 'nullable|string|max:255',
+                'tax_number' => 'nullable|string|max:255',
+                'cr_number' => 'nullable|string|max:255',
+                'contact_person' => 'nullable|string|max:255',
+                'contact_person_phone' => 'nullable|string|max:20',
+                'notes' => 'nullable|string',
+                'status' => 'required|in:نشط,غير نشط',
+                'credit_limit' => 'nullable|numeric|min:0',
+                'payment_terms' => 'nullable|string|max:255',
+            ]);
 
-        // Ensure credit_limit is never null
-        $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
+            // Ensure credit_limit is never null
+            $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
 
-        $supplier = SparePartSupplier::create($validated);
+            $supplier = SparePartSupplier::create($validated);
 
-        // إذا كان طلب AJAX، أرجع JSON
-        if ($request->wantsJson()) {
-            return response()->json([
-                'id' => $supplier->id,
-                'name' => $supplier->name,
-                'phone' => $supplier->phone,
-                'email' => $supplier->email
-            ], 201);
+            // إذا كان طلب AJAX، أرجع JSON
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'id' => $supplier->id,
+                    'name' => $supplier->name,
+                    'phone' => $supplier->phone,
+                    'email' => $supplier->email
+                ], 201);
+            }
+
+            return redirect()->route('spare-part-suppliers.index')
+                ->with('success', 'تم إضافة المورد بنجاح');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // معالجة أخطاء التحقق من الصحة
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'خطأ في التحقق من البيانات',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            // معالجة الأخطاء العامة
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'حدث خطأ في إضافة المورد: ' . $e->getMessage()
+                ], 500);
+            }
+            throw $e;
         }
-
-        return redirect()->route('spare-part-suppliers.index')
-            ->with('success', 'تم إضافة المورد بنجاح');
     }
 
     /**
