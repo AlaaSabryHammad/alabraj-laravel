@@ -123,7 +123,7 @@
     <!-- Credit Limit -->
     <div>
         <label for="credit_limit" class="block text-sm font-medium text-gray-700 mb-2">حد الائتمان</label>
-        <input type="number" id="credit_limit" name="credit_limit" value="{{ old('credit_limit', $supplier->credit_limit ?? '') }}" step="0.01" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="حد الائتمان">
+        <input type="number" id="credit_limit" name="credit_limit" value="{{ old('credit_limit', $supplier->credit_limit ?? 0) }}" step="0.01" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="حد الائتمان">
         @error('credit_limit')
             <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
         @enderror

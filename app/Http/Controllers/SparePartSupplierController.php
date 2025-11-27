@@ -64,6 +64,9 @@ class SparePartSupplierController extends Controller
             'payment_terms' => 'nullable|string|max:255',
         ]);
 
+        // Ensure credit_limit is never null
+        $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
+
         SparePartSupplier::create($validated);
 
         return redirect()->route('spare-part-suppliers.index')
@@ -110,6 +113,9 @@ class SparePartSupplierController extends Controller
             'credit_limit' => 'nullable|numeric|min:0',
             'payment_terms' => 'nullable|string|max:255',
         ]);
+
+        // Ensure credit_limit is never null
+        $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
 
         $sparePartSupplier->update($validated);
 
