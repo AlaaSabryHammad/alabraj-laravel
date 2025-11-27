@@ -77,7 +77,7 @@ class SparePartSupplierController extends Controller
                     'name' => $supplier->name,
                     'phone' => $supplier->phone,
                     'email' => $supplier->email
-                ], 201);
+                ], 201)->header('Content-Type', 'application/json; charset=utf-8');
             }
 
             return redirect()->route('spare-part-suppliers.index')

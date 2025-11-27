@@ -2457,12 +2457,17 @@
                                 });
                             }
                             return response.text().then(text => {
-                                console.log('Success response text:', text);
+                                console.log('Success response text (raw):', text);
                                 try {
-                                    return JSON.parse(text);
+                                    // تنظيف النص من المحارف الزائدة
+                                    const cleanText = text.trim();
+                                    console.log('Success response text (trimmed):', cleanText);
+                                    return JSON.parse(cleanText);
                                 } catch (e) {
                                     console.error('JSON parse error:', e);
-                                    throw new Error('خطأ في قراءة الاستجابة من الخادم');
+                                    console.error('Text length:', text.length);
+                                    console.error('Text char codes:', Array.from(text.slice(0, 50)).map(c => c.charCodeAt(0)));
+                                    throw new Error('خطأ في قراءة الاستجابة من الخادم: ' + e.message);
                                 }
                             });
                         })
