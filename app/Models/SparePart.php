@@ -89,6 +89,14 @@ class SparePart extends Model
     }
 
     /**
+     * Get the spare part supplier
+     */
+    public function sparePartSupplier()
+    {
+        return $this->belongsTo(SparePartSupplier::class, 'spare_part_supplier_id');
+    }
+
+    /**
      * Get serial numbers for this spare part
      */
     public function serialNumbers()

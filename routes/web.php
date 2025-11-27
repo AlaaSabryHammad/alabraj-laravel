@@ -28,6 +28,7 @@ use App\Http\Controllers\MyTasksController;
 use App\Http\Controllers\SparePartReportController;
 use App\Http\Controllers\SparePartTypeController;
 use App\Http\Controllers\FuelManagementController;
+use App\Http\Controllers\SparePartSupplierController;
 
 // Authentication Routes (Public)
 Route::middleware('guest')->group(function () {
@@ -521,6 +522,9 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
         Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
     });
+
+    // Spare Part Supplier Management Routes
+    Route::resource('spare-part-suppliers', SparePartSupplierController::class);
 
     // Correspondence Management Routes
     Route::prefix('correspondences')->group(function () {
