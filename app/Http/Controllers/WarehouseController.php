@@ -147,7 +147,15 @@ class WarehouseController extends Controller
             );
         })->values()->toArray();
 
-        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts', 'sparePartsForJson', 'employeesForJson', 'locationsForJson'));
+        // الحصول على قائمة بالقطع التي تم تصديرها من هذا المستودع
+        $exportedParts = SparePartTransaction::with(['sparePart', 'user', 'equipment'])
+            ->where('location_id', $warehouse->id)
+            ->where('transaction_type', 'تصدير')
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('warehouses.show', compact('warehouse', 'inventory', 'newInventory', 'damagedInventory', 'allSpareParts', 'sparePartTypes', 'suppliers', 'employees', 'equipments', 'allSparePartSerials', 'damagedPartsReceipts', 'sparePartsForJson', 'employeesForJson', 'locationsForJson', 'exportedParts'));
     }
 
     /**

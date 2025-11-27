@@ -616,6 +616,135 @@
                 @endif
             </div>
         </div>
+
+        <!-- Exported Parts Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+            <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="ri-send-plane-line text-2xl"></i>
+                        <div>
+                            <h2 class="text-2xl font-bold">القطع المُصَدَّرة</h2>
+                            <p class="text-cyan-100">سجل القطع التي تم تصديرها من هذا المستودع</p>
+                        </div>
+                    </div>
+                    <span class="bg-white bg-opacity-20 px-4 py-2 rounded-lg font-semibold">{{ $exportedParts->total() }} عملية تصدير</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100">
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">التاريخ</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">اسم القطعة</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">الكود</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold text-gray-900">الكمية</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">السعر</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">المجموع</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">المعدة</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">المُصدِّر</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($exportedParts as $transaction)
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('Y/m/d') }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                @if($transaction->sparePart)
+                                    <span class="font-medium text-gray-900">{{ $transaction->sparePart->name }}</span>
+                                @else
+                                    <span class="text-gray-500">غير محدد</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dir-ltr">
+                                {{ $transaction->sparePart?->code ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center text-gray-900">
+                                {{ $transaction->quantity }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dir-ltr">
+                                {{ number_format($transaction->unit_price, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dir-ltr">
+                                {{ number_format($transaction->total_amount, 2) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                @if($transaction->equipment)
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                                        {{ $transaction->equipment->name }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-500 text-xs">لم يتم تحديد معدة</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                @if($transaction->user)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ $transaction->user->name }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-500">غير محدد</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="ri-inbox-line text-4xl text-gray-300 mb-3"></i>
+                                    <p class="text-gray-600 font-medium">لا توجد عمليات تصدير</p>
+                                    <p class="text-gray-500 text-sm mt-1">لم يتم تصدير أي قطع غيار من هذا المستودع حتى الآن</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if($exportedParts->hasPages())
+            <div class="px-6 py-4 border-t border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        عرض <span class="font-semibold">{{ $exportedParts->from() ?? 0 }}</span> إلى <span class="font-semibold">{{ $exportedParts->to() ?? 0 }}</span> من <span class="font-semibold">{{ $exportedParts->total() }}</span> عملية
+                    </div>
+                    <nav class="flex gap-2">
+                        @if($exportedParts->onFirstPage())
+                        <button disabled class="px-3 py-2 text-gray-400 cursor-not-allowed">
+                            <i class="ri-arrow-right-line"></i>
+                        </button>
+                        @else
+                        <a href="{{ $exportedParts->previousPageUrl() }}" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="ri-arrow-right-line"></i>
+                        </a>
+                        @endif
+
+                        @foreach($exportedParts->getUrlRange(1, $exportedParts->lastPage()) as $page => $url)
+                            @if($page == $exportedParts->currentPage())
+                            <button class="px-3 py-2 bg-blue-600 text-white rounded-lg font-medium">{{ $page }}</button>
+                            @else
+                            <a href="{{ $url }}" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">{{ $page }}</a>
+                            @endif
+                        @endforeach
+
+                        @if($exportedParts->hasMorePages())
+                        <a href="{{ $exportedParts->nextPageUrl() }}" class="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="ri-arrow-left-line"></i>
+                        </a>
+                        @else
+                        <button disabled class="px-3 py-2 text-gray-400 cursor-not-allowed">
+                            <i class="ri-arrow-left-line"></i>
+                        </button>
+                        @endif
+                    </nav>
+                </div>
+            </div>
+            @endif
+        </div>
     </div>
 
     <script>
