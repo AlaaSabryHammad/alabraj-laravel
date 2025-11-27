@@ -126,6 +126,13 @@
                     'color' => 'from-green-600 to-green-700',
                 ],
                 [
+                    'id' => 'spare-part-suppliers',
+                    'title' => 'موردو قطع الغيار',
+                    'icon' => 'ri-store-3-line',
+                    'route' => 'spare-part-suppliers.index',
+                    'color' => 'from-emerald-600 to-emerald-700',
+                ],
+                [
                     'id' => 'reports',
                     'title' => 'تقارير قطع الغيار',
                     'icon' => 'ri-bar-chart-line',
