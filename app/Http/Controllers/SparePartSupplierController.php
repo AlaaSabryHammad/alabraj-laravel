@@ -69,6 +69,8 @@ class SparePartSupplierController extends Controller
                 'status' => 'required|in:نشط,غير نشط',
                 'credit_limit' => 'nullable|numeric|min:0',
                 'payment_terms' => 'nullable|string|max:255',
+                'code' => 'nullable|string|max:255',
+                'category' => 'nullable|string|max:255',
             ]);
 
             // Ensure credit_limit is never null

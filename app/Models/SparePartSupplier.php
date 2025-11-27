@@ -26,6 +26,8 @@ class SparePartSupplier extends Model
         'status',
         'credit_limit',
         'payment_terms',
+        'code',
+        'category',
     ];
 
     protected $casts = [

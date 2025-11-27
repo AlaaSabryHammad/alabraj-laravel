@@ -2349,6 +2349,7 @@
                         </div>
                         
                         <form id="newSupplierForm" class="p-8">
+                            @csrf
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">اسم المورد *</label>
@@ -2401,12 +2402,16 @@
                                 </select>
                             </div>
                             
+                            <!-- Hidden fields for required but not visible inputs -->
+                            <input type="hidden" name="credit_limit" value="0">
+                            <input type="hidden" name="status" value="نشط">
+
                             <div class="flex justify-end gap-4 pt-6 border-t">
-                                <button type="button" onclick="closeNewSupplierModal()" 
+                                <button type="button" onclick="closeNewSupplierModal()"
                                         class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
                                     إلغاء
                                 </button>
-                                <button type="submit" 
+                                <button type="submit"
                                         class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-colors">
                                     <i class="ri-save-line"></i>
                                     حفظ المورد
@@ -2426,28 +2431,19 @@
                     form.addEventListener('submit', function(e) {
                         e.preventDefault();
 
-                        const formDataFromForm = new FormData(form);
-                        const supplierName = formDataFromForm.get('name');
-                        const supplierCode = formDataFromForm.get('code');
-                        const supplierPhone = formDataFromForm.get('phone');
-                        const supplierEmail = formDataFromForm.get('email');
-                        const supplierAddress = formDataFromForm.get('address');
+                        // Extract form values for success message
+                        const supplierName = document.getElementById('newSupplierName').value;
+                        const supplierPhone = document.getElementById('newSupplierPhone').value;
+                        const supplierEmail = document.getElementById('newSupplierEmail').value;
+
+                        const supplierFormData = new FormData(form);
 
                         // إرسال البيانات إلى الخادم
                         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
                         const url = '{{ route("spare-part-suppliers.store") }}';
                         console.log('Sending request to:', url);
                         console.log('CSRF Token:', csrfToken);
-
-                        // استخدام FormData بدلاً من JSON لتجنب مشاكل CSRF
-                        const supplierFormData = new FormData();
-                        supplierFormData.append('name', supplierName);
-                        supplierFormData.append('phone', supplierPhone);
-                        supplierFormData.append('email', supplierEmail);
-                        supplierFormData.append('address', supplierAddress);
-                        supplierFormData.append('status', 'نشط');
-                        supplierFormData.append('credit_limit', 0);
-                        supplierFormData.append('_token', csrfToken);
+                        console.log('Form data:', Object.fromEntries(supplierFormData));
 
                         fetch(url, {
                             method: 'POST',
