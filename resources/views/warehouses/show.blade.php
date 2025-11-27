@@ -2407,11 +2407,12 @@
                         const supplierAddress = formData.get('address');
 
                         // إرسال البيانات إلى الخادم
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
                         fetch('{{ route("spare-part-suppliers.store") }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                'X-CSRF-TOKEN': csrfToken
                             },
                             body: JSON.stringify({
                                 name: supplierName,
@@ -2435,7 +2436,14 @@
                         .then(response => {
                             if (!response.ok) {
                                 return response.json().then(data => {
+                                    // معالجة أخطاء التحقق من الصحة
+                                    if (data.errors) {
+                                        const errors = Object.values(data.errors).flat();
+                                        throw new Error(errors[0] || 'حدث خطأ في إضافة المورد');
+                                    }
                                     throw new Error(data.message || 'حدث خطأ في إضافة المورد');
+                                }).catch(e => {
+                                    throw e;
                                 });
                             }
                             return response.json();
