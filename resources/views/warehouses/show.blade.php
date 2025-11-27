@@ -823,8 +823,9 @@
 
         // دالة فتح modal نوع الاستلام
         function openReceiveModal() {
-            console.log('openReceiveModal called'); // Debug log
-            const modalHTML = `
+            try {
+                console.log('openReceiveModal called'); // Debug log
+                const modalHTML = `
                 <div id="receiveTypeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl">
                         <div class="bg-gradient-to-r from-green-600 to-blue-600 p-6 text-white rounded-t-2xl">
@@ -865,9 +866,13 @@
                 </div>
             `;
 
-            console.log('Adding modal to DOM'); // Debug log
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            console.log('Modal added successfully'); // Debug log
+                console.log('Adding modal to DOM'); // Debug log
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                console.log('Modal added successfully'); // Debug log
+            } catch (error) {
+                console.error('Error in openReceiveModal:', error);
+                alert('حدث خطأ: ' + error.message);
+            }
         }
 
         function closeReceiveModal() {
