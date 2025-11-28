@@ -2343,12 +2343,12 @@
 
 
     <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[9999] items-center justify-center p-4"
-        style="display: none;">
-        <div class="relative max-w-5xl max-h-[85vh] flex items-center justify-center">
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 items-center justify-center p-4"
+        style="display: none; top: 0; left: 0; right: 0; bottom: 0;">
+        <div class="relative flex items-center justify-center" style="max-width: 90vw; max-height: 90vh;">
             <!-- الصورة الرئيسية -->
             <img id="modalImage" src="" alt=""
-                class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+                style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 0.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
 
             <!-- زر الإغلاق -->
             <div class="absolute top-4 right-4 z-10">
@@ -2422,9 +2422,8 @@
             console.log('👁️ Showing modal...');
             // Show modal with multiple methods to ensure visibility
             modal.classList.remove('hidden');
+            modal.classList.add('visible');
             modal.style.display = 'flex';
-            modal.style.visibility = 'visible';
-            modal.style.opacity = '1';
 
             // Prevent body scroll
             document.body.style.overflow = 'hidden';
@@ -2437,10 +2436,9 @@
 
             const modal = document.getElementById('imageModal');
             if (modal) {
+                modal.classList.remove('visible');
                 modal.classList.add('hidden');
                 modal.style.display = 'none';
-                modal.style.visibility = 'hidden';
-                modal.style.opacity = '0';
                 console.log('🔒 Modal hidden');
             }
 
@@ -4759,4 +4757,30 @@
             }
         });
     </script>
+
+    <style>
+        #imageModal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            z-index: 9999 !important;
+            background-color: rgba(0, 0, 0, 0.75) !important;
+            display: none !important;
+        }
+
+        #imageModal.visible {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        #imageModal img {
+            max-width: 90vw !important;
+            max-height: 85vh !important;
+            object-fit: contain !important;
+            border-radius: 0.5rem;
+        }
+    </style>
 @endsection
