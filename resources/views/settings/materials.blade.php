@@ -316,6 +316,12 @@
             document.getElementById('material-form').action = '{{ route('settings.materials.store') }}';
             document.getElementById('material-modal-title').textContent = 'إضافة مادة جديدة';
 
+            // Show category and status fields again
+            const categoryField = document.getElementById('material_category')?.parentElement;
+            const statusField = document.getElementById('material_status')?.parentElement;
+            if (categoryField) categoryField.style.display = '';
+            if (statusField) statusField.style.display = '';
+
             const methodField = document.querySelector('input[name="_method"]');
             if (methodField) methodField.remove();
         }
@@ -331,11 +337,18 @@
             const modalTitle = document.getElementById('material-modal-title');
             const nameInput = document.getElementById('material_name');
             const unitSelect = document.getElementById('material_unit');
+            const categoryField = document.getElementById('material_category')?.parentElement;
+            const statusField = document.getElementById('material_status')?.parentElement;
             const form = document.getElementById('material-form');
 
             modalTitle.textContent = 'تعديل المادة';
             nameInput.value = name;
             unitSelect.value = unit;
+
+            // Hide category and status fields during edit (they're not used in update)
+            if (categoryField) categoryField.style.display = 'none';
+            if (statusField) statusField.style.display = 'none';
+
             form.action = `/settings/materials/${id}`;
 
             let methodField = document.querySelector('#material-form input[name="_method"]');
@@ -420,9 +433,16 @@
             const originalText = submitBtn.textContent;
             submitBtn.textContent = 'جاري...';
 
+            const formData = new FormData(this);
+            const methodField = this.querySelector('input[name="_method"]');
+            if (methodField && methodField.value === 'PUT') {
+                // For PUT requests, we need to send _method in the form data
+                formData.set('_method', 'PUT');
+            }
+
             fetch(this.action, {
                 method: 'POST',
-                body: new FormData(this),
+                body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
