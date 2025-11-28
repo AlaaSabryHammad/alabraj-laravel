@@ -3,25 +3,38 @@
 @section('title', 'موردو قطع الغيار')
 
 @section('content')
-<div class="p-6" dir="rtl">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+<div class="space-y-6">
+    <!-- Header with Breadcrumb and Back Button -->
+    <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <i class="ri-store-3-line text-orange-600"></i>
-                موردو قطع الغيار
-            </h1>
-            <p class="text-gray-600">إدارة موردي قطع الغيار والقطع المصنعة</p>
+            <div class="flex items-center space-x-2 space-x-reverse mb-4">
+                <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-blue-600 transition-colors">
+                    <i class="ri-home-line"></i>
+                </a>
+                <span class="text-gray-400">/</span>
+                <span class="text-blue-600 font-medium">موردو قطع الغيار</span>
+            </div>
+            <div class="flex items-center space-x-reverse space-x-4">
+                <a href="{{ route('dashboard') }}"
+                    class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <i class="ri-arrow-right-line ml-2"></i>
+                    العودة
+                </a>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">موردو قطع الغيار</h1>
+            </div>
+            <p class="text-gray-600 mt-2">إدارة موردي قطع الغيار والقطع المصنعة</p>
         </div>
-        <a href="{{ route('spare-part-suppliers.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
-            <i class="ri-add-line"></i>
-            إضافة مورد جديد
-        </a>
+        <div class="hidden md:flex items-center justify-center">
+            <div
+                class="w-24 h-24 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <i class="ri-store-3-line text-white text-4xl"></i>
+            </div>
+        </div>
     </div>
 
     <!-- Success Message -->
     @if(session('success'))
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
             <i class="ri-check-circle-line text-green-600 text-2xl"></i>
             <span class="text-green-800">{{ session('success') }}</span>
         </div>
@@ -29,14 +42,23 @@
 
     <!-- Error Message -->
     @if(session('error'))
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
             <i class="ri-close-circle-line text-red-600 text-2xl"></i>
             <span class="text-red-800">{{ session('error') }}</span>
         </div>
     @endif
 
+    <!-- Add Button and Filters -->
+    <div class="flex items-center justify-between">
+        <div></div>
+        <a href="{{ route('spare-part-suppliers.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors font-medium">
+            <i class="ri-add-line"></i>
+            إضافة مورد جديد
+        </a>
+    </div>
+
     <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <form method="GET" class="flex gap-2">
@@ -133,7 +155,7 @@
     </div>
 
     <!-- Pagination -->
-    <div class="mt-6">
+    <div>
         {{ $suppliers->links() }}
     </div>
 </div>
