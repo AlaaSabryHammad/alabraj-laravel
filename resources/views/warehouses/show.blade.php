@@ -294,10 +294,16 @@
                                         السعر
                                     </div>
                                 </th>
-                                <th scope="col" class="px-6 py-3 rounded-tl-lg">
+                                <th scope="col" class="px-6 py-3">
                                     <div class="flex items-center gap-2">
                                         <i class="ri-eye-line text-gray-600"></i>
                                         الحالة
+                                    </div>
+                                </th>
+                                <th scope="col" class="px-6 py-3 rounded-tl-lg">
+                                    <div class="flex items-center gap-2">
+                                        <i class="ri-function-line text-gray-600"></i>
+                                        الإجراءات
                                     </div>
                                 </th>
                             </tr>
@@ -411,10 +417,20 @@
                                             {{ $statusText }}
                                         </span>
                                     </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3 justify-center">
+                                            <button type="button"
+                                                    onclick="printPartBarcode('{{ $part['code'] }}', '{{ $part['name'] }}')"
+                                                    class="text-blue-600 hover:text-blue-800 transition-colors"
+                                                    title="طباعة الكود">
+                                                <i class="ri-printer-line text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                                         <div class="flex flex-col items-center gap-3">
                                             <i class="ri-inbox-line text-4xl text-gray-400"></i>
                                             <p>لا توجد قطع غيار مسجلة حتى الآن</p>
@@ -1006,6 +1022,145 @@
             const modal = document.getElementById('serialNumbersModal');
             if (modal) {
                 modal.remove();
+            }
+        }
+
+        // دالة طباعة كود القطعة الواحدة
+        function printPartBarcode(code, name) {
+            try {
+                // إنشاء نافذة طباعة جديدة
+                const printWindow = window.open('', '', 'width=800,height=600');
+
+                if (!printWindow) {
+                    alert('لم يتمكن من فتح نافذة الطباعة. يرجى التحقق من إعدادات المتصفح');
+                    return;
+                }
+
+                const currentDate = new Date().toLocaleDateString('ar-SA');
+
+                // إنشاء محتوى الطباعة
+                const printContent = `
+                    <!DOCTYPE html>
+                    <html dir="rtl" lang="ar">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>طباعة الكود - ${name}</title>
+                        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+                        <style>
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            body {
+                                font-family: 'Arial', sans-serif;
+                                background: #f5f5f5;
+                                padding: 20px;
+                            }
+                            .print-container {
+                                background: white;
+                                border-radius: 8px;
+                                padding: 30px;
+                                max-width: 400px;
+                                margin: 0 auto;
+                                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                                text-align: center;
+                            }
+                            .header {
+                                margin-bottom: 20px;
+                                border-bottom: 2px solid #3b82f6;
+                                padding-bottom: 15px;
+                            }
+                            .part-name {
+                                font-size: 18px;
+                                font-weight: bold;
+                                color: #1f2937;
+                                margin-bottom: 5px;
+                            }
+                            .part-code {
+                                font-size: 12px;
+                                color: #6b7280;
+                                margin-bottom: 20px;
+                            }
+                            .barcode-container {
+                                margin: 30px 0;
+                                display: flex;
+                                justify-content: center;
+                            }
+                            svg {
+                                max-width: 100%;
+                                height: auto;
+                            }
+                            .footer {
+                                margin-top: 20px;
+                                padding-top: 15px;
+                                border-top: 1px solid #e5e7eb;
+                                font-size: 11px;
+                                color: #9ca3af;
+                            }
+                            @media print {
+                                body {
+                                    background: white;
+                                    padding: 0;
+                                }
+                                .print-container {
+                                    box-shadow: none;
+                                    max-width: 100%;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-container">
+                            <div class="header">
+                                <div class="part-name">${name}</div>
+                                <div class="part-code">الكود: ${code}</div>
+                            </div>
+
+                            <div class="barcode-container">
+                                <svg id="barcode"><\/svg>
+                            </div>
+
+                            <div class="footer">
+                                <p>تاريخ الطباعة: ${currentDate}</p>
+                                <p>شركة الأبراج للمقاولات</p>
+                            </div>
+                        </div>
+
+                        <script>
+                            // إنشاء الباركود
+                            JsBarcode("#barcode", "${code}", {
+                                format: "CODE128",
+                                width: 2,
+                                height: 50,
+                                displayValue: true,
+                                fontSize: 12,
+                                margin: 10
+                            });
+
+                            // طباعة تلقائية بعد تحميل الباركود
+                            window.onload = function() {
+                                setTimeout(function() {
+                                    window.print();
+                                    setTimeout(function() {
+                                        window.close();
+                                    }, 500);
+                                }, 500);
+                            };
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+
+                // كتابة المحتوى إلى النافذة
+                printWindow.document.open();
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+
+            } catch (error) {
+                console.error('Error printing barcode:', error);
+                alert('حدث خطأ أثناء طباعة الكود: ' + error.message);
             }
         }
 
