@@ -15,11 +15,11 @@
                 <span class="text-blue-600 font-medium">موردو قطع الغيار</span>
             </div>
             <div class="flex items-center space-x-reverse space-x-4">
-                <a href="{{ route('dashboard') }}"
-                    class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                <button onclick="history.back()"
+                    class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
                     <i class="ri-arrow-right-line ml-2"></i>
                     العودة
-                </a>
+                </button>
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900">موردو قطع الغيار</h1>
             </div>
             <p class="text-gray-600 mt-2">إدارة موردي قطع الغيار والقطع المصنعة</p>
