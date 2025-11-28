@@ -2345,48 +2345,79 @@
     <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[9999] items-center justify-center p-4"
         style="display: none;">
-        <div class="relative max-w-4xl max-h-full flex items-center justify-center">
+        <div class="relative max-w-5xl max-h-[85vh] flex items-center justify-center">
+            <!-- الصورة الرئيسية -->
             <img id="modalImage" src="" alt=""
                 class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+
+            <!-- زر الإغلاق -->
             <div class="absolute top-4 right-4 z-10">
                 <button onclick="closeImageModal()"
-                    class="bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-2 transition-all shadow-lg">
+                    class="bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-2 transition-all shadow-lg hover:bg-opacity-100">
                     <i class="ri-close-line text-xl"></i>
                 </button>
             </div>
+
+            <!-- أزرار التنقل -->
+            <button id="prevImageBtn" onclick="previousImage()"
+                class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-3 transition-all shadow-lg z-10 hidden md:flex items-center justify-center">
+                <i class="ri-arrow-left-line text-xl"></i>
+            </button>
+
+            <button id="nextImageBtn" onclick="nextImage()"
+                class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-3 transition-all shadow-lg z-10 hidden md:flex items-center justify-center">
+                <i class="ri-arrow-right-line text-xl"></i>
+            </button>
+
+            <!-- معلومات الصورة والعدّاد -->
             <div id="modalImageTitle"
-                class="absolute bottom-4 left-4 right-4 bg-black bg-opacity-70 text-white p-3 rounded-lg text-center z-10">
+                class="absolute bottom-4 left-4 right-4 bg-black bg-opacity-70 text-white p-3 rounded-lg text-center z-10 flex items-center justify-between">
+                <span id="imageCounter" class="text-xs font-medium"></span>
+                <span id="imageTitleText" class="flex-1 mx-3"></span>
+                <span id="imageTotal" class="text-xs font-medium"></span>
             </div>
         </div>
     </div>
 
     <script>
+        // متغيرات عامة لإدارة معرض الصور
+        let currentImageIndex = 0;
+        let projectImagesArray = [];
+
         // Image modal functions
         function showImageModal(imageSrc, imageTitle) {
             console.log('🔍 Opening image modal:', imageSrc, imageTitle);
 
             const modal = document.getElementById('imageModal');
             const modalImage = document.getElementById('modalImage');
-            const modalTitle = document.getElementById('modalImageTitle');
+            const imageTitleText = document.getElementById('imageTitleText');
 
             console.log('📋 Modal elements check:', {
                 modal: !!modal,
                 modalImage: !!modalImage,
-                modalTitle: !!modalTitle,
-                modalId: modal ? modal.id : 'not found',
-                modalClasses: modal ? modal.className : 'not found'
+                imageTitleText: !!imageTitleText
             });
 
-            if (!modal || !modalImage || !modalTitle) {
+            if (!modal || !modalImage || !imageTitleText) {
                 console.error('❌ Modal elements not found');
                 alert('خطأ: عناصر النافذة المنبثقة غير موجودة');
                 return;
             }
 
+            // البحث عن فهرس الصورة الحالية
+            currentImageIndex = projectImagesArray.findIndex(img => img.src === imageSrc);
+            if (currentImageIndex === -1) {
+                currentImageIndex = 0;
+            }
+
             console.log('🖼️ Setting image source:', imageSrc);
             modalImage.src = imageSrc;
             modalImage.alt = imageTitle;
-            modalTitle.textContent = imageTitle;
+            imageTitleText.textContent = imageTitle;
+
+            // تحديث العدّاد
+            updateImageCounter();
+            updateNavigationButtons();
 
             console.log('👁️ Showing modal...');
             // Show modal with multiple methods to ensure visibility
@@ -2399,16 +2430,6 @@
             document.body.style.overflow = 'hidden';
 
             console.log('✅ Modal should be visible now');
-
-            // Double check modal visibility
-            setTimeout(() => {
-                console.log('🔍 Modal visibility check:', {
-                    display: modal.style.display,
-                    visibility: modal.style.visibility,
-                    opacity: modal.style.opacity,
-                    hasHiddenClass: modal.classList.contains('hidden')
-                });
-            }, 100);
         }
 
         function closeImageModal() {
@@ -2428,10 +2449,90 @@
             console.log('📜 Body scroll restored');
         }
 
-        // Close modal when clicking outside the image
+        // دالة الانتقال للصورة السابقة
+        function previousImage() {
+            if (projectImagesArray.length === 0) return;
+
+            currentImageIndex--;
+            if (currentImageIndex < 0) {
+                currentImageIndex = projectImagesArray.length - 1;
+            }
+
+            displayCurrentImage();
+        }
+
+        // دالة الانتقال للصورة التالية
+        function nextImage() {
+            if (projectImagesArray.length === 0) return;
+
+            currentImageIndex++;
+            if (currentImageIndex >= projectImagesArray.length) {
+                currentImageIndex = 0;
+            }
+
+            displayCurrentImage();
+        }
+
+        // دالة عرض الصورة الحالية
+        function displayCurrentImage() {
+            if (projectImagesArray.length === 0) return;
+
+            const currentImage = projectImagesArray[currentImageIndex];
+            const modalImage = document.getElementById('modalImage');
+            const imageTitleText = document.getElementById('imageTitleText');
+
+            modalImage.src = currentImage.src;
+            modalImage.alt = currentImage.alt;
+            imageTitleText.textContent = currentImage.alt;
+
+            updateImageCounter();
+            updateNavigationButtons();
+        }
+
+        // دالة تحديث العدّاد
+        function updateImageCounter() {
+            const imageCounter = document.getElementById('imageCounter');
+            const imageTotal = document.getElementById('imageTotal');
+
+            imageCounter.textContent = `${currentImageIndex + 1}`;
+            imageTotal.textContent = `من ${projectImagesArray.length}`;
+        }
+
+        // دالة تحديث حالة أزرار التنقل
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevImageBtn');
+            const nextBtn = document.getElementById('nextImageBtn');
+
+            if (projectImagesArray.length > 1) {
+                prevBtn.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+            }
+        }
+
+        // تهيئة معرض الصور عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM loaded, initializing image modal system...');
 
+            // جمع جميع الصور
+            const projectImages = document.querySelectorAll('.project-image');
+            console.log('🖼️ Found project images:', projectImages.length);
+
+            // بناء مصفوفة الصور
+            projectImagesArray = [];
+            projectImages.forEach((img, index) => {
+                projectImagesArray.push({
+                    src: img.src,
+                    alt: img.alt || `صورة المشروع ${index + 1}`
+                });
+                console.log(`Image ${index + 1}:`, img.src);
+            });
+
+            console.log('📦 Images array created:', projectImagesArray.length);
+
+            // إضافة مستمع الـ Modal
             const modal = document.getElementById('imageModal');
             if (modal) {
                 console.log('✅ Modal element found:', modal.id);
@@ -2441,69 +2542,30 @@
                         closeImageModal();
                     }
                 });
-                console.log('✅ Outside click listener added');
             } else {
                 console.error('❌ Modal element not found during DOM load');
             }
 
-            // Test all project images
-            const projectImages = document.querySelectorAll('.project-image');
-            console.log('🖼️ Found project images:', projectImages.length);
-
-            projectImages.forEach((img, index) => {
-                console.log(`Image ${index + 1}:`, img.src);
-
-                // Add additional click listener for debugging
-                img.addEventListener('click', function(e) {
-                    console.log('📸 Image clicked (event listener):', this.src);
-                    e.preventDefault(); // Prevent any default behavior
-                });
-
-                img.addEventListener('load', function() {
-                    console.log('✅ Image loaded successfully:', this.src);
-                });
-
-                img.addEventListener('error', function() {
-                    console.error('❌ Image failed to load:', this.src);
-                });
-            });
-
-            // Test modal elements availability
-            const modalImage = document.getElementById('modalImage');
-            const modalTitle = document.getElementById('modalImageTitle');
-
-            console.log('📋 Modal system status:', {
-                modal: !!modal,
-                modalImage: !!modalImage,
-                modalTitle: !!modalTitle,
-                projectImages: projectImages.length
-            });
+            console.log('✅ Image gallery system initialized successfully');
         });
 
-        // Close modal with Escape key
+        // دعم لوحة المفاتيح للتنقل بين الصور
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                console.log('⌨️ Escape key pressed, closing modal...');
-                closeImageModal();
-            }
-        });
+            const modal = document.getElementById('imageModal');
 
-        // Test image loading and add click debugging
-        document.addEventListener('DOMContentLoaded', function() {
-            // Remove old debugging code and add test function
-            window.testImageModal = function() {
-                console.log('🧪 Manual test triggered');
-                const firstImage = document.querySelector('.project-image');
-                if (firstImage) {
-                    const imageSrc = firstImage.src;
-                    const imageAlt = firstImage.alt || 'اختبار النافذة المنبثقة';
-                    showImageModal(imageSrc, imageAlt);
-                } else {
-                    console.error('❌ No project images found for testing');
+            // إذا كان الـ modal مرئياً
+            if (modal && modal.style.display === 'flex') {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    console.log('⌨️ Arrow key pressed: next image');
+                    nextImage();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    console.log('⌨️ Arrow key pressed: previous image');
+                    previousImage();
+                } else if (e.key === 'Escape') {
+                    console.log('⌨️ Escape key pressed, closing modal...');
+                    closeImageModal();
                 }
-            };
-
-            console.log('🎯 Image modal system initialized. Use testImageModal() to test manually.');
+            }
         });
 
         function exportProject() {
