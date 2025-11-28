@@ -24,8 +24,8 @@ class DatabaseSeeder extends Seeder
             // إنشاء المستخدم الوحيد محمد الشهراني
             MinimalUserSeeder::class,
 
-            // إنشاء المعدات
-            EquipmentSeeder::class,
+            // تعطيل: إنشاء المعدات
+            // EquipmentSeeder::class,
         ]);
     }
 }
