@@ -20,9 +20,15 @@ class LocationController extends Controller
         // Calculate statistics for all locations (not just paginated ones)
         $stats = [
             'active' => Location::where('status', 'active')->count(),
-            'site' => Location::where('type', 'site')->count(),
-            'warehouse' => Location::where('type', 'warehouse')->count(),
-            'office' => Location::where('type', 'office')->count(),
+            'site' => Location::whereHas('locationType', function ($query) {
+                $query->where('name', 'موقع');
+            })->count(),
+            'warehouse' => Location::whereHas('locationType', function ($query) {
+                $query->where('name', 'مستودع');
+            })->count(),
+            'office' => Location::whereHas('locationType', function ($query) {
+                $query->where('name', 'مكتب');
+            })->count(),
         ];
 
         return view('locations.index', compact('locations', 'stats'));
