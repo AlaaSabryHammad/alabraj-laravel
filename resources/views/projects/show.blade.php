@@ -2343,8 +2343,8 @@
 
 
     <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 items-center justify-center p-4"
-        style="display: none; top: 0; left: 0; right: 0; bottom: 0;">
+    <div id="imageModal" class="hidden"
+        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;">
         <div class="relative flex items-center justify-center" style="max-width: 90vw; max-height: 90vh;">
             <!-- الصورة الرئيسية -->
             <img id="modalImage" src="" alt=""
@@ -2420,10 +2420,9 @@
             updateNavigationButtons();
 
             console.log('👁️ Showing modal...');
-            // Show modal with multiple methods to ensure visibility
+            // Show modal by removing hidden class and adding visible class
             modal.classList.remove('hidden');
             modal.classList.add('visible');
-            modal.style.display = 'flex';
 
             // Prevent body scroll
             document.body.style.overflow = 'hidden';
@@ -2438,7 +2437,6 @@
             if (modal) {
                 modal.classList.remove('visible');
                 modal.classList.add('hidden');
-                modal.style.display = 'none';
                 console.log('🔒 Modal hidden');
             }
 
@@ -2551,8 +2549,8 @@
         document.addEventListener('keydown', function(e) {
             const modal = document.getElementById('imageModal');
 
-            // إذا كان الـ modal مرئياً
-            if (modal && modal.style.display === 'flex') {
+            // إذا كان الـ modal مرئياً (بالتحقق من عدم وجود class hidden)
+            if (modal && !modal.classList.contains('hidden')) {
                 if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                     console.log('⌨️ Arrow key pressed: next image');
                     nextImage();
@@ -4768,12 +4766,23 @@
             z-index: 9999 !important;
             background-color: rgba(0, 0, 0, 0.75) !important;
             display: none !important;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         #imageModal.visible {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        #imageModal.hidden {
+            display: none !important;
+            opacity: 0;
+            visibility: hidden;
         }
 
         #imageModal img {
