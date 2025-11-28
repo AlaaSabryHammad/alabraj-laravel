@@ -195,8 +195,7 @@
                     </div>
 
                     <div>
-                        <label for="material_unit" class="block text-sm font-medium text-gray-700 mb-2">وحدة
-                            القياس</label>
+                        <label for="material_unit" class="block text-sm font-medium text-gray-700 mb-2">وحدة القياس</label>
                         <select id="material_unit" name="unit"
                             class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                             required>
@@ -206,6 +205,37 @@
                             <option value="لتر">لتر</option>
                         </select>
                         <div id="unit_error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <div>
+                        <label for="material_category" class="block text-sm font-medium text-gray-700 mb-2">الفئة</label>
+                        <select id="material_category" name="category"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                            required>
+                            <option value="">اختر الفئة</option>
+                            <option value="cement">أسمنت</option>
+                            <option value="steel">حديد</option>
+                            <option value="aggregate">خرسانة</option>
+                            <option value="tools">أدوات</option>
+                            <option value="electrical">كهربائية</option>
+                            <option value="plumbing">سباكة</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                        <div id="category_error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <div>
+                        <label for="material_status" class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+                        <select id="material_status" name="status"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                            required>
+                            <option value="">اختر الحالة</option>
+                            <option value="active">نشط</option>
+                            <option value="inactive">غير نشط</option>
+                            <option value="out_of_stock">نفذ المخزون</option>
+                            <option value="discontinued">متوقف</option>
+                        </select>
+                        <div id="status_error" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                     <div class="flex gap-3 pt-4">
@@ -281,6 +311,8 @@
         function clearMaterialForm() {
             document.getElementById('material_name').value = '';
             document.getElementById('material_unit').value = '';
+            document.getElementById('material_category').value = '';
+            document.getElementById('material_status').value = '';
             document.getElementById('material-form').action = '{{ route('settings.materials.store') }}';
             document.getElementById('material-modal-title').textContent = 'إضافة مادة جديدة';
 
@@ -377,6 +409,54 @@
                     confirmBtn.disabled = false;
                 });
         }
+
+        // Handle form submission
+        document.getElementById('material-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearMaterialErrors();
+
+            const submitBtn = document.getElementById('material-save-btn');
+            submitBtn.disabled = true;
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'جاري...';
+
+            fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    closeMaterialModal();
+                    location.reload();
+                } else if (data.errors) {
+                    Object.entries(data.errors).forEach(([field, msgs]) => {
+                        const errorEl = document.getElementById(field + '_error');
+                        if (errorEl) {
+                            errorEl.textContent = msgs[0];
+                            errorEl.classList.remove('hidden');
+                        }
+                    });
+                } else if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert('حدث خطأ أثناء حفظ البيانات');
+                }
+            })
+            .catch(e => {
+                console.error(e);
+                alert('خطأ في الاتصال');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        });
 
         // Handle modal close on background click
         document.getElementById('material-modal')?.addEventListener('click', function(e) {
