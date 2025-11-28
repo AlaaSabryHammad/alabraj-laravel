@@ -23,7 +23,7 @@ class EmployeeController extends Controller
     {
         $query = Employee::with(['user', 'location']);
 
-        // Site manager filter: show only employees in same location
+        // Role-based filtering
         $currentUser = Auth::user();
         if ($currentUser && $currentUser->employee) {
             $currentEmployee = $currentUser->employee;
@@ -64,26 +64,16 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Manager filter: show all employees except managers and general managers
+            // Manager filter: show all employees
             $managerVariants = Employee::variantsForArabic('مدير');
             if (in_array($currentEmployee->role, $managerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
+                // Managers can see all employees - no filter applied
             }
 
-            // Project Manager filter: show all employees except managers and general managers
+            // Project Manager filter: show all employees
             $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
             if (in_array($currentEmployee->role, $projectManagerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
+                // Project managers can see all employees - no filter applied
             }
         }
 
@@ -728,37 +718,16 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Manager filter: show all employees except managers and general managers
+            // Manager filter: show all employees
             $managerVariants = Employee::variantsForArabic('مدير');
             if (in_array($currentEmployee->role, $managerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
+                // Managers can see all employees - no filter applied
             }
 
-            // Manager filter: show all employees except managers and general managers
-            $managerVariants = Employee::variantsForArabic('مدير');
-            if (in_array($currentEmployee->role, $managerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
-            }
-
-            // Project Manager filter: show all employees except managers and general managers
+            // Project Manager filter: show all employees
             $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
             if (in_array($currentEmployee->role, $projectManagerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
+                // Project managers can see all employees - no filter applied
             }
         }
 
@@ -881,37 +850,16 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Manager filter: show all employees except managers and general managers
+            // Manager filter: show all employees
             $managerVariants = Employee::variantsForArabic('مدير');
             if (in_array($currentEmployee->role, $managerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
+                // Managers can see all employees - no filter applied
             }
 
-            // Manager filter: show all employees except managers and general managers
-            $managerVariants = Employee::variantsForArabic('مدير');
-            if (in_array($currentEmployee->role, $managerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
-            }
-
-            // Project Manager filter: show all employees except managers and general managers
+            // Project Manager filter: show all employees
             $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
             if (in_array($currentEmployee->role, $projectManagerVariants)) {
-                // Exclude managers and general managers
-                $excludedRoles = array_merge(
-                    Employee::variantsForArabic('مدير'),
-                    Employee::variantsForArabic('مدير عام')
-                );
-                $query->whereNotIn('role', $excludedRoles);
+                // Project managers can see all employees - no filter applied
             }
         }
 
@@ -1001,26 +949,16 @@ class EmployeeController extends Controller
                     }
                 }
 
-                // Manager filter: show all employees except managers and general managers
+                // Manager filter: show all employees
                 $managerVariants = Employee::variantsForArabic('مدير');
                 if (in_array($currentEmployee->role, $managerVariants)) {
-                    // Exclude managers and general managers
-                    $excludedRoles = array_merge(
-                        Employee::variantsForArabic('مدير'),
-                        Employee::variantsForArabic('مدير عام')
-                    );
-                    $query->whereNotIn('role', $excludedRoles);
+                    // Managers can see all employees - no filter applied
                 }
 
-                // Project Manager filter: show all employees except managers and general managers
+                // Project Manager filter: show all employees
                 $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
                 if (in_array($currentEmployee->role, $projectManagerVariants)) {
-                    // Exclude managers and general managers
-                    $excludedRoles = array_merge(
-                        Employee::variantsForArabic('مدير'),
-                        Employee::variantsForArabic('مدير عام')
-                    );
-                    $query->whereNotIn('role', $excludedRoles);
+                    // Project managers can see all employees - no filter applied
                 }
             }
 
@@ -1147,26 +1085,16 @@ class EmployeeController extends Controller
                     }
                 }
 
-                // Manager filter: show all employees except managers and general managers
+                // Manager filter: show all employees
                 $managerVariants = Employee::variantsForArabic('مدير');
                 if (in_array($currentEmployee->role, $managerVariants)) {
-                    // Exclude managers and general managers
-                    $excludedRoles = array_merge(
-                        Employee::variantsForArabic('مدير'),
-                        Employee::variantsForArabic('مدير عام')
-                    );
-                    $query->whereNotIn('role', $excludedRoles);
+                    // Managers can see all employees - no filter applied
                 }
 
-                // Project Manager filter: show all employees except managers and general managers
+                // Project Manager filter: show all employees
                 $projectManagerVariants = Employee::variantsForArabic('مدير مشاريع');
                 if (in_array($currentEmployee->role, $projectManagerVariants)) {
-                    // Exclude managers and general managers
-                    $excludedRoles = array_merge(
-                        Employee::variantsForArabic('مدير'),
-                        Employee::variantsForArabic('مدير عام')
-                    );
-                    $query->whereNotIn('role', $excludedRoles);
+                    // Project managers can see all employees - no filter applied
                 }
             }
 
