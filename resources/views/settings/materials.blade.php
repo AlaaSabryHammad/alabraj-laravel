@@ -8,19 +8,19 @@
     <div class="flex items-center justify-between">
         <div>
             <div class="flex items-center space-x-2 space-x-reverse mb-4">
-                <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-blue-600 transition-colors">
+                <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-orange-600 transition-colors">
                     <i class="ri-home-line"></i>
                 </a>
                 <span class="text-gray-400">/</span>
-                <a href="{{ route('settings.index') }}" class="text-gray-600 hover:text-blue-600 transition-colors">الإعدادات</a>
+                <a href="{{ route('settings.index') }}" class="text-gray-600 hover:text-orange-600 transition-colors">الإعدادات</a>
                 <span class="text-gray-400">/</span>
-                <span class="text-blue-600 font-medium">المواد</span>
+                <span class="text-orange-600 font-medium">المواد</span>
             </div>
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">إدارة المواد</h1>
             <p class="text-gray-600">إدارة شاملة لمخزون المواد والمعدات ووحدات القياس</p>
         </div>
         <div class="hidden md:flex items-center justify-center">
-            <div class="w-24 h-24 bg-gradient-to-r from-purple-500 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <div class="w-24 h-24 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <i class="ri-box-3-line text-white text-4xl"></i>
             </div>
         </div>
@@ -35,23 +35,56 @@
     @endif
 
     <!-- Statistics Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="text-center">
-                <div class="text-3xl font-bold text-purple-600">{{ $allMaterials->count() ?? 0 }}</div>
-                <div class="text-sm text-gray-600 mt-1">إجمالي المواد</div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Total Materials -->
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-blue-600 text-sm font-medium mb-2">إجمالي المواد</p>
+                    <p class="text-3xl font-bold text-blue-900">{{ $allMaterials->count() ?? 0 }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-200 rounded-xl flex items-center justify-center">
+                    <i class="ri-box-3-line text-blue-600 text-xl"></i>
+                </div>
             </div>
-            <div class="text-center">
-                <div class="text-3xl font-bold text-green-600">{{ $allMaterials->where('status', 'active')->count() }}</div>
-                <div class="text-sm text-gray-600 mt-1">متوفرة</div>
+        </div>
+
+        <!-- Active Materials -->
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-green-600 text-sm font-medium mb-2">متوفرة</p>
+                    <p class="text-3xl font-bold text-green-900">{{ $allMaterials->where('status', 'active')->count() }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-200 rounded-xl flex items-center justify-center">
+                    <i class="ri-check-double-line text-green-600 text-xl"></i>
+                </div>
             </div>
-            <div class="text-center">
-                <div class="text-3xl font-bold text-yellow-600">{{ $allMaterials->filter(function($m) { return $m->isLowStock(); })->count() }}</div>
-                <div class="text-sm text-gray-600 mt-1">مخزون منخفض</div>
+        </div>
+
+        <!-- Low Stock -->
+        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-6 border border-yellow-200">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-yellow-600 text-sm font-medium mb-2">مخزون منخفض</p>
+                    <p class="text-3xl font-bold text-yellow-900">{{ $allMaterials->filter(function($m) { return $m->isLowStock(); })->count() }}</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-200 rounded-xl flex items-center justify-center">
+                    <i class="ri-alert-line text-yellow-600 text-xl"></i>
+                </div>
             </div>
-            <div class="text-center">
-                <div class="text-3xl font-bold text-red-600">{{ $allMaterials->where('current_stock', 0)->count() }}</div>
-                <div class="text-sm text-gray-600 mt-1">نفذ المخزون</div>
+        </div>
+
+        <!-- Out of Stock -->
+        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-6 border border-red-200">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-red-600 text-sm font-medium mb-2">نفذ المخزون</p>
+                    <p class="text-3xl font-bold text-red-900">{{ $allMaterials->where('current_stock', 0)->count() }}</p>
+                </div>
+                <div class="w-12 h-12 bg-red-200 rounded-xl flex items-center justify-center">
+                    <i class="ri-close-circle-line text-red-600 text-xl"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -63,7 +96,7 @@
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">قائمة المواد</h3>
                 <button type="button" onclick="openAddMaterialModal()"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors">
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors">
                     <i class="ri-add-line text-lg"></i>
                     <span>إضافة مادة</span>
                 </button>
@@ -76,12 +109,12 @@
                     <div class="relative">
                         <input type="text" name="search" value="{{ request('search') }}"
                             placeholder="ابحث عن مادة..."
-                            class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm">
+                            class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm">
                         <i class="ri-search-line absolute right-3 top-3 text-gray-400"></i>
                     </div>
 
                     <!-- Category Filter -->
-                    <select name="category" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white text-sm">
+                    <select name="category" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all bg-white text-sm">
                         <option value="">جميع الفئات</option>
                         <option value="cement" {{ request('category') == 'cement' ? 'selected' : '' }}>أسمنت</option>
                         <option value="steel" {{ request('category') == 'steel' ? 'selected' : '' }}>حديد</option>
@@ -93,7 +126,7 @@
                     </select>
 
                     <!-- Status Filter -->
-                    <select name="status" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white text-sm">
+                    <select name="status" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all bg-white text-sm">
                         <option value="">جميع الحالات</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
@@ -103,7 +136,7 @@
 
                     <!-- Filter Button -->
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 px-4 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center justify-center gap-2">
+                        <button type="submit" class="flex-1 px-4 py-2.5 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors text-sm flex items-center justify-center gap-2">
                             <i class="ri-search-line"></i>
                             <span>بحث</span>
                         </button>
@@ -136,8 +169,8 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                    <i class="ri-box-3-line text-purple-600 text-lg"></i>
+                                <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="ri-box-3-line text-orange-600 text-lg"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ $material->name }}</p>
@@ -172,7 +205,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center justify-center gap-2">
                                 <button type="button" onclick="editMaterial({{ $material->id }}, '{{ addslashes($material->name) }}', '{{ addslashes($material->unit ?? '') }}')"
-                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors"
                                     title="تعديل">
                                     <i class="ri-edit-line text-lg"></i>
                                 </button>
@@ -200,13 +233,13 @@
         @else
         <!-- Empty State -->
         <div class="px-6 py-16 text-center">
-            <div class="mx-auto w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <i class="ri-inbox-line text-gray-400 text-3xl"></i>
+            <div class="mx-auto w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                <i class="ri-inbox-line text-orange-400 text-3xl"></i>
             </div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد مواد</h3>
             <p class="text-gray-500 mb-6">ابدأ بإضافة المادة الأولى</p>
             <button type="button" onclick="openAddMaterialModal()"
-                class="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors">
+                class="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors">
                 <i class="ri-add-line text-lg"></i>
                 <span>إضافة مادة جديدة</span>
             </button>
@@ -243,7 +276,7 @@
                     </label>
                     <input type="text" id="material-name" name="name" required
                         placeholder="أدخل اسم المادة"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all">
                     <div id="name-error" class="text-red-500 text-sm mt-1 hidden"></div>
                 </div>
 
@@ -253,7 +286,7 @@
                         وحدة القياس <span class="text-red-500">*</span>
                     </label>
                     <select id="material-unit" name="unit" required
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all bg-white">
                         <option value="">اختر وحدة</option>
                         @foreach(\App\Models\MaterialUnit::all() as $unit)
                             <option value="{{ $unit->name }}">{{ $unit->name }}</option>
@@ -268,7 +301,7 @@
                         الفئة <span class="text-red-500">*</span>
                     </label>
                     <select id="material-category" name="category" required
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all bg-white">
                         <option value="">اختر</option>
                         <option value="cement">أسمنت</option>
                         <option value="steel">حديد</option>
@@ -287,7 +320,7 @@
                         الحالة <span class="text-red-500">*</span>
                     </label>
                     <select id="material-status" name="status" required
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white">
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all bg-white">
                         <option value="">اختر</option>
                         <option value="active">نشط</option>
                         <option value="inactive">غير نشط</option>
@@ -305,7 +338,7 @@
                     إلغاء
                 </button>
                 <button type="submit" id="submit-btn"
-                    class="px-6 py-2 font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">
+                    class="px-6 py-2 font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors">
                     <span id="submit-text">حفظ</span>
                 </button>
             </div>
