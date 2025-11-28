@@ -1444,14 +1444,18 @@
 
         // وظيفة معاينة البيانات
         function showDataPreview() {
-            const formData = new FormData(document.querySelector('form'));
+            const form = document.querySelector('form');
             const data = {};
 
-            for (let [key, value] of formData.entries()) {
-                if (key !== '_token' && !key.includes('[file]')) {
-                    data[key] = value;
+            // جمع البيانات من جميع حقول الإدخال في النموذج
+            form.querySelectorAll('input:not([type="file"]):not([type="hidden"]), select, textarea').forEach(element => {
+                if (element.name && element.name !== '_token' && element.name !== 'rating') {
+                    // تجاهل حقول المصفوفات المتداخلة (مثل additional_documents)
+                    if (!element.name.includes('[')) {
+                        data[element.name] = element.value || '';
+                    }
                 }
-            }
+            });
 
             const previewHTML = `
         <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
