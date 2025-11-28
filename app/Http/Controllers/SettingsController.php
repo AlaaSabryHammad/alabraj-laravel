@@ -363,7 +363,9 @@ class SettingsController extends Controller
 
         // Handle unit filter
         if ($request->filled('unit')) {
-            $query->where('unit_of_measure', $request->get('unit'));
+            $query->whereHas('materialUnit', function($q) use ($request) {
+                $q->where('name', $request->get('unit'));
+            });
         }
 
         $materials = $query->latest()->paginate(10);
@@ -389,7 +391,9 @@ class SettingsController extends Controller
 
         // Handle unit filter
         if ($request->filled('unit')) {
-            $query->where('unit_of_measure', $request->get('unit'));
+            $query->whereHas('materialUnit', function($q) use ($request) {
+                $q->where('name', $request->get('unit'));
+            });
         }
 
         $materials = $query->latest()->paginate(10);

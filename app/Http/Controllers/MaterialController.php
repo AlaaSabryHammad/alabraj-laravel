@@ -161,7 +161,7 @@ class MaterialController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:materials,name,' . $material->id,
                 'unit' => 'required|string|max:255',
             ]);
 
@@ -187,11 +187,19 @@ class MaterialController extends Controller
 
             return redirect()->route('settings.materials')
                 ->with('success', 'تم تحديث المادة بنجاح');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['errors' => $e->errors()], 422);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors());
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json(['error' => true, 'message' => 'حدث خطأ: ' . $e->getMessage()], 500);
             }
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'حدث خطأ: ' . $e->getMessage());
