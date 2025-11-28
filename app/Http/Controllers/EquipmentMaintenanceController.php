@@ -74,7 +74,7 @@ class EquipmentMaintenanceController extends Controller
             'external_cost' => 'nullable|required_if:maintenance_type,external|numeric|min:0',
             'maintenance_center' => 'nullable|required_if:maintenance_type,external|string|max:255',
             'invoice_number' => 'nullable|required_if:maintenance_type,external|string|max:255',
-            'invoice_image' => 'nullable|image|mimes:jpeg,png,jpg,pdf|max:5120',
+            'invoice_image' => 'nullable|mimes:jpeg,png,jpg,pdf|max:5120',
         ]);
 
         $validated['user_id'] = Auth::id();
@@ -127,7 +127,7 @@ class EquipmentMaintenanceController extends Controller
             'external_cost' => 'nullable|required_if:maintenance_type,external|numeric|min:0',
             'maintenance_center' => 'nullable|required_if:maintenance_type,external|string|max:255',
             'invoice_number' => 'nullable|required_if:maintenance_type,external|string|max:255',
-            'invoice_image' => 'nullable|image|mimes:jpeg,png,jpg,pdf|max:5120',
+            'invoice_image' => 'nullable|mimes:jpeg,png,jpg,pdf|max:5120',
         ]);
 
         // رفع صورة فاتورة جديدة إذا كانت موجودة
