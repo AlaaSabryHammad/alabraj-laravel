@@ -244,10 +244,10 @@ class EmployeeController extends Controller
             'category' => 'required|in:A+,A,B,C,D,E',
 
             // Photo uploads
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'national_id_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'work_permit_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'national_id_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'work_permit_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
 
             // Passport data
             'passport_number' => 'nullable|string|max:50',
@@ -262,7 +262,7 @@ class EmployeeController extends Controller
             // Driving license data
             'driving_license_issue_date' => 'nullable|date',
             'driving_license_expiry' => 'nullable|date|after:driving_license_issue_date',
-            'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
 
             // Location assignment
             'location_id' => 'nullable|exists:locations,id',
@@ -472,10 +472,10 @@ class EmployeeController extends Controller
                 'category' => 'nullable|string|max:255',
 
                 // Photo uploads
-                'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'national_id_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'work_permit_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+                'national_id_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+                'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+                'work_permit_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
 
                 // Passport data
                 'passport_number' => 'nullable|string|max:50',
@@ -490,7 +490,7 @@ class EmployeeController extends Controller
                 // Driving license data
                 'driving_license_issue_date' => 'nullable|date',
                 'driving_license_expiry' => 'nullable|date|after:driving_license_issue_date',
-                'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'driving_license_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
 
                 // Location assignment
                 'location_id' => 'nullable|exists:locations,id',

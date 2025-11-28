@@ -42,7 +42,7 @@
                                     <li>ملء جميع الحقول المطلوبة (المميزة بعلامة *)</li>
                                     <li>صحة تنسيق البريد الإلكتروني</li>
                                     <li>عدم تكرار رقم الهوية أو البريد الإلكتروني</li>
-                                    <li>أن تكون أحجام الصور أقل من 2MB</li>
+                                    <li>أن تكون أحجام الصور أقل من 10MB</li>
                                     <li>صحة تواريخ انتهاء الوثائق</li>
                                 </ul>
                             </div>
@@ -94,7 +94,7 @@
                             <li>رقم الهوية الوطنية يجب أن يكون فريداً ولم يتم استخدامه من قبل</li>
                             <li>البريد الإلكتروني سيتم استخدامه لتسجيل الدخول إلى النظام</li>
                             <li>كلمة المرور الافتراضية ستكون نفس رقم الهوية الوطنية</li>
-                            <li>حجم الصور يجب أن يكون أقل من 2MB (باستثناء الصورة الشخصية: 5MB)</li>
+                            <li>حجم الصور يجب أن يكون أقل من 10MB</li>
                             <li>تأكد من صحة تواريخ انتهاء الوثائق لتجنب التحذيرات المستقبلية</li>
                         </ul>
                     </div>
@@ -290,7 +290,7 @@
                                 <input type="file" id="photo" name="photo" accept="image/*"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('photo') border-red-500 @enderror"
                                     onchange="previewImage('photo', 'photo_preview')">
-                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 2MB</p>
+                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 10MB</p>
                                 @error('photo')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -311,7 +311,7 @@
                                 <input type="file" id="national_id_photo" name="national_id_photo" accept="image/*"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('national_id_photo') border-red-500 @enderror"
                                     onchange="previewImage('national_id_photo', 'national_id_preview')">
-                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 2MB</p>
+                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 10MB</p>
                                 @error('national_id_photo')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -387,7 +387,7 @@
                                 <input type="file" id="passport_photo" name="passport_photo" accept="image/*"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('passport_photo') border-red-500 @enderror"
                                     onchange="previewImage('passport_photo', 'passport_preview')">
-                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 2MB</p>
+                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 10MB</p>
                                 @error('passport_photo')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -447,7 +447,7 @@
                                 <input type="file" id="work_permit_photo" name="work_permit_photo" accept="image/*"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('work_permit_photo') border-red-500 @enderror"
                                     onchange="previewImage('work_permit_photo', 'work_permit_preview')">
-                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 2MB</p>
+                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 10MB</p>
                                 @error('work_permit_photo')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -497,7 +497,7 @@
                                     accept="image/*"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('driving_license_photo') border-red-500 @enderror"
                                     onchange="previewImage('driving_license_photo', 'driving_license_preview')">
-                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 2MB</p>
+                                <p class="text-sm text-gray-500 mt-1">JPG, PNG حتى 10MB</p>
                                 @error('driving_license_photo')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -967,9 +967,9 @@
         // Validate file size
         document.querySelectorAll('input[type="file"]').forEach(input => {
             input.addEventListener('change', function() {
-                const maxSize = 2 * 1024 * 1024; // 2MB
+                const maxSize = 10 * 1024 * 1024; // 10MB
                 if (this.files[0] && this.files[0].size > maxSize) {
-                    alert('حجم الملف كبير جداً. الحد الأقصى 2MB');
+                    alert('حجم الملف كبير جداً. الحد الأقصى 10MB');
                     this.value = '';
                     // Clear preview
                     const previewId = this.getAttribute('onchange').match(/'([^']+)'/g)[1].replace(/'/g,
