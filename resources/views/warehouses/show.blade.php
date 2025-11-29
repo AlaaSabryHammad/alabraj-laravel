@@ -1027,16 +1027,13 @@
         // دالة طباعة QR Code للقطعة الواحدة
         window.printPartBarcode = function(code, name) {
             try {
-                // طباعة البيانات المستقبلة في وحدة التحكم للتشخيص
                 console.log('Print QR Code Called - Code:', code, 'Name:', name);
 
-                // التحقق من أن البيانات صحيحة
                 if (!code || code.length === 0) {
                     alert('خطأ: الكود غير صحيح');
                     return;
                 }
 
-                // إنشاء نافذة طباعة جديدة
                 const printWindow = window.open('', '', 'width=900,height=800');
 
                 if (!printWindow) {
@@ -1046,101 +1043,16 @@
 
                 const currentDate = new Date().toLocaleDateString('ar-SA');
 
-                // إنشاء HTML الكامل مباشرة دون استخدام متغيرات معقدة
-                printWindow.document.open('text/html', 'replace');
+                // البنية الأساسية للـ HTML
+                const docType = '<!DOCTYPE html>';
+                const htmlTag = '<html dir="rtl" lang="ar">';
+                const head = '<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>طباعة QR Code</title><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;background:#f5f5f5;padding:40px 20px;}.print-container{background:white;border-radius:10px;padding:40px 30px;max-width:500px;margin:0 auto;box-shadow:0 4px 15px rgba(0,0,0,0.15);}.header{margin-bottom:25px;border-bottom:3px solid #3b82f6;padding-bottom:20px;text-align:center;}.part-name{font-size:22px;font-weight:bold;color:#1f2937;margin-bottom:8px;}.part-code{font-size:14px;color:#6b7280;font-family:"Courier New",monospace;margin-top:4px;background:#f3f4f6;padding:8px 12px;border-radius:6px;display:inline-block;}.qr-container{margin:40px 0;display:flex;justify-content:center;align-items:center;padding:20px;background:#fafbfc;border-radius:8px;border:2px dashed #e5e7eb;}#qrcode{background:white;padding:10px;border-radius:6px;}.qr-label{text-align:center;font-size:12px;color:#9ca3af;margin-top:10px;}.info-section{background:#f9fafb;padding:15px;border-radius:8px;margin:15px 0;border-right:4px solid #3b82f6;}.info-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;}.info-label{font-weight:600;color:#374151;}.info-value{color:#6b7280;}.footer{margin-top:25px;padding-top:20px;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;}@media print{body{background:white;padding:0;}.print-container{box-shadow:none;max-width:100%;}}</style></head>';
+                const body = '<body><div class="print-container"><div class="header"><div class="part-name" id="partName"></div><div class="part-code" id="partCode"></div></div><div class="qr-container"><div id="qrcode"></div></div><div class="qr-label">امسح الكود QR للحصول على بيانات المنتج الكاملة</div><div class="info-section"><div class="info-row"><span class="info-label">رقم الكود:</span><span class="info-value" id="infoCode"></span></div><div class="info-row"><span class="info-label">اسم المنتج:</span><span class="info-value" id="infoName"></span></div><div class="info-row"><span class="info-label">تاريخ الطباعة:</span><span class="info-value" id="infoDate"></span></div></div><div class="footer"><p>شركة الأبراج للمقاولات</p><p style="margin-top:5px;font-size:11px;">Abraj Contracting Company</p><p style="margin-top:8px;font-size:10px;color:#d1d5db;">تم الطباعة بواسطة نظام إدارة المستودع</p></div></div>';
 
-                // محتوى HTML النافذة - استخدام أحرف هروب آمنة للبيانات
-                const safeCode = code.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-                const safeName = name.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-                const safeDate = currentDate.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                // بناء الـ JavaScript script
+                const scriptContent = 'window.addEventListener("load",function(){try{document.getElementById("partName").textContent="' + name.replace(/"/g, '\\"') + '";document.getElementById("partCode").textContent="' + code.replace(/"/g, '\\"') + '";document.getElementById("infoCode").textContent="' + code.replace(/"/g, '\\"') + '";document.getElementById("infoName").textContent="' + name.replace(/"/g, '\\"') + '";document.getElementById("infoDate").textContent="' + currentDate.replace(/"/g, '\\"') + '";var qrData="الكود: ' + code + ' | الاسم: ' + name + ' | التاريخ: ' + currentDate + ' | الشركة: شركة الأبراج للمقاولات";console.log("Creating QR Code with data:",qrData);var qr=new QRCode(document.getElementById("qrcode"),{text:qrData,width:300,height:300,colorDark:"#000000",colorLight:"#FFFFFF",correctLevel:QRCode.CorrectLevel.H});console.log("QR Code created successfully");setTimeout(function(){window.print();setTimeout(function(){window.close();},2000);},500);}catch(e){console.error("Error creating QR Code:",e);document.getElementById("qrcode").innerHTML="<p style=\\"color:red;\\">Error: "+e.message+"</p>";}});';
 
-                const htmlContent = `<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طباعة QR Code</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: "Segoe UI", Arial, sans-serif; background: #f5f5f5; padding: 40px 20px; }
-        .print-container { background: white; border-radius: 10px; padding: 40px 30px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); }
-        .header { margin-bottom: 25px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; text-align: center; }
-        .part-name { font-size: 22px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }
-        .part-code { font-size: 14px; color: #6b7280; font-family: "Courier New", monospace; margin-top: 4px; background: #f3f4f6; padding: 8px 12px; border-radius: 6px; display: inline-block; }
-        .qr-container { margin: 40px 0; display: flex; justify-content: center; align-items: center; padding: 20px; background: #fafbfc; border-radius: 8px; border: 2px dashed #e5e7eb; }
-        #qrcode { background: white; padding: 10px; border-radius: 6px; }
-        .qr-label { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 10px; }
-        .info-section { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; border-right: 4px solid #3b82f6; }
-        .info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }
-        .info-label { font-weight: 600; color: #374151; }
-        .info-value { color: #6b7280; }
-        .footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.6; }
-        .company-name { font-weight: bold; color: #374151; margin-top: 8px; }
-        @media print { body { background: white; padding: 0; } .print-container { box-shadow: none; max-width: 100%; } }
-    </style>
-</head>
-<body>
-    <div class="print-container">
-        <div class="header">
-            <div class="part-name" id="partName">${safeName}</div>
-            <div class="part-code" id="partCode">${safeCode}</div>
-        </div>
-        <div class="qr-container">
-            <div id="qrcode"></div>
-        </div>
-        <div class="qr-label">امسح الكود QR للحصول على بيانات المنتج الكاملة</div>
-        <div class="info-section">
-            <div class="info-row">
-                <span class="info-label">رقم الكود:</span>
-                <span class="info-value" id="infoCode">${safeCode}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">اسم المنتج:</span>
-                <span class="info-value" id="infoName">${safeName}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">تاريخ الطباعة:</span>
-                <span class="info-value" id="infoDate">${safeDate}</span>
-            </div>
-        </div>
-        <div class="footer">
-            <p>شركة الأبراج للمقاولات</p>
-            <p style="margin-top: 5px; font-size: 11px;">Abraj Contracting Company</p>
-            <p style="margin-top: 8px; font-size: 10px; color: #d1d5db;">تم الطباعة بواسطة نظام إدارة المستودع</p>
-        </div>
-    </div>
-    <script>
-        window.addEventListener('load', function() {
-            try {
-                const code = '${safeCode}';
-                const name = '${safeName}';
-                const currentDate = '${safeDate}';
-                const qrData = 'الكود: ' + code + ' | الاسم: ' + name + ' | التاريخ: ' + currentDate + ' | الشركة: شركة الأبراج للمقاولات';
-
-                console.log('Creating QR Code with data:', qrData);
-                var qr = new QRCode(document.getElementById('qrcode'), {
-                    text: qrData,
-                    width: 300,
-                    height: 300,
-                    colorDark: '#000000',
-                    colorLight: '#FFFFFF',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-                console.log('QR Code created successfully');
-            } catch(e) {
-                console.error('Error creating QR Code:', e);
-                document.getElementById('qrcode').innerHTML = '<p style="color: red;">خطأ في إنشاء QR Code: ' + e.message + '</p>';
-            }
-        });
-
-        setTimeout(function() {
-            window.print();
-            setTimeout(function() { window.close(); }, 2000);
-        }, 1500);
-    </script>
-</body>
-</html>`;
+                const htmlContent = docType + htmlTag + head + body + '<script>' + scriptContent + '<\/script></body></html>';
 
                 printWindow.document.write(htmlContent);
                 printWindow.document.close();
