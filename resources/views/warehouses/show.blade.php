@@ -767,6 +767,16 @@
     </div>
 
     <script>
+        // دالة معالج طباعة QR Code - يجب أن تكون مُعرّفة أولاً
+        function handlePrintQR(code, name) {
+            console.log('handlePrintQR called with:', code, name);
+            if (code && name) {
+                printPartBarcode(code, name);
+            } else {
+                alert('خطأ: البيانات غير صحيحة');
+            }
+        }
+
         // دالة مساعدة للتعامل مع زر الاستقبال
         function handleReceiveClick() {
             console.log('handleReceiveClick called');
@@ -1147,16 +1157,6 @@
             } catch (error) {
                 console.error('Error printing QR Code:', error);
                 alert('حدث خطأ أثناء طباعة QR Code:\n' + error.message);
-            }
-        }
-
-        // دالة معالج طباعة QR Code
-        function handlePrintQR(code, name) {
-            console.log('handlePrintQR called with:', code, name);
-            if (code && name) {
-                printPartBarcode(code, name);
-            } else {
-                alert('خطأ: البيانات غير صحيحة');
             }
         }
 
