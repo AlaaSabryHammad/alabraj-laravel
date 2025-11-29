@@ -1728,6 +1728,7 @@
             employees: @json($employees),
             spareParts: @json($sparePartsForJson ?? [])
         };
+        console.log('damagedPartsModalData loaded:', damagedPartsModalData);
 
         // دالة فتح modal استلام قطع غيار تالفة
         function openDamagedPartsReceiveModal() {
