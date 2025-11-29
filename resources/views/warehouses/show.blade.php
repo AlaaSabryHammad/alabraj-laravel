@@ -419,8 +419,9 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3 justify-center">
-                                            <button type="button" class="text-blue-600 hover:text-blue-800 transition-colors" title="طباعة الكود"
-                                                    onclick="printPartBarcode({{ json_encode($part['code']) }}, {{ json_encode($part['name']) }})">
+                                            <button type="button" class="text-blue-600 hover:text-blue-800 transition-colors print-btn" title="طباعة الكود"
+                                                    data-code="{{ htmlspecialchars($part['code'], ENT_QUOTES, 'UTF-8') }}"
+                                                    data-name="{{ htmlspecialchars($part['name'], ENT_QUOTES, 'UTF-8') }}">
                                                 <i class="ri-printer-line text-lg"></i>
                                             </button>
                                         </div>
@@ -1024,7 +1025,7 @@
         }
 
         // دالة طباعة QR Code للقطعة الواحدة
-        function printPartBarcode(code, name) {
+        window.printPartBarcode = function(code, name) {
             try {
                 // طباعة البيانات المستقبلة في وحدة التحكم للتشخيص
                 console.log('Print QR Code Called - Code:', code, 'Name:', name);
@@ -1149,6 +1150,20 @@
                 alert('حدث خطأ أثناء طباعة QR Code:\n' + error.message);
             }
         }
+
+        // إضافة event listeners للأزرار بعد تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            const printButtons = document.querySelectorAll('.print-btn');
+            printButtons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const code = this.getAttribute('data-code');
+                    const name = this.getAttribute('data-name');
+                    console.log('Button clicked - Code:', code, 'Name:', name);
+                    window.printPartBarcode(code, name);
+                });
+            });
+        });
 
         // دالة طباعة جميع الباركودات
         function printAllBarcodes() {
