@@ -419,11 +419,8 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3 justify-center">
-                                            <button type="button"
-                                                    data-code="{{ htmlspecialchars($part['code'], ENT_QUOTES, 'UTF-8') }}"
-                                                    data-name="{{ htmlspecialchars($part['name'], ENT_QUOTES, 'UTF-8') }}"
-                                                    class="print-part-btn text-blue-600 hover:text-blue-800 transition-colors"
-                                                    title="طباعة الكود">
+                                            <button type="button" class="text-blue-600 hover:text-blue-800 transition-colors" title="طباعة الكود"
+                                                    onclick="handlePrintQR({{ json_encode($part['code']) }}, {{ json_encode($part['name']) }})">
                                                 <i class="ri-printer-line text-lg"></i>
                                             </button>
                                         </div>
@@ -1153,24 +1150,15 @@
             }
         }
 
-        // Event Listener لأزرار طباعة QR Code
-        document.addEventListener('DOMContentLoaded', function() {
-            const printButtons = document.querySelectorAll('.print-part-btn');
-            console.log('Found print buttons:', printButtons.length);
-
-            printButtons.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log('Print button clicked');
-                    const code = this.getAttribute('data-code');
-                    const name = this.getAttribute('data-name');
-                    console.log('Data - Code:', code, 'Name:', name);
-                    if (code && name) {
-                        printPartBarcode(code, name);
-                    }
-                });
-            });
-        });
+        // دالة معالج طباعة QR Code
+        function handlePrintQR(code, name) {
+            console.log('handlePrintQR called with:', code, name);
+            if (code && name) {
+                printPartBarcode(code, name);
+            } else {
+                alert('خطأ: البيانات غير صحيحة');
+            }
+        }
 
         // دالة طباعة جميع الباركودات
         function printAllBarcodes() {
