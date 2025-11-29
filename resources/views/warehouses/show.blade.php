@@ -1050,7 +1050,11 @@
                 // إنشاء HTML الكامل مباشرة دون استخدام متغيرات معقدة
                 printWindow.document.open('text/html', 'replace');
 
-                // محتوى HTML النافذة
+                // محتوى HTML النافذة - استخدام أحرف هروب آمنة للبيانات
+                const safeCode = code.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                const safeName = name.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                const safeDate = currentDate.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
                 const htmlContent = `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -1080,8 +1084,8 @@
 <body>
     <div class="print-container">
         <div class="header">
-            <div class="part-name" id="partName"></div>
-            <div class="part-code" id="partCode"></div>
+            <div class="part-name" id="partName">${safeName}</div>
+            <div class="part-code" id="partCode">${safeCode}</div>
         </div>
         <div class="qr-container">
             <div id="qrcode"></div>
@@ -1090,15 +1094,15 @@
         <div class="info-section">
             <div class="info-row">
                 <span class="info-label">رقم الكود:</span>
-                <span class="info-value" id="infoCode"></span>
+                <span class="info-value" id="infoCode">${safeCode}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">اسم المنتج:</span>
-                <span class="info-value" id="infoName"></span>
+                <span class="info-value" id="infoName">${safeName}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">تاريخ الطباعة:</span>
-                <span class="info-value" id="infoDate"></span>
+                <span class="info-value" id="infoDate">${safeDate}</span>
             </div>
         </div>
         <div class="footer">
@@ -1108,18 +1112,12 @@
         </div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('load', function() {
             try {
-                const code = ${JSON.stringify(code)};
-                const name = ${JSON.stringify(name)};
-                const currentDate = ${JSON.stringify(currentDate)};
+                const code = '${safeCode}';
+                const name = '${safeName}';
+                const currentDate = '${safeDate}';
                 const qrData = 'الكود: ' + code + ' | الاسم: ' + name + ' | التاريخ: ' + currentDate + ' | الشركة: شركة الأبراج للمقاولات';
-
-                document.getElementById('partName').textContent = name;
-                document.getElementById('partCode').textContent = code;
-                document.getElementById('infoCode').textContent = code;
-                document.getElementById('infoName').textContent = name;
-                document.getElementById('infoDate').textContent = currentDate;
 
                 console.log('Creating QR Code with data:', qrData);
                 var qr = new QRCode(document.getElementById('qrcode'), {
