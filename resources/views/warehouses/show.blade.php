@@ -1088,17 +1088,19 @@
                 });
             });
 
-            // إضافة event listeners لأزرار الـ modal التطويرية داخل receive modal
-            const devModalButtonsReceive = document.querySelectorAll('.dev-modal-btn-receive');
-            devModalButtonsReceive.forEach(function(button) {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const title = this.getAttribute('data-title');
-                    const message = this.getAttribute('data-message');
-                    showDevelopmentModal(title, message);
-                    closeReceiveModal();
-                });
-            });
+        });
+
+        // استخدام event delegation للأزرار الديناميكية
+        document.addEventListener('click', function(e) {
+            // معالجة أزرار الـ modal التطويرية داخل receive modal
+            if (e.target.closest('.dev-modal-btn-receive')) {
+                e.preventDefault();
+                const button = e.target.closest('.dev-modal-btn-receive');
+                const title = button.getAttribute('data-title');
+                const message = button.getAttribute('data-message');
+                showDevelopmentModal(title, message);
+                closeReceiveModal();
+            }
         });
 
         // دالة طباعة جميع الباركودات
