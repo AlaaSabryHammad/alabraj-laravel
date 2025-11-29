@@ -883,8 +883,8 @@
                                 </div>
                             </button>
 
-                            <button type="button" onclick="showDevelopmentModal('استلام قطع غيار تالفة', 'سيتم تطوير وظيفة استلام القطع التالفة من المشاريع قريباً'); closeReceiveModal();" 
-                                    class="w-full bg-orange-50 hover:bg-orange-100 border-2 border-orange-200 hover:border-orange-300 p-6 rounded-xl transition-all duration-300 flex items-center gap-4 text-right">
+                            <button type="button" class="dev-modal-btn-receive w-full bg-orange-50 hover:bg-orange-100 border-2 border-orange-200 hover:border-orange-300 p-6 rounded-xl transition-all duration-300 flex items-center gap-4 text-right"
+                                    data-title="استلام قطع غيار تالفة" data-message="سيتم تطوير وظيفة استلام القطع التالفة من المشاريع قريباً">
                                 <div class="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center">
                                     <i class="ri-error-warning-line text-2xl text-orange-600"></i>
                                 </div>
@@ -1085,6 +1085,18 @@
                     const message = this.getAttribute('data-message');
                     showDevelopmentModal(title, message);
                     closeSerialNumbersModal();
+                });
+            });
+
+            // إضافة event listeners لأزرار الـ modal التطويرية داخل receive modal
+            const devModalButtonsReceive = document.querySelectorAll('.dev-modal-btn-receive');
+            devModalButtonsReceive.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const title = this.getAttribute('data-title');
+                    const message = this.getAttribute('data-message');
+                    showDevelopmentModal(title, message);
+                    closeReceiveModal();
                 });
             });
         });
