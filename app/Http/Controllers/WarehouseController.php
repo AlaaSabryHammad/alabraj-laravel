@@ -98,8 +98,8 @@ class WarehouseController extends Controller
         // الحصول على جميع المواقع (للقوائم المنسدلة)
         $allLocations = Location::select('id', 'name', 'project_id')->get();
 
-        // الحصول على جميع المعدات لربطها بالتصدير
-        $equipments = Equipment::where('status', 'active')->get();
+        // الحصول على جميع المعدات لربطها بالتصدير والاستقبال
+        $equipments = Equipment::all();
 
         // الحصول على جميع الأرقام التسلسلية للمستودع
         $allSparePartSerials = SparePartSerial::whereHas('sparePart.inventories', function ($query) use ($warehouse) {
