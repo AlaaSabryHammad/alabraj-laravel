@@ -1170,11 +1170,15 @@ class WarehouseController extends Controller
 
         DB::beginTransaction();
         try {
+            // الحصول على المشروع من المستودع/الموقع أو استخدام المشروع الافتراضي
+            $projectId = $warehouse->project_id ?? 1; // استخدم المشروع من الموقع أو المشروع الأول كبديل
+
             // حفظ كل قطعة تالفة في جدول DamagedPartsReceipt
             foreach ($validated['spare_parts'] as $part) {
-                $damagedPart = new DamagedPartsReceipt([
+                DamagedPartsReceipt::create([
                     'receipt_date' => now()->toDateString(),
                     'receipt_time' => now()->toTimeString(),
+                    'project_id' => $projectId,
                     'equipment_id' => $validated['equipment_id'],
                     'warehouse_id' => $warehouse->id,
                     'spare_part_id' => $part['spare_part_id'],
@@ -1185,7 +1189,6 @@ class WarehouseController extends Controller
                     'processing_status' => 'received',
                     'damage_condition' => 'for_evaluation'
                 ]);
-                $damagedPart->save();
 
                 // تحديث المخزون - إضافة القطعة للقطع التالفة
                 $inventory = WarehouseInventory::firstOrCreate(
