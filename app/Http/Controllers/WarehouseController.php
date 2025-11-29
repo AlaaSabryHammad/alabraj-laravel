@@ -1194,13 +1194,13 @@ class WarehouseController extends Controller
                 $inventory = WarehouseInventory::firstOrCreate(
                     [
                         'location_id' => $warehouse->id,
-                        'spare_part_id' => $part['spare_part_id'],
-                        'status' => 'damaged'
+                        'spare_part_id' => $part['spare_part_id']
                     ],
                     [
                         'current_stock' => 0,
                         'available_stock' => 0,
-                        'damaged_stock' => 0
+                        'damaged_stock' => 0,
+                        'status' => 'damaged'
                     ]
                 );
 

@@ -15,10 +15,12 @@ class WarehouseInventory extends Model
         'current_stock',
         'reserved_stock',
         'available_stock',
+        'damaged_stock',
         'average_cost',
         'total_value',
         'last_transaction_date',
         'location_shelf',
+        'status',
     ];
 
     protected $casts = [
