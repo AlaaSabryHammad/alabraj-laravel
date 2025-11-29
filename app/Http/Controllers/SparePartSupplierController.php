@@ -46,12 +46,6 @@ class SparePartSupplierController extends Controller
     public function store(Request $request)
     {
         try {
-            \Log::info('SparePartSupplier store request', [
-                'name' => $request->input('name'),
-                'credit_limit' => $request->input('credit_limit'),
-                'all_input' => $request->all()
-            ]);
-
             $validated = $request->validate([
                 'name' => 'required|string|max:255|unique:spare_part_suppliers',
                 'company_name' => 'nullable|string|max:255',
@@ -69,13 +63,10 @@ class SparePartSupplierController extends Controller
                 'status' => 'required|in:نشط,غير نشط',
                 'credit_limit' => 'nullable|numeric|min:0',
                 'payment_terms' => 'nullable|string|max:255',
-                'code' => 'nullable|string|max:255',
-                'category' => 'nullable|string|max:255',
             ]);
 
             // Ensure credit_limit is never null
             $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
-            \Log::info('After validation', ['credit_limit' => $validated['credit_limit'], 'type' => gettype($validated['credit_limit'])]);
 
             $supplier = SparePartSupplier::create($validated);
 
