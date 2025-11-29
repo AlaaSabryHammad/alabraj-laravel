@@ -997,14 +997,14 @@
                                     <span class="font-semibold text-gray-900">طباعة جميع الباركود</span>
                                 </button>
                                 
-                                <button type="button" onclick="showDevelopmentModal('تصدير قائمة الأرقام', 'سيتم تطوير وظيفة تصدير القائمة قريباً'); closeSerialNumbersModal();" 
-                                        class="w-full bg-green-50 hover:bg-green-100 border-2 border-green-200 hover:border-green-300 p-4 rounded-xl transition-all duration-300 flex items-center gap-3">
+                                <button type="button" class="dev-modal-btn w-full bg-green-50 hover:bg-green-100 border-2 border-green-200 hover:border-green-300 p-4 rounded-xl transition-all duration-300 flex items-center gap-3"
+                                        data-title="تصدير قائمة الأرقام" data-message="سيتم تطوير وظيفة تصدير القائمة قريباً">
                                     <i class="ri-file-excel-line text-2xl text-green-600"></i>
                                     <span class="font-semibold text-gray-900">تصدير إلى Excel</span>
                                 </button>
-                                
-                                <button type="button" onclick="showDevelopmentModal('مراجعة الأرقام', 'سيتم تطوير وظيفة مراجعة وتدقيق الأرقام قريباً'); closeSerialNumbersModal();" 
-                                        class="w-full bg-orange-50 hover:bg-orange-100 border-2 border-orange-200 hover:border-orange-300 p-4 rounded-xl transition-all duration-300 flex items-center gap-3">
+
+                                <button type="button" class="dev-modal-btn w-full bg-orange-50 hover:bg-orange-100 border-2 border-orange-200 hover:border-orange-300 p-4 rounded-xl transition-all duration-300 flex items-center gap-3"
+                                        data-title="مراجعة الأرقام" data-message="سيتم تطوير وظيفة مراجعة وتدقيق الأرقام قريباً">
                                     <i class="ri-search-line text-2xl text-orange-600"></i>
                                     <span class="font-semibold text-gray-900">مراجعة وتدقيق</span>
                                 </button>
@@ -1161,6 +1161,18 @@
                     const name = this.getAttribute('data-name');
                     console.log('Button clicked - Code:', code, 'Name:', name);
                     window.printPartBarcode(code, name);
+                });
+            });
+
+            // إضافة event listeners لأزرار الـ modal التطويرية
+            const devModalButtons = document.querySelectorAll('.dev-modal-btn');
+            devModalButtons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const title = this.getAttribute('data-title');
+                    const message = this.getAttribute('data-message');
+                    showDevelopmentModal(title, message);
+                    closeSerialNumbersModal();
                 });
             });
         });
