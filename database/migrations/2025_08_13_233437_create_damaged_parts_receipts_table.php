@@ -45,7 +45,7 @@ return new class extends Migration
             $table->foreignId('sent_by')->nullable()->constrained('employees')->comment('موظف الإرسال من المشروع');
 
             // معلومات التخزين
-            $table->foreignId('warehouse_id')->constrained('warehouses')->comment('المخزن المستقبل');
+            $table->foreignId('warehouse_id')->constrained('locations')->comment('المخزن المستقبل');
             $table->string('storage_location')->nullable()->comment('موقع التخزين في المخزن');
 
             // التكاليف المقدرة

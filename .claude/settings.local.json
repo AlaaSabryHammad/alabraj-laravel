@@ -10,7 +10,11 @@
       "Bash(cat:*)",
       "Bash(c:/xampp/htdocs/abraj-latest/resources/views/settings/materials.blade.php)",
       "Bash(php -l:*)",
-      "Bash(php -r:*)"
+      "Bash(php -r:*)",
+      "Bash(nul)",
+      "Bash(del nul 2)",
+      "Bash(git reset:*)",
+      "Bash(php artisan:*)"
     ],
     "deny": [],
     "ask": [],
