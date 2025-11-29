@@ -420,8 +420,9 @@
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3 justify-center">
                                             <button type="button"
-                                                    onclick="printPartBarcode('{{ $part['code'] }}', '{{ $part['name'] }}')"
-                                                    class="text-blue-600 hover:text-blue-800 transition-colors"
+                                                    data-code="{{ htmlspecialchars($part['code'], ENT_QUOTES, 'UTF-8') }}"
+                                                    data-name="{{ htmlspecialchars($part['name'], ENT_QUOTES, 'UTF-8') }}"
+                                                    class="print-part-btn text-blue-600 hover:text-blue-800 transition-colors"
                                                     title="طباعة الكود">
                                                 <i class="ri-printer-line text-lg"></i>
                                             </button>
@@ -1151,6 +1152,18 @@
                 alert('حدث خطأ أثناء طباعة QR Code:\n' + error.message);
             }
         }
+
+        // Event Listener لأزرار طباعة QR Code
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.print-part-btn');
+            if (btn) {
+                const code = btn.getAttribute('data-code');
+                const name = btn.getAttribute('data-name');
+                if (code && name) {
+                    printPartBarcode(code, name);
+                }
+            }
+        });
 
         // دالة طباعة جميع الباركودات
         function printAllBarcodes() {
