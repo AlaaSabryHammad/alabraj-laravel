@@ -1096,9 +1096,7 @@
             if (e.target.closest('.dev-modal-btn-receive')) {
                 e.preventDefault();
                 const button = e.target.closest('.dev-modal-btn-receive');
-                const title = button.getAttribute('data-title');
-                const message = button.getAttribute('data-message');
-                showDevelopmentModal(title, message);
+                openDamagedPartsReceiveModal();
                 closeReceiveModal();
             }
         });
@@ -1732,6 +1730,151 @@
             if (modal) {
                 modal.remove();
             }
+        }
+
+        // دالة فتح modal استلام قطع غيار تالفة
+        function openDamagedPartsReceiveModal() {
+            const modalHTML = `
+                <div id="damagedPartsReceiveModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl max-w-4xl w-full overflow-y-auto shadow-2xl" style="max-height: 90vh;">
+                        <div class="bg-gradient-to-r from-orange-600 to-red-600 p-6 text-white rounded-t-2xl">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-2xl font-bold flex items-center gap-3">
+                                    <i class="ri-error-warning-line text-3xl"></i>
+                                    استلام قطع غيار تالفة
+                                </h3>
+                                <button type="button" onclick="closeDamagedPartsReceiveModal()"
+                                        class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center hover:bg-opacity-30 transition-colors">
+                                    <i class="ri-close-line text-white text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <form id="damagedPartsForm" class="p-8">
+                            <!-- معلومات المشروع -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-building-line text-orange-600"></i>
+                                    معلومات المشروع
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">المشروع *</label>
+                                        <input type="text" name="project_name" required
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                               placeholder="اسم المشروع">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الاستقبال *</label>
+                                        <input type="date" name="receipt_date" required value="${new Date().toISOString().split('T')[0]}"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات الضرر</label>
+                                    <textarea name="damage_notes" rows="3"
+                                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                              placeholder="وصف الأضرار والمشاكل"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- قطع الغيار التالفة -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-tools-line text-orange-600"></i>
+                                    قطع الغيار التالفة
+                                </h4>
+                                <div id="damagedSparePartsContainer" class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-orange-300">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
+                                            <input type="text" name="spare_part_name[]" required
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                                   placeholder="اسم القطعة">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">الكود *</label>
+                                            <input type="text" name="spare_part_code[]" required
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                                   placeholder="كود القطعة">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">الكمية *</label>
+                                            <input type="number" name="quantity[]" required min="1" value="1"
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addDamagedSparePartRow()"
+                                        class="mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center gap-2">
+                                    <i class="ri-add-line"></i>
+                                    إضافة قطعة أخرى
+                                </button>
+                            </div>
+
+                            <!-- أزرار الإجراء -->
+                            <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                                <button type="button" onclick="closeDamagedPartsReceiveModal()"
+                                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                                    إلغاء
+                                </button>
+                                <button type="submit"
+                                        class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center gap-2 transition-colors">
+                                    <i class="ri-check-line"></i>
+                                    حفظ القطع التالفة
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // إضافة event listener للـ form
+            document.getElementById('damagedPartsForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // هنا يمكنك إضافة منطق الحفظ
+                alert('سيتم حفظ القطع التالفة قريباً');
+                closeDamagedPartsReceiveModal();
+            });
+        }
+
+        function closeDamagedPartsReceiveModal() {
+            const modal = document.getElementById('damagedPartsReceiveModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function addDamagedSparePartRow() {
+            const container = document.getElementById('damagedSparePartsContainer');
+            const newRow = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-orange-300 items-end">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
+                        <input type="text" name="spare_part_name[]" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                               placeholder="اسم القطعة">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الكود *</label>
+                        <input type="text" name="spare_part_code[]" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                               placeholder="كود القطعة">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية *</label>
+                        <input type="number" name="quantity[]" required min="1" value="1"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()"
+                            class="px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', newRow);
         }
 
         // دوال إدارة قطع الغيار في النموذج
