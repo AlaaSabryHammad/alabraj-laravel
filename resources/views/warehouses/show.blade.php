@@ -520,13 +520,12 @@
                                 <tr>
                                     <th scope="col" class="px-6 py-3 rounded-tr-lg">رقم الاستلام</th>
                                     <th scope="col" class="px-6 py-3">تاريخ الاستلام</th>
-                                    <th scope="col" class="px-6 py-3">المشروع</th>
                                     <th scope="col" class="px-6 py-3">قطعة الغيار</th>
                                     <th scope="col" class="px-6 py-3">الكمية</th>
                                     <th scope="col" class="px-6 py-3">حالة التلف</th>
                                     <th scope="col" class="px-6 py-3">حالة المعالجة</th>
-                                    <th scope="col" class="px-6 py-3">مُستلمة بواسطة</th>
-                                    <th scope="col" class="px-6 py-3 rounded-tl-lg">الإجراءات</th>
+                                    <th scope="col" class="px-6 py-3">المستلم</th>
+                                    <th scope="col" class="px-6 py-3 rounded-tl-lg">معلومات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -539,9 +538,6 @@
                                             {{ $receipt->receipt_date->format('Y-m-d') }}
                                             <br>
                                             <span class="text-xs text-gray-500">{{ $receipt->receipt_time }}</span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ $receipt->project->name ?? 'غير محدد' }}
                                         </td>
                                         <td class="px-6 py-4">
                                             <div>
@@ -577,12 +573,16 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $receipt->receivedByEmployee->name ?? 'غير محدد' }}
+                                            <div class="flex items-center gap-2">
+                                                <i class="ri-user-line text-gray-400"></i>
+                                                <span>{{ $receipt->receivedByEmployee->name ?? 'غير محدد' }}</span>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="flex items-center gap-2 text-gray-500">
-                                                <span title="البيانات معروضة فقط - التعديل والحذف مُعطّل">
-                                                    <i class="ri-lock-line text-lg"></i>
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                                                    <i class="ri-file-text-line"></i>
+                                                    {{ $receipt->receipt_number }}
                                                 </span>
                                             </div>
                                         </td>
