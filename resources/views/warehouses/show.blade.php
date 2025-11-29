@@ -1737,16 +1737,20 @@
             const sparePartsData = damagedPartsModalData.spareParts;
 
             let equipmentOptions = '<option value="">اختر المعدة</option>';
+            console.log('equipments array:', equipments, 'length:', equipments?.length || 0);
             equipments.forEach(equipment => {
+                console.log('adding equipment:', equipment);
                 equipmentOptions += `<option value="${equipment.id}">${equipment.name}</option>`;
             });
 
             let employeeOptions = '<option value="">اختر الموظف</option>';
+            console.log('employees array:', employees, 'length:', employees?.length || 0);
             employees.forEach(employee => {
                 employeeOptions += `<option value="${employee.id}">${employee.name}</option>`;
             });
 
             let sparePartOptions = '<option value="">اختر قطعة الغيار</option>';
+            console.log('spareParts array:', sparePartsData, 'length:', sparePartsData?.length || 0);
             sparePartsData.forEach(part => {
                 sparePartOptions += `<option value="${part.id}" data-code="${part.code}" data-name="${part.name}">${part.name}</option>`;
             });
