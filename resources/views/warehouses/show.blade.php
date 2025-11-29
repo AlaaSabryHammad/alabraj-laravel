@@ -1861,9 +1861,7 @@
             // إضافة event listener للـ form
             document.getElementById('damagedPartsForm')?.addEventListener('submit', function(e) {
                 e.preventDefault();
-                // هنا يمكنك إضافة منطق الحفظ
-                alert('سيتم حفظ القطع التالفة قريباً');
-                closeDamagedPartsReceiveModal();
+                submitDamagedPartsForm();
             });
         }
 
@@ -1927,6 +1925,71 @@
             if (newSelect) {
                 newSelect.addEventListener('change', handleDamagedSparePartSelection);
             }
+        }
+
+        // دالة إرسال نموذج القطع التالفة
+        function submitDamagedPartsForm() {
+            const form = document.getElementById('damagedPartsForm');
+            const equipmentId = form.querySelector('[name="equipment_id"]').value;
+            const employeeId = form.querySelector('[name="employee_id"]').value;
+            const damageNotes = form.querySelector('[name="damage_notes"]').value;
+
+            // جمع بيانات القطع
+            const spareParts = [];
+            const container = document.getElementById('damagedSparePartsContainer');
+            const rows = container.querySelectorAll('.grid');
+
+            rows.forEach(row => {
+                const selectElement = row.querySelector('select[name="spare_part_id[]"]');
+                const quantityElement = row.querySelector('input[name="quantity[]"]');
+
+                if (selectElement && selectElement.value && quantityElement && quantityElement.value) {
+                    spareParts.push({
+                        spare_part_id: selectElement.value,
+                        quantity: parseInt(quantityElement.value)
+                    });
+                }
+            });
+
+            if (spareParts.length === 0) {
+                alert('يرجى إضافة قطعة غيار واحدة على الأقل');
+                return;
+            }
+
+            // إرسال البيانات
+            const warehouseId = {{ $warehouse->id }};
+            const url = `/warehouses/${warehouseId}/store-damaged-parts`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    equipment_id: equipmentId,
+                    employee_id: employeeId,
+                    damage_notes: damageNotes,
+                    spare_parts: spareParts
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeDamagedPartsReceiveModal();
+                    // إعادة تحميل الصفحة لتحديث البيانات
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } else {
+                    alert('خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في الاتصال بالخادم');
+            });
         }
 
         // دوال إدارة قطع الغيار في النموذج

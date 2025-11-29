@@ -1152,4 +1152,69 @@ class WarehouseController extends Controller
             'serialNumbers' => $sparePart->serialNumbers
         ]);
     }
+
+    /**
+     * حفظ القطع التالفة المستقبلة
+     */
+    public function storeDamagedParts(Request $request, Location $warehouse)
+    {
+        // التحقق من صحة البيانات
+        $validated = $request->validate([
+            'equipment_id' => 'required|exists:equipment,id',
+            'employee_id' => 'required|exists:employees,id',
+            'damage_notes' => 'nullable|string',
+            'spare_parts' => 'required|array|min:1',
+            'spare_parts.*.spare_part_id' => 'required|exists:spare_parts,id',
+            'spare_parts.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // حفظ كل قطعة تالفة في جدول DamagedPartsReceipt
+            foreach ($validated['spare_parts'] as $part) {
+                DamagedPartsReceipt::create([
+                    'receipt_date' => now()->toDateString(),
+                    'receipt_time' => now()->toTimeString(),
+                    'equipment_id' => $validated['equipment_id'],
+                    'warehouse_id' => $warehouse->id,
+                    'spare_part_id' => $part['spare_part_id'],
+                    'quantity_received' => $part['quantity'],
+                    'sent_by' => $validated['employee_id'],
+                    'received_by' => Auth::id(),
+                    'damage_description' => $validated['damage_notes'] ?? null,
+                    'processing_status' => 'received',
+                    'damage_condition' => 'for_evaluation'
+                ]);
+
+                // تحديث المخزون - إضافة القطعة للقطع التالفة
+                $inventory = WarehouseInventory::firstOrCreate(
+                    [
+                        'location_id' => $warehouse->id,
+                        'spare_part_id' => $part['spare_part_id'],
+                        'status' => 'damaged'
+                    ],
+                    [
+                        'current_stock' => 0,
+                        'available_stock' => 0,
+                        'damaged_stock' => 0
+                    ]
+                );
+
+                $inventory->increment('damaged_stock', $part['quantity']);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حفظ القطع التالفة بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ في حفظ البيانات: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
