@@ -420,7 +420,7 @@
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3 justify-center">
                                             <button type="button" class="text-blue-600 hover:text-blue-800 transition-colors" title="طباعة الكود"
-                                                    onclick="handlePrintQR({{ json_encode($part['code']) }}, {{ json_encode($part['name']) }})">
+                                                    onclick="printPartBarcode({{ json_encode($part['code']) }}, {{ json_encode($part['name']) }})">
                                                 <i class="ri-printer-line text-lg"></i>
                                             </button>
                                         </div>
@@ -767,19 +767,6 @@
     </div>
 
     <script>
-        // دالة معالج طباعة QR Code - يجب أن تكون مُعرّفة أولاً
-        window.handlePrintQR = function(code, name) {
-            console.log('handlePrintQR called with:', code, name);
-            if (code && name) {
-                printPartBarcode(code, name);
-            } else {
-                alert('خطأ: البيانات غير صحيحة');
-            }
-        };
-
-        // تأكيد أن الدالة موجودة
-        console.log('handlePrintQR function is defined:', typeof window.handlePrintQR);
-
         // دالة مساعدة للتعامل مع زر الاستقبال
         function handleReceiveClick() {
             console.log('handleReceiveClick called');
