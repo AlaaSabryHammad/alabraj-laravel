@@ -1025,11 +1025,11 @@
             }
         }
 
-        // دالة طباعة كود القطعة الواحدة
+        // دالة طباعة QR Code للقطعة الواحدة
         function printPartBarcode(code, name) {
             try {
                 // طباعة البيانات المستقبلة في وحدة التحكم للتشخيص
-                console.log('Print Barcode Called - Code:', code, 'Name:', name);
+                console.log('Print QR Code Called - Code:', code, 'Name:', name);
 
                 // التحقق من أن البيانات صحيحة
                 if (!code || code.length === 0) {
@@ -1038,7 +1038,7 @@
                 }
 
                 // إنشاء نافذة طباعة جديدة
-                const printWindow = window.open('', '', 'width=900,height=700');
+                const printWindow = window.open('', '', 'width=900,height=800');
 
                 if (!printWindow) {
                     alert('لم يتمكن من فتح نافذة الطباعة. يرجى التحقق من إعدادات المتصفح');
@@ -1046,6 +1046,9 @@
                 }
 
                 const currentDate = new Date().toLocaleDateString('ar-SA');
+
+                // بيانات المنتج المشفرة في QR Code
+                const qrData = 'الكود: ' + code + ' | الاسم: ' + name + ' | التاريخ: ' + currentDate + ' | الشركة: شركة الأبراج للمقاولات';
 
                 // كتابة HTML مباشرة باستخدام طريقة آمنة
                 printWindow.document.open('text/html', 'replace');
@@ -1055,20 +1058,24 @@
                 html += '<head>';
                 html += '<meta charset="UTF-8">';
                 html += '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
-                html += '<title>طباعة الكود - ' + name + '</title>';
-                html += '<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>';
+                html += '<title>طباعة QR Code - ' + name + '</title>';
+                html += '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>';
                 html += '<style>';
                 html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
                 html += 'body { font-family: "Segoe UI", Arial, sans-serif; background: #f5f5f5; padding: 40px 20px; }';
-                html += '.print-container { background: white; border-radius: 10px; padding: 40px 30px; max-width: 450px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); }';
-                html += '.header { margin-bottom: 25px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; }';
-                html += '.part-name { font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }';
-                html += '.part-code-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }';
-                html += '.part-code { font-size: 16px; color: #1f2937; font-weight: bold; font-family: "Courier New", monospace; margin-top: 4px; }';
-                html += '.barcode-container { margin: 35px 0; display: flex; justify-content: center; align-items: center; min-height: 100px; }';
-                html += 'svg { max-width: 100%; height: auto; }';
-                html += '.footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; line-height: 1.6; }';
-                html += '.company-name { font-weight: bold; color: #374151; margin-top: 5px; }';
+                html += '.print-container { background: white; border-radius: 10px; padding: 40px 30px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); }';
+                html += '.header { margin-bottom: 25px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; text-align: center; }';
+                html += '.part-name { font-size: 22px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }';
+                html += '.part-code { font-size: 14px; color: #6b7280; font-family: "Courier New", monospace; margin-top: 4px; background: #f3f4f6; padding: 8px 12px; border-radius: 6px; display: inline-block; }';
+                html += '.qr-container { margin: 40px 0; display: flex; justify-content: center; align-items: center; padding: 20px; background: #fafbfc; border-radius: 8px; border: 2px dashed #e5e7eb; }';
+                html += '#qrcode { background: white; padding: 10px; border-radius: 6px; }';
+                html += '.qr-label { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 10px; }';
+                html += '.info-section { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; border-right: 4px solid #3b82f6; }';
+                html += '.info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }';
+                html += '.info-label { font-weight: 600; color: #374151; }';
+                html += '.info-value { color: #6b7280; }';
+                html += '.footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.6; }';
+                html += '.company-name { font-weight: bold; color: #374151; margin-top: 8px; }';
                 html += '@media print { body { background: white; padding: 0; } .print-container { box-shadow: none; max-width: 100%; } }';
                 html += '</style>';
                 html += '</head>';
@@ -1076,39 +1083,54 @@
                 html += '<div class="print-container">';
                 html += '<div class="header">';
                 html += '<div class="part-name">' + name + '</div>';
-                html += '<div class="part-code-label">رقم الكود / Product Code:</div>';
                 html += '<div class="part-code">' + code + '</div>';
                 html += '</div>';
-                html += '<div class="barcode-container">';
-                html += '<svg id="barcode"></svg>';
+                html += '<div class="qr-container">';
+                html += '<div id="qrcode"><\/div>';
                 html += '</div>';
+                html += '<div class="qr-label">امسح الكود QR للحصول على بيانات المنتج الكاملة</div>';
+                html += '<div class="info-section">';
+                html += '<div class="info-row">';
+                html += '<span class="info-label">رقم الكود:</span>';
+                html += '<span class="info-value">' + code + '<\/span>';
+                html += '<\/div>';
+                html += '<div class="info-row">';
+                html += '<span class="info-label">اسم المنتج:</span>';
+                html += '<span class="info-value">' + name + '<\/span>';
+                html += '<\/div>';
+                html += '<div class="info-row">';
+                html += '<span class="info-label">تاريخ الطباعة:</span>';
+                html += '<span class="info-value">' + currentDate + '<\/span>';
+                html += '<\/div>';
+                html += '<\/div>';
                 html += '<div class="footer">';
-                html += '<div>تاريخ الطباعة: ' + currentDate + '</div>';
-                html += '<div class="company-name">شركة الأبراج للمقاولات</div>';
-                html += '<div style="margin-top: 10px; font-size: 11px;">Abraj Contracting Company</div>';
-                html += '</div>';
-                html += '</div>';
+                html += '<p>شركة الأبراج للمقاولات</p>';
+                html += '<p style="margin-top: 5px; font-size: 11px;">Abraj Contracting Company</p>';
+                html += '<p style="margin-top: 8px; font-size: 10px; color: #d1d5db;">تم الطباعة بواسطة نظام إدارة المستودع</p>';
+                html += '<\/div>';
+                html += '<\/div>';
                 html += '<script>';
                 html += 'document.addEventListener("DOMContentLoaded", function() {';
-                html += '  console.log("Creating barcode for code:", "' + code + '");';
+                html += '  console.log("Creating QR Code for:", "' + code + '");';
                 html += '  try {';
-                html += '    JsBarcode("#barcode", "' + code.replace(/"/g, '\\"').replace(/\n/g, '') + '", {';
-                html += '      format: "CODE128",';
-                html += '      width: 2,';
-                html += '      height: 60,';
-                html += '      displayValue: true,';
-                html += '      fontSize: 14,';
-                html += '      margin: 15';
+                html += '    var qr = new QRCode(document.getElementById("qrcode"), {';
+                html += '      text: "' + qrData.replace(/"/g, '\\"') + '",';
+                html += '      width: 300,';
+                html += '      height: 300,';
+                html += '      colorDark: "#000000",';
+                html += '      colorLight: "#FFFFFF",';
+                html += '      correctLevel: QRCode.CorrectLevel.H';
                 html += '    });';
-                html += '    console.log("Barcode created successfully");';
+                html += '    console.log("QR Code created successfully");';
                 html += '  } catch(e) {';
-                html += '    console.error("Error creating barcode:", e);';
+                html += '    console.error("Error creating QR Code:", e);';
+                html += '    document.getElementById("qrcode").innerHTML = "<p style=\\"color: red;\\">خطأ في إنشاء QR Code</p>";';
                 html += '  }';
                 html += '});';
                 html += 'setTimeout(function() {';
                 html += '  window.print();';
-                html += '  setTimeout(function() { window.close(); }, 1500);';
-                html += '}, 1000);';
+                html += '  setTimeout(function() { window.close(); }, 2000);';
+                html += '}, 1500);';
                 html += '<\/script>';
                 html += '</body>';
                 html += '</html>';
@@ -1117,8 +1139,8 @@
                 printWindow.document.close();
 
             } catch (error) {
-                console.error('Error printing barcode:', error);
-                alert('حدث خطأ أثناء طباعة الكود:\n' + error.message);
+                console.error('Error printing QR Code:', error);
+                alert('حدث خطأ أثناء طباعة QR Code:\n' + error.message);
             }
         }
 
