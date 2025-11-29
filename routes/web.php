@@ -266,18 +266,6 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::delete('/{sparePartType}', [SparePartTypeController::class, 'destroy'])->name('spare-part-types.destroy');
     });
 
-    // Damaged Parts Receipt Management Routes
-    Route::prefix('damaged-parts-receipts')->group(function () {
-        Route::get('/', [App\Http\Controllers\DamagedPartsReceiptController::class, 'index'])->name('damaged-parts-receipts.index');
-        Route::get('/create', [App\Http\Controllers\DamagedPartsReceiptController::class, 'create'])->name('damaged-parts-receipts.create');
-        Route::post('/', [App\Http\Controllers\DamagedPartsReceiptController::class, 'store'])->name('damaged-parts-receipts.store');
-        Route::get('/{damagedPartsReceipt}', [App\Http\Controllers\DamagedPartsReceiptController::class, 'show'])->name('damaged-parts-receipts.show');
-        Route::get('/{damagedPartsReceipt}/edit', [App\Http\Controllers\DamagedPartsReceiptController::class, 'edit'])->name('damaged-parts-receipts.edit');
-        Route::put('/{damagedPartsReceipt}', [App\Http\Controllers\DamagedPartsReceiptController::class, 'update'])->name('damaged-parts-receipts.update');
-        Route::delete('/{damagedPartsReceipt}', [App\Http\Controllers\DamagedPartsReceiptController::class, 'destroy'])->name('damaged-parts-receipts.destroy');
-        Route::patch('/{damagedPartsReceipt}/status', [App\Http\Controllers\DamagedPartsReceiptController::class, 'updateStatus'])->name('damaged-parts-receipts.update-status');
-    });
-
     // Document Management Routes
     Route::prefix('documents')->group(function () {
         Route::get('/', [DocumentController::class, 'index'])->name('documents.index');

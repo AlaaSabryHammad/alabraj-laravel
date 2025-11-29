@@ -504,11 +504,11 @@
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <a href="{{ route('damaged-parts-receipts.create') }}" 
-                       class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                    <button onclick="openDamagedPartsReceiveModal()"
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                         <i class="ri-add-line"></i>
-                        إضافة استلام جديد
-                    </a>
+                        استلام قطع غيار تالفة
+                    </button>
                 </div>
             </div>
 
@@ -580,24 +580,10 @@
                                             {{ $receipt->receivedByEmployee->name ?? 'غير محدد' }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="flex items-center gap-2">
-                                                <a href="{{ route('damaged-parts-receipts.show', $receipt) }}" 
-                                                   class="text-blue-600 hover:text-blue-900" title="عرض التفاصيل">
-                                                    <i class="ri-eye-line text-lg"></i>
-                                                </a>
-                                                <a href="{{ route('damaged-parts-receipts.edit', $receipt) }}" 
-                                                   class="text-green-600 hover:text-green-900" title="تعديل">
-                                                    <i class="ri-edit-line text-lg"></i>
-                                                </a>
-                                                <form action="{{ route('damaged-parts-receipts.destroy', $receipt) }}" 
-                                                      method="POST" class="inline" 
-                                                      onsubmit="return confirm('هل أنت متأكد من حذف هذا الاستلام؟')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900" title="حذف">
-                                                        <i class="ri-delete-bin-line text-lg"></i>
-                                                    </button>
-                                                </form>
+                                            <div class="flex items-center gap-2 text-gray-500">
+                                                <span title="البيانات معروضة فقط - التعديل والحذف مُعطّل">
+                                                    <i class="ri-lock-line text-lg"></i>
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
@@ -617,11 +603,11 @@
                         <i class="ri-file-damage-line text-4xl text-gray-400 mb-3"></i>
                         <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد استلامات قطع غيار تالفة</h3>
                         <p class="text-gray-600 mb-4">لم يتم تسجيل أي استلامات لقطع غيار تالفة في هذا المستودع بعد</p>
-                        <a href="{{ route('damaged-parts-receipts.create') }}" 
-                           class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <button onclick="openDamagedPartsReceiveModal()"
+                                class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
                             <i class="ri-add-line"></i>
-                            إضافة أول استلام
-                        </a>
+                            استلام قطع غيار تالفة
+                        </button>
                     </div>
                 @endif
             </div>
