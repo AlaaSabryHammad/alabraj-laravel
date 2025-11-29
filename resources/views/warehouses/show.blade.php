@@ -1028,8 +1028,17 @@
         // دالة طباعة كود القطعة الواحدة
         function printPartBarcode(code, name) {
             try {
+                // طباعة البيانات المستقبلة في وحدة التحكم للتشخيص
+                console.log('Print Barcode Called - Code:', code, 'Name:', name);
+
+                // التحقق من أن البيانات صحيحة
+                if (!code || code.length === 0) {
+                    alert('خطأ: الكود غير صحيح');
+                    return;
+                }
+
                 // إنشاء نافذة طباعة جديدة
-                const printWindow = window.open('', '', 'width=800,height=600');
+                const printWindow = window.open('', '', 'width=900,height=700');
 
                 if (!printWindow) {
                     alert('لم يتمكن من فتح نافذة الطباعة. يرجى التحقق من إعدادات المتصفح');
@@ -1038,129 +1047,78 @@
 
                 const currentDate = new Date().toLocaleDateString('ar-SA');
 
-                // إنشاء محتوى الطباعة
-                const printContent = `
-                    <!DOCTYPE html>
-                    <html dir="rtl" lang="ar">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>طباعة الكود - ${name}</title>
-                        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
-                        <style>
-                            * {
-                                margin: 0;
-                                padding: 0;
-                                box-sizing: border-box;
-                            }
-                            body {
-                                font-family: 'Arial', sans-serif;
-                                background: #f5f5f5;
-                                padding: 20px;
-                            }
-                            .print-container {
-                                background: white;
-                                border-radius: 8px;
-                                padding: 30px;
-                                max-width: 400px;
-                                margin: 0 auto;
-                                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                                text-align: center;
-                            }
-                            .header {
-                                margin-bottom: 20px;
-                                border-bottom: 2px solid #3b82f6;
-                                padding-bottom: 15px;
-                            }
-                            .part-name {
-                                font-size: 18px;
-                                font-weight: bold;
-                                color: #1f2937;
-                                margin-bottom: 5px;
-                            }
-                            .part-code {
-                                font-size: 12px;
-                                color: #6b7280;
-                                margin-bottom: 20px;
-                            }
-                            .barcode-container {
-                                margin: 30px 0;
-                                display: flex;
-                                justify-content: center;
-                            }
-                            svg {
-                                max-width: 100%;
-                                height: auto;
-                            }
-                            .footer {
-                                margin-top: 20px;
-                                padding-top: 15px;
-                                border-top: 1px solid #e5e7eb;
-                                font-size: 11px;
-                                color: #9ca3af;
-                            }
-                            @media print {
-                                body {
-                                    background: white;
-                                    padding: 0;
-                                }
-                                .print-container {
-                                    box-shadow: none;
-                                    max-width: 100%;
-                                }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="print-container">
-                            <div class="header">
-                                <div class="part-name">${name}</div>
-                                <div class="part-code">الكود: ${code}</div>
-                            </div>
+                // كتابة HTML مباشرة باستخدام طريقة آمنة
+                printWindow.document.open('text/html', 'replace');
 
-                            <div class="barcode-container">
-                                <svg id="barcode"><\/svg>
-                            </div>
+                let html = '<!DOCTYPE html>';
+                html += '<html dir="rtl" lang="ar">';
+                html += '<head>';
+                html += '<meta charset="UTF-8">';
+                html += '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+                html += '<title>طباعة الكود - ' + name + '</title>';
+                html += '<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>';
+                html += '<style>';
+                html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
+                html += 'body { font-family: "Segoe UI", Arial, sans-serif; background: #f5f5f5; padding: 40px 20px; }';
+                html += '.print-container { background: white; border-radius: 10px; padding: 40px 30px; max-width: 450px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); }';
+                html += '.header { margin-bottom: 25px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; }';
+                html += '.part-name { font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }';
+                html += '.part-code-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }';
+                html += '.part-code { font-size: 16px; color: #1f2937; font-weight: bold; font-family: "Courier New", monospace; margin-top: 4px; }';
+                html += '.barcode-container { margin: 35px 0; display: flex; justify-content: center; align-items: center; min-height: 100px; }';
+                html += 'svg { max-width: 100%; height: auto; }';
+                html += '.footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; line-height: 1.6; }';
+                html += '.company-name { font-weight: bold; color: #374151; margin-top: 5px; }';
+                html += '@media print { body { background: white; padding: 0; } .print-container { box-shadow: none; max-width: 100%; } }';
+                html += '</style>';
+                html += '</head>';
+                html += '<body>';
+                html += '<div class="print-container">';
+                html += '<div class="header">';
+                html += '<div class="part-name">' + name + '</div>';
+                html += '<div class="part-code-label">رقم الكود / Product Code:</div>';
+                html += '<div class="part-code">' + code + '</div>';
+                html += '</div>';
+                html += '<div class="barcode-container">';
+                html += '<svg id="barcode"></svg>';
+                html += '</div>';
+                html += '<div class="footer">';
+                html += '<div>تاريخ الطباعة: ' + currentDate + '</div>';
+                html += '<div class="company-name">شركة الأبراج للمقاولات</div>';
+                html += '<div style="margin-top: 10px; font-size: 11px;">Abraj Contracting Company</div>';
+                html += '</div>';
+                html += '</div>';
+                html += '<script>';
+                html += 'document.addEventListener("DOMContentLoaded", function() {';
+                html += '  console.log("Creating barcode for code:", "' + code + '");';
+                html += '  try {';
+                html += '    JsBarcode("#barcode", "' + code.replace(/"/g, '\\"').replace(/\n/g, '') + '", {';
+                html += '      format: "CODE128",';
+                html += '      width: 2,';
+                html += '      height: 60,';
+                html += '      displayValue: true,';
+                html += '      fontSize: 14,';
+                html += '      margin: 15';
+                html += '    });';
+                html += '    console.log("Barcode created successfully");';
+                html += '  } catch(e) {';
+                html += '    console.error("Error creating barcode:", e);';
+                html += '  }';
+                html += '});';
+                html += 'setTimeout(function() {';
+                html += '  window.print();';
+                html += '  setTimeout(function() { window.close(); }, 1500);';
+                html += '}, 1000);';
+                html += '<\/script>';
+                html += '</body>';
+                html += '</html>';
 
-                            <div class="footer">
-                                <p>تاريخ الطباعة: ${currentDate}</p>
-                                <p>شركة الأبراج للمقاولات</p>
-                            </div>
-                        </div>
-
-                        <script>
-                            // إنشاء الباركود
-                            JsBarcode("#barcode", "${code}", {
-                                format: "CODE128",
-                                width: 2,
-                                height: 50,
-                                displayValue: true,
-                                fontSize: 12,
-                                margin: 10
-                            });
-
-                            // طباعة تلقائية بعد تحميل الباركود
-                            window.onload = function() {
-                                setTimeout(function() {
-                                    window.print();
-                                    setTimeout(function() {
-                                        window.close();
-                                    }, 500);
-                                }, 500);
-                            };
-                        <\/script>
-                    </body>
-                    </html>
-                `;
-
-                // كتابة المحتوى إلى النافذة
-                printWindow.document.open();
-                printWindow.document.write(printContent);
+                printWindow.document.write(html);
                 printWindow.document.close();
 
             } catch (error) {
                 console.error('Error printing barcode:', error);
-                alert('حدث خطأ أثناء طباعة الكود: ' + error.message);
+                alert('حدث خطأ أثناء طباعة الكود:\n' + error.message);
             }
         }
 
