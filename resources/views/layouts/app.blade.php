@@ -21,10 +21,18 @@
 
     <!-- Custom CSS for RTL -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;600;700;800;900&display=swap');
+
+        * {
+            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
 
         body {
-            font-family: 'Tajawal', sans-serif;
+            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
 
         .animate-fadeIn {
@@ -41,6 +49,43 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        /* تحديد أوزان الخط بوضوح */
+        .font-light {
+            font-weight: 300 !important;
+        }
+
+        .font-normal {
+            font-weight: 400 !important;
+        }
+
+        .font-medium {
+            font-weight: 500 !important;
+        }
+
+        .font-semibold {
+            font-weight: 600 !important;
+        }
+
+        .font-bold {
+            font-weight: 700 !important;
+        }
+
+        .font-extrabold {
+            font-weight: 800 !important;
+        }
+
+        .font-black {
+            font-weight: 900 !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700 !important;
+        }
+
+        strong, b {
+            font-weight: 700 !important;
         }
 
         .sidebar-item {
