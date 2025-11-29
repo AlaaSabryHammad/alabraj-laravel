@@ -1172,7 +1172,7 @@ class WarehouseController extends Controller
         try {
             // حفظ كل قطعة تالفة في جدول DamagedPartsReceipt
             foreach ($validated['spare_parts'] as $part) {
-                DamagedPartsReceipt::create([
+                $damagedPart = new DamagedPartsReceipt([
                     'receipt_date' => now()->toDateString(),
                     'receipt_time' => now()->toTimeString(),
                     'equipment_id' => $validated['equipment_id'],
@@ -1185,6 +1185,7 @@ class WarehouseController extends Controller
                     'processing_status' => 'received',
                     'damage_condition' => 'for_evaluation'
                 ]);
+                $damagedPart->save();
 
                 // تحديث المخزون - إضافة القطعة للقطع التالفة
                 $inventory = WarehouseInventory::firstOrCreate(
