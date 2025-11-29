@@ -1724,6 +1724,25 @@
 
         // دالة فتح modal استلام قطع غيار تالفة
         function openDamagedPartsReceiveModal() {
+            const equipments = @json($equipments);
+            const employees = @json($employees);
+            const sparePartsData = @json($sparePartsForJson ?? []);
+
+            let equipmentOptions = '<option value="">اختر المعدة</option>';
+            equipments.forEach(equipment => {
+                equipmentOptions += `<option value="${equipment.id}">${equipment.name}</option>`;
+            });
+
+            let employeeOptions = '<option value="">اختر الموظف</option>';
+            employees.forEach(employee => {
+                employeeOptions += `<option value="${employee.id}">${employee.name}</option>`;
+            });
+
+            let sparePartOptions = '<option value="">اختر قطعة الغيار</option>';
+            sparePartsData.forEach(part => {
+                sparePartOptions += `<option value="${part.id}" data-code="${part.code}" data-name="${part.name}">${part.name}</option>`;
+            });
+
             const modalHTML = `
                 <div id="damagedPartsReceiveModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                     <div class="bg-white rounded-2xl max-w-4xl w-full overflow-y-auto shadow-2xl" style="max-height: 90vh;">
@@ -1741,23 +1760,26 @@
                         </div>
 
                         <form id="damagedPartsForm" class="p-8">
-                            <!-- معلومات المشروع -->
+                            <!-- معلومات الاستقبال -->
                             <div class="mb-8">
                                 <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <i class="ri-building-line text-orange-600"></i>
-                                    معلومات المشروع
+                                    <i class="ri-info-line text-orange-600"></i>
+                                    معلومات الاستقبال
                                 </h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">المشروع *</label>
-                                        <input type="text" name="project_name" required
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                               placeholder="اسم المشروع">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">المعدة *</label>
+                                        <select name="equipment_id" id="equipmentSelect" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                            ${equipmentOptions}
+                                        </select>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الاستقبال *</label>
-                                        <input type="date" name="receipt_date" required value="${new Date().toISOString().split('T')[0]}"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">الموظف المسلم *</label>
+                                        <select name="employee_id" id="employeeSelect" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                            ${employeeOptions}
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="mt-4">
@@ -1778,20 +1800,21 @@
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-orange-300">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
-                                            <input type="text" name="spare_part_name[]" required
-                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                                   placeholder="اسم القطعة">
+                                            <select name="spare_part_id[]" class="spare_part_select" required
+                                                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                                                ${sparePartOptions}
+                                            </select>
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">الكود *</label>
-                                            <input type="text" name="spare_part_code[]" required
-                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                                   placeholder="كود القطعة">
+                                            <input type="text" name="spare_part_code[]" class="spare_part_code" readonly
+                                                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f3f4f6; color: #6b7280;"
+                                                   placeholder="يتم ملؤه تلقائياً">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">الكمية *</label>
                                             <input type="number" name="quantity[]" required min="1" value="1"
-                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
                                         </div>
                                     </div>
                                 </div>
@@ -1821,6 +1844,13 @@
 
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+            // إضافة event listeners للقطع المختارة
+            const container = document.getElementById('damagedSparePartsContainer');
+            const firstRow = container.querySelector('.spare_part_select');
+            if (firstRow) {
+                firstRow.addEventListener('change', handleDamagedSparePartSelection);
+            }
+
             // إضافة event listener للـ form
             document.getElementById('damagedPartsForm')?.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -1828,6 +1858,17 @@
                 alert('سيتم حفظ القطع التالفة قريباً');
                 closeDamagedPartsReceiveModal();
             });
+        }
+
+        function handleDamagedSparePartSelection(e) {
+            const select = e.target;
+            const selectedOption = select.options[select.selectedIndex];
+            const code = selectedOption.getAttribute('data-code') || '';
+            const row = select.closest('.grid');
+            const codeInput = row.querySelector('.spare_part_code');
+            if (codeInput) {
+                codeInput.value = code;
+            }
         }
 
         function closeDamagedPartsReceiveModal() {
@@ -1839,24 +1880,32 @@
 
         function addDamagedSparePartRow() {
             const container = document.getElementById('damagedSparePartsContainer');
+            const sparePartsData = @json($sparePartsForJson ?? []);
+
+            let sparePartOptions = '<option value="">اختر قطعة الغيار</option>';
+            sparePartsData.forEach(part => {
+                sparePartOptions += `<option value="${part.id}" data-code="${part.code}" data-name="${part.name}">${part.name}</option>`;
+            });
+
             const newRow = `
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-orange-300 items-end">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
-                        <input type="text" name="spare_part_name[]" required
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                               placeholder="اسم القطعة">
+                        <select name="spare_part_id[]" class="spare_part_select" required
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                            ${sparePartOptions}
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الكود *</label>
-                        <input type="text" name="spare_part_code[]" required
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                               placeholder="كود القطعة">
+                        <input type="text" name="spare_part_code[]" class="spare_part_code" readonly
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f3f4f6; color: #6b7280;"
+                               placeholder="يتم ملؤه تلقائياً">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الكمية *</label>
                         <input type="number" name="quantity[]" required min="1" value="1"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
                     </div>
                     <button type="button" onclick="this.parentElement.remove()"
                             class="px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg">
@@ -1865,6 +1914,12 @@
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', newRow);
+
+            // إضافة event listener للصف الجديد
+            const newSelect = container.querySelector('.spare_part_select:last-of-type');
+            if (newSelect) {
+                newSelect.addEventListener('change', handleDamagedSparePartSelection);
+            }
         }
 
         // دوال إدارة قطع الغيار في النموذج
