@@ -1722,11 +1722,18 @@
             }
         }
 
+        // البيانات المتاحة بشكل عام
+        const damagedPartsModalData = {
+            equipments: @json($equipments),
+            employees: @json($employees),
+            spareParts: @json($sparePartsForJson ?? [])
+        };
+
         // دالة فتح modal استلام قطع غيار تالفة
         function openDamagedPartsReceiveModal() {
-            const equipments = @json($equipments);
-            const employees = @json($employees);
-            const sparePartsData = @json($sparePartsForJson ?? []);
+            const equipments = damagedPartsModalData.equipments;
+            const employees = damagedPartsModalData.employees;
+            const sparePartsData = damagedPartsModalData.spareParts;
 
             let equipmentOptions = '<option value="">اختر المعدة</option>';
             equipments.forEach(equipment => {
@@ -1880,7 +1887,7 @@
 
         function addDamagedSparePartRow() {
             const container = document.getElementById('damagedSparePartsContainer');
-            const sparePartsData = @json($sparePartsForJson ?? []);
+            const sparePartsData = damagedPartsModalData.spareParts;
 
             let sparePartOptions = '<option value="">اختر قطعة الغيار</option>';
             sparePartsData.forEach(part => {
