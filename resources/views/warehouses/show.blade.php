@@ -1154,15 +1154,22 @@
         }
 
         // Event Listener لأزرار طباعة QR Code
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.print-part-btn');
-            if (btn) {
-                const code = btn.getAttribute('data-code');
-                const name = btn.getAttribute('data-name');
-                if (code && name) {
-                    printPartBarcode(code, name);
-                }
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            const printButtons = document.querySelectorAll('.print-part-btn');
+            console.log('Found print buttons:', printButtons.length);
+
+            printButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Print button clicked');
+                    const code = this.getAttribute('data-code');
+                    const name = this.getAttribute('data-name');
+                    console.log('Data - Code:', code, 'Name:', name);
+                    if (code && name) {
+                        printPartBarcode(code, name);
+                    }
+                });
+            });
         });
 
         // دالة طباعة جميع الباركودات
