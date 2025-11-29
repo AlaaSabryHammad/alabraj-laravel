@@ -1913,7 +1913,52 @@
             }
         }
 
-        // دالة إرسال نموذج القطع التالفة
+        // دالة عرض رسائل النجاح والخطأ في Modal
+        function showDamagedPartsModal(title, message, isSuccess = true, onClose = null) {
+            const modalHTML = `
+                <div id="damagedPartsMessageModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+                        <div class="bg-gradient-to-r ${isSuccess ? 'from-green-600 to-green-700' : 'from-red-600 to-red-700'} p-6 text-white">
+                            <div class="flex items-center gap-3">
+                                <i class="ri-${isSuccess ? 'check-circle' : 'error-warning'}-line text-3xl"></i>
+                                <h3 class="text-xl font-bold">${title}</h3>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-700 text-center mb-6">${message}</p>
+                            <button onclick="closeDamagedPartsMessageModal()"
+                                    class="w-full px-6 py-3 text-white rounded-lg font-medium transition-colors"
+                                    style="background-color: ${isSuccess ? '#16a34a' : '#dc2626'};"
+                                    onmouseover="this.style.backgroundColor = '${isSuccess ? '#15803d' : '#b91c1c'}'"
+                                    onmouseout="this.style.backgroundColor = '${isSuccess ? '#16a34a' : '#dc2626'}'">
+                                موافق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // Store the callback if provided
+            if (onClose) {
+                window.damagedPartsModalCallback = onClose;
+            }
+        }
+
+        function closeDamagedPartsMessageModal() {
+            const modal = document.getElementById('damagedPartsMessageModal');
+            if (modal) {
+                modal.remove();
+                // Execute callback if exists
+                if (window.damagedPartsModalCallback) {
+                    const callback = window.damagedPartsModalCallback;
+                    window.damagedPartsModalCallback = null;
+                    callback();
+                }
+            }
+        }
+
         function submitDamagedPartsForm() {
             const form = document.getElementById('damagedPartsForm');
             const equipmentId = form.querySelector('[name="equipment_id"]').value;
@@ -1938,7 +1983,7 @@
             });
 
             if (spareParts.length === 0) {
-                alert('يرجى إضافة قطعة غيار واحدة على الأقل');
+                showDamagedPartsModal('تنبيه', 'يرجى إضافة قطعة غيار واحدة على الأقل', false);
                 return;
             }
 
@@ -1962,19 +2007,20 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    closeDamagedPartsReceiveModal();
-                    // إعادة تحميل الصفحة لتحديث البيانات
-                    setTimeout(() => {
-                        location.reload();
-                    }, 500);
+                    showDamagedPartsModal('نجح', data.message, true, () => {
+                        closeDamagedPartsReceiveModal();
+                        // إعادة تحميل الصفحة لتحديث البيانات
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    });
                 } else {
-                    alert('خطأ: ' + data.message);
+                    showDamagedPartsModal('خطأ', 'خطأ: ' + data.message, false);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('حدث خطأ في الاتصال بالخادم');
+                showDamagedPartsModal('خطأ', 'حدث خطأ في الاتصال بالخادم', false);
             });
         }
 
