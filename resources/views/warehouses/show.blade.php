@@ -525,7 +525,8 @@
                                     <th scope="col" class="px-6 py-3">حالة التلف</th>
                                     <th scope="col" class="px-6 py-3">حالة المعالجة</th>
                                     <th scope="col" class="px-6 py-3">المستلم</th>
-                                    <th scope="col" class="px-6 py-3 rounded-tl-lg">معلومات</th>
+                                    <th scope="col" class="px-6 py-3">معلومات</th>
+                                    <th scope="col" class="px-6 py-3 rounded-tl-lg">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -585,6 +586,26 @@
                                                     {{ $receipt->receipt_number }}
                                                 </span>
                                             </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button onclick="showDamagedPartDetails({{ json_encode([
+                                                'receipt_number' => $receipt->receipt_number,
+                                                'receipt_date' => $receipt->receipt_date->format('Y-m-d'),
+                                                'receipt_time' => $receipt->receipt_time,
+                                                'spare_part_name' => $receipt->sparePart->name ?? 'غير محدد',
+                                                'spare_part_code' => $receipt->sparePart->code ?? 'غير محدد',
+                                                'quantity_received' => $receipt->quantity_received,
+                                                'damage_condition' => $receipt->damage_condition_text,
+                                                'processing_status' => $receipt->processing_status_text,
+                                                'received_by' => $receipt->receivedByEmployee->name ?? 'غير محدد',
+                                                'sent_by' => $receipt->sentByEmployee->name ?? 'غير محدد',
+                                                'damage_description' => $receipt->damage_description ?? 'لا توجد ملاحظات',
+                                                'equipment_name' => $receipt->equipment->name ?? 'غير محدد'
+                                            ]) }})"
+                                                    class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors">
+                                                <i class="ri-eye-line"></i>
+                                                عرض التفاصيل
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -1956,6 +1977,137 @@
                     window.damagedPartsModalCallback = null;
                     callback();
                 }
+            }
+        }
+
+        // دالة عرض تفاصيل القطعة التالفة
+        function showDamagedPartDetails(details) {
+            const detailsHTML = `
+                <div id="damagedPartDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-y-auto" style="max-height: 90vh;">
+                        <!-- Header -->
+                        <div class="bg-gradient-to-r from-orange-600 to-red-600 p-6 text-white sticky top-0">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i class="ri-file-damage-line text-3xl"></i>
+                                    <div>
+                                        <h3 class="text-2xl font-bold">تفاصيل القطعة التالفة</h3>
+                                        <p class="text-orange-100 text-sm">${details.receipt_number}</p>
+                                    </div>
+                                </div>
+                                <button onclick="closeDamagedPartDetailsModal()" class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center hover:bg-opacity-30 transition-colors">
+                                    <i class="ri-close-line text-white text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-8">
+                            <!-- معلومات القطعة -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-tools-line text-orange-600"></i>
+                                    معلومات القطعة
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">اسم القطعة</label>
+                                        <p class="text-lg font-medium text-gray-900 mt-1">${details.spare_part_name}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">كود القطعة</label>
+                                        <p class="text-lg font-medium text-gray-900 mt-1 font-mono">${details.spare_part_code}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">الكمية المستقبلة</label>
+                                        <p class="text-lg font-bold text-red-600 mt-1">${details.quantity_received} وحدة</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">حالة التلف</label>
+                                        <p class="text-lg font-medium text-gray-900 mt-1">${details.damage_condition}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- معلومات الاستقبال -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-inbox-line text-blue-600"></i>
+                                    معلومات الاستقبال
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50 p-6 rounded-xl border border-blue-200">
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">تاريخ الاستقبال</label>
+                                        <p class="text-lg font-medium text-gray-900 mt-1">${details.receipt_date}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">وقت الاستقبال</label>
+                                        <p class="text-lg font-medium text-gray-900 mt-1">${details.receipt_time}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">المستقبل بواسطة</label>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <i class="ri-user-line text-gray-400"></i>
+                                            <p class="text-lg font-medium text-gray-900">${details.received_by}</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">المُسلِّم</label>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <i class="ri-user-line text-gray-400"></i>
+                                            <p class="text-lg font-medium text-gray-900">${details.sent_by}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- حالة المعالجة والمعدة -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-settings-line text-purple-600"></i>
+                                    معلومات المعالجة
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-purple-50 p-6 rounded-xl border border-purple-200">
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">حالة المعالجة</label>
+                                        <p class="text-lg font-medium text-gray-900 mt-1">${details.processing_status}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500 uppercase">المعدة</label>
+                                        <p class="text-lg font-medium text-gray-900 mt-1">${details.equipment_name}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- الملاحظات والتفاصيل -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-file-text-line text-green-600"></i>
+                                    الملاحظات والتفاصيل
+                                </h4>
+                                <div class="bg-green-50 p-6 rounded-xl border border-green-200">
+                                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">${details.damage_description}</p>
+                                </div>
+                            </div>
+
+                            <!-- أزرار الإغلاق -->
+                            <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                                <button onclick="closeDamagedPartDetailsModal()" class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                                    إغلاق
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', detailsHTML);
+        }
+
+        function closeDamagedPartDetailsModal() {
+            const modal = document.getElementById('damagedPartDetailsModal');
+            if (modal) {
+                modal.remove();
             }
         }
 
