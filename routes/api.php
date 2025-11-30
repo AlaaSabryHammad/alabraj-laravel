@@ -22,7 +22,6 @@ use App\Http\Controllers\FuelManagementController;
 
 // Public routes (no authentication required)
 Route::post('login', [AuthController::class, 'login']);
-Route::get('fuel-truck/{fuelTruck}/distributions', [FuelManagementController::class, 'showDistributions']);
 
 // Protected routes (authentication required)
 Route::middleware('auth:sanctum')->group(function () {
@@ -73,7 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('equipment/{equipment}/status', [EquipmentController::class, 'updateStatus']);
 
     // Fuel Management API routes
-    Route::get('fuel-truck/{id}/distributions', [FuelManagementController::class, 'showDistributions']);
+    Route::get('fuel-truck/{fuelTruck}/distributions', [FuelManagementController::class, 'showDistributions']);
 });
 
 // Default user route for authenticated users
