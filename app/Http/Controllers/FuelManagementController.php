@@ -86,7 +86,9 @@ class FuelManagementController extends Controller
     public function showDistributions($fuelTruck)
     {
         // Handle both model binding and ID parameter
-        $fuelTruckId = $fuelTruck instanceof FuelTruck ? $fuelTruck->id : $fuelTruck;
+        $fuelTruckId = $fuelTruck instanceof FuelTruck ? $fuelTruck->id : (int)$fuelTruck;
+
+        \Log::info('FuelManagementController::showDistributions - fuelTruckId: ' . $fuelTruckId . ', type: ' . gettype($fuelTruckId));
 
         $distributions = FuelDistribution::with(['targetEquipment', 'distributedBy', 'approvedBy'])
             ->where('fuel_truck_id', $fuelTruckId)
@@ -125,48 +127,76 @@ class FuelManagementController extends Controller
      */
     public function distributeFuel(Request $request, FuelTruck $fuelTruck)
     {
-        $request->validate([
-            'target_equipment_id' => 'required|exists:equipments,id',
-            'quantity' => 'required|numeric|min:0.1',
-            'distribution_date' => 'required|date',
-            'notes' => 'nullable|string'
-        ]);
+        try {
+            \Log::info('distributeFuel called with fuelTruckId: ' . $fuelTruck->id);
+            \Log::info('Request data: ' . json_encode($request->all()));
 
-        // Check if user is the driver of the fuel truck
-        $user = Auth::user();
-        if (!$user->employee || $fuelTruck->equipment->driver_id !== $user->employee->id) {
+            $validated = $request->validate([
+                'target_equipment_id' => 'required|exists:equipments,id',
+                'quantity' => 'required|numeric|min:0.1',
+                'distribution_date' => 'required|date',
+                'notes' => 'nullable|string'
+            ]);
+
+            \Log::info('Validation passed: ' . json_encode($validated));
+
+            // Check if user is the driver of the fuel truck
+            $user = Auth::user();
+            if (!$user) {
+                \Log::error('No authenticated user found');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'يجب تسجيل الدخول أولاً'
+                ], 401);
+            }
+
+            \Log::info('Current user: ' . $user->id . ', user->employee_id: ' . ($user->employee_id ?? 'null'));
+            \Log::info('Fuel truck equipment driver_id: ' . ($fuelTruck->equipment->driver_id ?? 'null'));
+
+            if (!$user->employee_id || $fuelTruck->equipment->driver_id !== $user->employee_id) {
+                \Log::warning('User not authorized to distribute from this fuel truck. User employee_id: ' . ($user->employee_id ?? 'null') . ', Truck driver_id: ' . ($fuelTruck->equipment->driver_id ?? 'null'));
+                return response()->json([
+                    'success' => false,
+                    'message' => 'غير مصرح لك بتوزيع المحروقات من هذه السيارة'
+                ], 403);
+            }
+
+            // Check if there's enough fuel
+            if ($request->quantity > $fuelTruck->remaining_quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الكمية المطلوبة أكبر من الكمية المتاحة'
+                ], 400);
+            }
+
+            $distribution = FuelDistribution::create([
+                'fuel_truck_id' => $fuelTruck->id,
+                'target_equipment_id' => $request->target_equipment_id,
+                'distributed_by' => Auth::id(),
+                'fuel_type' => $fuelTruck->fuel_type,
+                'quantity' => $request->quantity,
+                'distribution_date' => $request->distribution_date,
+                'approval_status' => 'pending',
+                'notes' => $request->notes
+            ]);
+
+            \Log::info('Distribution created - ID: ' . $distribution->id . ', fuel_truck_id: ' . $distribution->fuel_truck_id . ', fuelTruck model id: ' . $fuelTruck->id);
+
+            // Send notification to target equipment driver
+            $this->notifyTargetEquipmentDriver($distribution);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تسجيل التوزيع بنجاح وتم إرسال إشعار لسائق المعدة',
+                'distribution' => $distribution->load(['targetEquipment', 'distributedBy'])
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in distributeFuel: ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
             return response()->json([
                 'success' => false,
-                'message' => 'غير مصرح لك بتوزيع المحروقات من هذه السيارة'
-            ], 403);
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Check if there's enough fuel
-        if ($request->quantity > $fuelTruck->remaining_quantity) {
-            return response()->json([
-                'success' => false,
-                'message' => 'الكمية المطلوبة أكبر من الكمية المتاحة'
-            ], 400);
-        }
-
-        $distribution = FuelDistribution::create([
-            'fuel_truck_id' => $fuelTruck->id,
-            'target_equipment_id' => $request->target_equipment_id,
-            'distributed_by' => Auth::id(),
-            'fuel_type' => $fuelTruck->fuel_type,
-            'quantity' => $request->quantity,
-            'distribution_date' => $request->distribution_date,
-            'notes' => $request->notes
-        ]);
-
-        // Send notification to target equipment driver
-        $this->notifyTargetEquipmentDriver($distribution);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تسجيل التوزيع بنجاح وتم إرسال إشعار لسائق المعدة',
-            'distribution' => $distribution->load(['targetEquipment', 'distributedBy'])
-        ]);
     }
 
     /**

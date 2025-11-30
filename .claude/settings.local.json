@@ -14,7 +14,11 @@
       "Bash(nul)",
       "Bash(del nul 2)",
       "Bash(git reset:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(if [ -f \"storage/logs/laravel.log\" ])",
+      "Bash(then tail -50 \"storage/logs/laravel.log\")",
+      "Bash(else echo \"Log file not found\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": [],
