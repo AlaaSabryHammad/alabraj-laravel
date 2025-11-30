@@ -8,6 +8,8 @@ use App\Models\FuelTruck;
 use App\Models\FuelDistribution;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Notifications\FuelDistributionNotification;
 
 class FuelManagementController extends Controller
 {
@@ -154,9 +156,12 @@ class FuelManagementController extends Controller
             'notes' => $request->notes
         ]);
 
+        // Send notification to target equipment driver
+        $this->notifyTargetEquipmentDriver($distribution);
+
         return response()->json([
             'success' => true,
-            'message' => 'تم تسجيل التوزيع بنجاح وفي انتظار الموافقة',
+            'message' => 'تم تسجيل التوزيع بنجاح وتم إرسال إشعار لسائق المعدة',
             'distribution' => $distribution->load(['targetEquipment', 'distributedBy'])
         ]);
     }
@@ -262,5 +267,25 @@ class FuelManagementController extends Controller
             ->get();
 
         return view('fuel-management.driver', compact('driverFuelTrucks', 'targetEquipments'));
+    }
+
+    /**
+     * إرسال إشعار لسائق المعدة المستهدفة بتوزيع المحروقات
+     */
+    private function notifyTargetEquipmentDriver(FuelDistribution $distribution): void
+    {
+        try {
+            // الحصول على المعدة المستهدفة والسائق
+            $equipment = Equipment::with('driver.user')->find($distribution->target_equipment_id);
+
+            if (!$equipment || !$equipment->driver || !$equipment->driver->user) {
+                return;
+            }
+
+            // إرسال إشعار لسائق المعدة
+            $equipment->driver->user->notify(new FuelDistributionNotification($distribution));
+        } catch (\Exception $e) {
+            Log::info('Failed to send fuel distribution notification to driver: ' . $e->getMessage());
+        }
     }
 }
