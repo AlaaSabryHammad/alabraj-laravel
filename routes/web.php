@@ -252,6 +252,7 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::post('/{warehouse}/receive-new-spares', [WarehouseController::class, 'receiveNewSpares'])->name('warehouses.receive-new-spares');
         Route::post('/{warehouse}/receive-damaged-spares', [WarehouseController::class, 'receiveDamagedSpares'])->name('warehouses.receive-damaged-spares');
         Route::post('/{warehouse}/store-damaged-parts', [WarehouseController::class, 'storeDamagedParts'])->name('warehouses.store-damaged-parts');
+        Route::post('/{warehouse}/transfer-spare-parts', [WarehouseController::class, 'transferSpareParts'])->name('warehouses.transfer-spare-parts');
         Route::post('/{warehouse}/export-spares', [WarehouseController::class, 'storeExport'])->name('warehouses.export-spares');
         Route::get('/{warehouse}/reports', [WarehouseController::class, 'reports'])->name('warehouses.reports');
     });
@@ -264,6 +265,13 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/{sparePartType}/edit', [SparePartTypeController::class, 'edit'])->name('spare-part-types.edit');
         Route::put('/{sparePartType}', [SparePartTypeController::class, 'update'])->name('spare-part-types.update');
         Route::delete('/{sparePartType}', [SparePartTypeController::class, 'destroy'])->name('spare-part-types.destroy');
+    });
+
+    // Spare Parts Management Routes
+    Route::prefix('spare-parts')->group(function () {
+        Route::post('/', [App\Http\Controllers\SparePartController::class, 'store'])->name('spare-parts.store');
+        Route::put('/{sparePart}', [App\Http\Controllers\SparePartController::class, 'update'])->name('spare-parts.update');
+        Route::delete('/{sparePart}', [App\Http\Controllers\SparePartController::class, 'destroy'])->name('spare-parts.destroy');
     });
 
     // Document Management Routes
@@ -293,12 +301,20 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
 
 
     // Finance Management Routes
-    Route::prefix('finance')->group(function () {
-        Route::get('/', [FinanceController::class, 'index'])->name('finance.index');
-        Route::get('/all-transactions', [FinanceController::class, 'allTransactions'])->name('finance.all-transactions');
-        Route::get('/daily-report', [FinanceController::class, 'dailyReport'])->name('finance.daily-report');
-        Route::get('/employee-report/{employee}', [FinanceController::class, 'employeeReport'])->name('finance.employee-report');
-        Route::get('/{id}', [FinanceController::class, 'show'])->name('finance.show');
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::get('/', [FinanceController::class, 'index'])->name('index');
+        Route::get('/all-transactions', [FinanceController::class, 'allTransactions'])->name('all-transactions');
+        Route::get('/daily-report', [FinanceController::class, 'dailyReport'])->name('daily-report');
+        Route::get('/employee-report/{employee}', [FinanceController::class, 'employeeReport'])->name('employee-report');
+        Route::get('/{id}', [FinanceController::class, 'show'])->name('show');
+
+        // Custodies Routes (nested under finance)
+        Route::prefix('custodies')->name('custodies.')->group(function () {
+            Route::post('/', [App\Http\Controllers\CustodyController::class, 'store'])->name('store');
+            Route::get('/{custody}', [App\Http\Controllers\CustodyController::class, 'show'])->name('show');
+            Route::get('/{custody}/print', [App\Http\Controllers\CustodyController::class, 'print'])->name('print');
+            Route::patch('/{custody}/approve', [App\Http\Controllers\CustodyController::class, 'approve'])->name('approve');
+        });
     });
 
     // Expense Voucher Management Routes
@@ -312,6 +328,20 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::delete('/{expenseVoucher}', [App\Http\Controllers\ExpenseVoucherController::class, 'destroy'])->name('destroy');
         Route::patch('/{expenseVoucher}/approve', [App\Http\Controllers\ExpenseVoucherController::class, 'approve'])->name('approve');
         Route::get('/{expenseVoucher}/print', [App\Http\Controllers\ExpenseVoucherController::class, 'print'])->name('print');
+    });
+
+    // Revenue Voucher Management Routes
+    Route::prefix('revenue-vouchers')->name('revenue-vouchers.')->group(function () {
+        Route::get('/', [App\Http\Controllers\RevenueVoucherController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\RevenueVoucherController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\RevenueVoucherController::class, 'store'])->name('store');
+        Route::get('/{revenueVoucher}', [App\Http\Controllers\RevenueVoucherController::class, 'show'])->name('show');
+        Route::get('/{revenueVoucher}/edit', [App\Http\Controllers\RevenueVoucherController::class, 'edit'])->name('edit');
+        Route::put('/{revenueVoucher}', [App\Http\Controllers\RevenueVoucherController::class, 'update'])->name('update');
+        Route::delete('/{revenueVoucher}', [App\Http\Controllers\RevenueVoucherController::class, 'destroy'])->name('destroy');
+        Route::patch('/{revenueVoucher}/approve', [App\Http\Controllers\RevenueVoucherController::class, 'approve'])->name('approve');
+        Route::patch('/{revenueVoucher}/mark-received', [App\Http\Controllers\RevenueVoucherController::class, 'markAsReceived'])->name('mark-received');
+        Route::get('/{revenueVoucher}/print', [App\Http\Controllers\RevenueVoucherController::class, 'print'])->name('print');
     });
 
     // Expense Entity Management Routes
@@ -555,6 +585,7 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/', [FuelManagementController::class, 'index'])->name('index');
         Route::get('/driver', [FuelManagementController::class, 'driverIndex'])->name('driver');
         Route::post('/equipment/{equipment}/add-fuel', [FuelManagementController::class, 'addFuel'])->name('add-fuel');
+        Route::post('/fuel-truck/{fuelTruck}/add-quantity', [FuelManagementController::class, 'addQuantity'])->name('add-quantity');
         Route::get('/fuel-truck/{fuelTruck}/distributions', [FuelManagementController::class, 'showDistributions'])->name('distributions');
         Route::post('/fuel-truck/{fuelTruck}/distribute', [FuelManagementController::class, 'distributeFuel'])->name('distribute');
         Route::patch('/distribution/{distribution}/approve', [FuelManagementController::class, 'approveDistribution'])->name('approve-distribution');

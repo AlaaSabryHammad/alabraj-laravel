@@ -18,6 +18,8 @@ class EquipmentTypeSeeder extends Seeder
             ['name' => 'رافعة'],
             ['name' => 'شاحنة'],
             ['name' => 'جرافة'],
+            ['name' => 'سيارة'],
+            ['name' => 'سيارة محروقات'],
             ['name' => 'خلاطة خرسانة'],
             ['name' => 'مولد كهربائي'],
             ['name' => 'ضاغط هواء'],

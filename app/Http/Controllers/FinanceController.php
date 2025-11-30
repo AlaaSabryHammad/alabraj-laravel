@@ -174,12 +174,12 @@ class FinanceController extends Controller
         // إجمالي الإيرادات الضريبية (المستخلصات + سندات القبض)
         $totalTaxRevenue = $extractTaxRevenue + $voucherTaxRevenue;
         
-        // حساب الضرائب من سندات الصرف (افتراضياً 15%)
+        // حساب الضرائب من سندات الصرف
         $totalTaxExpenses = ExpenseVoucher::where('status', '!=', 'cancelled')
-            ->where('tax_type', 'taxable')
+            ->where('tax_rate', '>', 0)
             ->get()
             ->sum(function ($voucher) {
-                return $voucher->amount * 0.15; // ضريبة 15%
+                return $voucher->tax_amount ?? 0;
             });
 
         // Get all active employees for custody form

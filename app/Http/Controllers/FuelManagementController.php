@@ -206,6 +206,41 @@ class FuelManagementController extends Controller
     }
 
     /**
+     * Add quantity to fuel truck
+     */
+    public function addQuantity(Request $request, FuelTruck $fuelTruck)
+    {
+        $request->validate([
+            'fuel_type' => 'required|in:diesel,gasoline,engine_oil,hydraulic_oil,radiator_water,brake_oil,other',
+            'quantity' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string'
+        ]);
+
+        $quantity = $request->quantity;
+
+        // Check if adding the quantity would exceed capacity
+        if ($fuelTruck->current_quantity + $quantity > $fuelTruck->capacity) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الكمية المراد إضافتها تتجاوز السعة الكلية للتانكر'
+            ], 400);
+        }
+
+        // Update current quantity
+        $fuelTruck->update([
+            'current_quantity' => $fuelTruck->current_quantity + $quantity,
+            'fuel_type' => $request->fuel_type,
+            'notes' => $request->notes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إضافة الكمية بنجاح',
+            'fuel_truck' => $fuelTruck
+        ]);
+    }
+
+    /**
      * Driver distribution page - for fuel truck drivers
      */
     public function driverIndex()

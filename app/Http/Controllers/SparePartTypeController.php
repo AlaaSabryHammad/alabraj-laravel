@@ -31,22 +31,19 @@ class SparePartTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:spare_part_types,name',
-            'description' => 'nullable|string|max:1000',
-            'category' => 'required|string|in:engine,transmission,brakes,electrical,hydraulic,cooling,filters,tires,body,other'
+            'description' => 'nullable|string|max:1000'
         ], [
             'name.required' => 'اسم نوع القطعة مطلوب',
-            'name.unique' => 'هذا النوع موجود مسبقاً',
-            'category.required' => 'الفئة مطلوبة',
-            'category.in' => 'الفئة المختارة غير صحيحة'
+            'name.unique' => 'هذا النوع موجود مسبقاً'
         ]);
 
         try {
             SparePartType::create($validated);
 
-            return redirect()->route('spare-part-types.index')
+            return redirect()->route('warehouses.index')
                 ->with('success', 'تم إضافة نوع قطعة الغيار بنجاح');
         } catch (\Exception $e) {
-            return redirect()->route('spare-part-types.index')
+            return redirect()->route('warehouses.index')
                 ->with('error', 'حدث خطأ أثناء إضافة نوع القطعة: ' . $e->getMessage());
         }
     }

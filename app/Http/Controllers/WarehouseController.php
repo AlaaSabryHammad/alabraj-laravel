@@ -62,19 +62,12 @@ class WarehouseController extends Controller
             })
             ->get();
 
-        // قطع الغيار التالفة
+        // قطع الغيار التالفة (التي لها damaged_stock > 0)
         $damagedInventory = WarehouseInventory::with(['sparePart.serialNumbers' => function ($query) use ($warehouse) {
             $query->where('location_id', $warehouse->id);
         }])
             ->where('location_id', $warehouse->id)
-            ->whereHas('sparePart', function ($query) {
-                $query->where('is_active', false)
-                    ->where(function ($subQuery) {
-                        $subQuery->where('source', 'damaged_replacement')
-                            ->orWhere('source', 'returned')
-                            ->orWhere('name', 'LIKE', '%(تالفة)%');
-                    });
-            })
+            ->where('damaged_stock', '>', 0)
             ->get();
 
         // للتوافق مع الكود القديم
@@ -95,8 +88,11 @@ class WarehouseController extends Controller
         // الحصول على الموظفين
         $employees = \App\Models\Employee::where('status', 'active')->get();
 
-        // الحصول على جميع المواقع (للقوائم المنسدلة)
-        $allLocations = Location::select('id', 'name', 'project_id')->get();
+        // الحصول على جميع المواقع ما عدا المستودعات (للقوائم المنسدلة)
+        $warehouseTypeId = \App\Models\LocationType::where('name', 'مستودع')->first()?->id;
+        $allLocations = Location::where('location_type_id', '!=', $warehouseTypeId)
+            ->select('id', 'name', 'project_id')
+            ->get();
 
         // الحصول على جميع المعدات لربطها بالتصدير والاستقبال
         $equipments = Equipment::all();
@@ -1173,6 +1169,16 @@ class WarehouseController extends Controller
             // الحصول على المشروع من المستودع/الموقع أو استخدام المشروع الافتراضي
             $projectId = $warehouse->project_id ?? 1; // استخدم المشروع من الموقع أو المشروع الأول كبديل
 
+            // الحصول على ID الموظف للمستخدم الحالي
+            $currentUserEmployeeId = Auth::user()?->employee_id;
+
+            if (!$currentUserEmployeeId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا توجد بيانات موظف مرتبطة بحسابك. يرجى التواصل مع الإدارة.'
+                ], 400);
+            }
+
             // حفظ كل قطعة تالفة في جدول DamagedPartsReceipt
             foreach ($validated['spare_parts'] as $part) {
                 DamagedPartsReceipt::create([
@@ -1184,7 +1190,7 @@ class WarehouseController extends Controller
                     'spare_part_id' => $part['spare_part_id'],
                     'quantity_received' => $part['quantity'],
                     'sent_by' => $validated['employee_id'],
-                    'received_by' => Auth::id(),
+                    'received_by' => $currentUserEmployeeId,
                     'damage_description' => $validated['damage_notes'] ?? null,
                     'processing_status' => 'received',
                     'damage_condition' => 'for_evaluation'
@@ -1218,6 +1224,110 @@ class WarehouseController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ في حفظ البيانات: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * نقل قطع الغيار بين المستودعات
+     */
+    public function transferSpareParts(Request $request, Location $warehouse)
+    {
+        // التحقق من صحة البيانات
+        $validated = $request->validate([
+            'destination_warehouse_id' => 'required|exists:locations,id|different:' . $warehouse->id,
+            'transfer_notes' => 'nullable|string|max:500',
+            'spare_parts' => 'required|array|min:1',
+            'spare_parts.*.spare_part_id' => 'required|exists:spare_parts,id',
+            'spare_parts.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $destinationWarehouse = Location::findOrFail($validated['destination_warehouse_id']);
+
+            // التحقق من أن الوجهة أيضاً مستودع
+            $warehouseTypeId = \App\Models\LocationType::where('name', 'مستودع')->first()?->id;
+            if ($destinationWarehouse->location_type_id !== $warehouseTypeId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الموقع المقصد ليس مستودعاً صحيحاً'
+                ], 400);
+            }
+
+            // التحقق من وجود قطع كافية للنقل
+            foreach ($validated['spare_parts'] as $part) {
+                $inventory = WarehouseInventory::where('location_id', $warehouse->id)
+                    ->where('spare_part_id', $part['spare_part_id'])
+                    ->first();
+
+                if (!$inventory || $inventory->available_stock < $part['quantity']) {
+                    $sparePart = SparePart::find($part['spare_part_id']);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "الكمية المتاحة من {$sparePart->name} غير كافية للنقل"
+                    ], 400);
+                }
+            }
+
+            // تنفيذ النقل
+            $currentUser = Auth::user();
+            $transferDate = now();
+
+            foreach ($validated['spare_parts'] as $part) {
+                // تقليل المخزون من المصدر
+                $sourceInventory = WarehouseInventory::where('location_id', $warehouse->id)
+                    ->where('spare_part_id', $part['spare_part_id'])
+                    ->firstOrFail();
+
+                $sourceInventory->decrement('current_stock', $part['quantity']);
+                $sourceInventory->decrement('available_stock', $part['quantity']);
+                $sourceInventory->update(['last_transaction_date' => $transferDate->toDateString()]);
+
+                // زيادة المخزون في الوجهة
+                $destInventory = WarehouseInventory::firstOrCreate(
+                    [
+                        'location_id' => $destinationWarehouse->id,
+                        'spare_part_id' => $part['spare_part_id']
+                    ],
+                    [
+                        'current_stock' => 0,
+                        'available_stock' => 0,
+                        'reserved_stock' => 0,
+                        'damaged_stock' => 0,
+                        'status' => 'new'
+                    ]
+                );
+
+                $destInventory->increment('current_stock', $part['quantity']);
+                $destInventory->increment('available_stock', $part['quantity']);
+                $destInventory->update(['last_transaction_date' => $transferDate->toDateString()]);
+
+                // تسجيل عملية النقل
+                SparePartTransaction::create([
+                    'spare_part_id' => $part['spare_part_id'],
+                    'location_id' => $warehouse->id,
+                    'transaction_type' => 'تحويل',
+                    'quantity' => $part['quantity'],
+                    'transaction_date' => $transferDate->toDateString(),
+                    'user_id' => $currentUser->id,
+                    'unit_price' => 0,
+                    'total_amount' => 0,
+                    'notes' => $validated['transfer_notes'] ?? null
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم نقل القطع بنجاح إلى ' . $destinationWarehouse->name
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ في نقل البيانات: ' . $e->getMessage()
             ], 500);
         }
     }

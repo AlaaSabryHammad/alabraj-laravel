@@ -64,7 +64,7 @@
                         <p class="text-sm font-medium text-gray-600">إجمالي الكمية</p>
                         @php
                             $totalQuantity =
-                                $newInventory->sum('current_stock') + $damagedInventory->sum('current_stock');
+                                $newInventory->sum('current_stock') + $damagedInventory->sum('damaged_stock');
                         @endphp
                         <p class="text-2xl font-bold text-blue-600">{{ $totalQuantity }}</p>
                     </div>
@@ -101,13 +101,15 @@
                         @php
                             $totalValue =
                                 $newInventory->sum(function ($item) {
-                                    return $item->current_stock * ($item->sparePart->price ?? 0);
+                                    $price = $item->average_cost > 0 ? $item->average_cost : ($item->sparePart->unit_price ?? 0);
+                                    return $item->current_stock * $price;
                                 }) +
                                 $damagedInventory->sum(function ($item) {
-                                    return $item->current_stock * ($item->sparePart->price ?? 0);
+                                    $price = $item->average_cost > 0 ? $item->average_cost : ($item->sparePart->unit_price ?? 0);
+                                    return $item->damaged_stock * $price;
                                 });
                         @endphp
-                        <p class="text-2xl font-bold text-purple-600">{{ number_format($totalValue, 0) }} ر.س</p>
+                        <p class="text-2xl font-bold text-purple-600">{{ number_format($totalValue, 2) }} ر.س</p>
                     </div>
                     <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                         <i class="ri-money-dollar-circle-line text-2xl text-purple-600"></i>
@@ -179,7 +181,7 @@
                                         <p class="text-sm text-gray-600">{{ $item->sparePart->code }}</p>
                                     </div>
                                     <div class="text-left">
-                                        <p class="font-semibold text-red-600">{{ $item->current_stock }}</p>
+                                        <p class="font-semibold text-red-600">{{ $item->damaged_stock }}</p>
                                         <p class="text-sm text-red-600">تالف</p>
                                     </div>
                                 </div>
@@ -205,8 +207,8 @@
                     <div>
                         <h2 class="text-lg font-semibold text-gray-900">أنواع قطع الغيار المسجلة</h2>
                         @php
-                            $allSpareParts = collect($newInventory)->merge($damagedInventory);
-                            $uniquePartNames = $allSpareParts->pluck('sparePart.name')->unique();
+                            $warehouseInventory = collect($newInventory)->merge($damagedInventory);
+                            $uniquePartNames = $warehouseInventory->pluck('sparePart.name')->unique();
                         @endphp
                         <p class="text-sm text-gray-600">{{ $uniquePartNames->count() }} نوع مختلف من قطع الغيار</p>
                     </div>
@@ -310,10 +312,12 @@
                                     $key = $partName . '_' . $partCode;
 
                                     if (!isset($groupedParts[$key])) {
+                                        // استخدام average_cost من المخزون (السعر الفعلي)، وإذا كان 0 استخدم unit_price
+                                        $price = $item->average_cost > 0 ? $item->average_cost : ($item->sparePart->unit_price ?? 0);
                                         $groupedParts[$key] = [
                                             'name' => $partName,
                                             'code' => $partCode,
-                                            'price' => $item->sparePart->unit_price ?? 0,
+                                            'price' => $price,
                                             'new_stock' => 0,
                                             'damaged_stock' => 0,
                                         ];
@@ -329,10 +333,12 @@
                                     $key = $partName . '_' . $partCode;
 
                                     if (!isset($groupedParts[$key])) {
+                                        // استخدام average_cost من المخزون (السعر الفعلي)، وإذا كان 0 استخدم unit_price
+                                        $price = $item->average_cost > 0 ? $item->average_cost : ($item->sparePart->unit_price ?? 0);
                                         $groupedParts[$key] = [
                                             'name' => $partName,
                                             'code' => $partCode,
-                                            'price' => $item->sparePart->unit_price ?? 0,
+                                            'price' => $price,
                                             'new_stock' => 0,
                                             'damaged_stock' => 0,
                                         ];
@@ -661,11 +667,12 @@
                             <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">المجموع</th>
                             <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">المعدة</th>
                             <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">المُصدِّر</th>
+                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($exportedParts as $transaction)
-                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-transaction-id="{{ $transaction->id }}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('Y/m/d') }}
                             </td>
@@ -706,10 +713,32 @@
                                     <span class="text-gray-500">غير محدد</span>
                                 @endif
                             </td>
+                            <td class="px-6 py-4 text-sm text-center">
+                                <div class="flex items-center gap-2 justify-center">
+                                    <button type="button"
+                                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors"
+                                            title="عرض التفاصيل"
+                                            onclick="viewExportDetails({{ $transaction->id }})">
+                                        <i class="ri-eye-line text-lg"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded transition-colors"
+                                            title="طباعة"
+                                            onclick="printExportRecord({{ $transaction->id }})">
+                                        <i class="ri-printer-line text-lg"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded transition-colors"
+                                            title="حذف"
+                                            onclick="deleteExportRecord({{ $transaction->id }})">
+                                        <i class="ri-delete-bin-line text-lg"></i>
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="ri-inbox-line text-4xl text-gray-300 mb-3"></i>
                                     <p class="text-gray-600 font-medium">لا توجد عمليات تصدير</p>
@@ -938,7 +967,7 @@
                                 </div>
                             </button>
 
-                            <button type="button" onclick="showDevelopmentModal('تصدير لمستودع آخر', 'سيتم تطوير وظيفة النقل بين المستودعات قريباً'); closeExportModal();" 
+                            <button type="button" onclick="openWarehouseTransferModal(); closeExportModal();"
                                     class="w-full bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 hover:border-purple-300 p-6 rounded-xl transition-all duration-300 flex items-center gap-4 text-right">
                                 <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center">
                                     <i class="ri-building-line text-2xl text-purple-600"></i>
@@ -1412,87 +1441,10 @@
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
                                                 <select name="spare_parts[0][name]" id="sparePartName_0" required onchange="handleSparePartNameChange(0, this)"
                                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                    <option value="">اختر نوع قطعة الغيار</option>
-                                                    
-                                                    <!-- قطع كهربائية -->
-                                                    <optgroup label="⚡ قطع كهربائية">
-                                                        <option value="محرك كهربائي" data-category="ELC" data-desc="محرك كهربائي للمعدات الصناعية">محرك كهربائي</option>
-                                                        <option value="مفتاح كهربائي" data-category="ELC" data-desc="مفتاح تحكم كهربائي">مفتاح كهربائي</option>
-                                                        <option value="كابل كهربائي" data-category="ELC" data-desc="كابل نقل الطاقة الكهربائية">كابل كهربائي</option>
-                                                        <option value="مقاومة كهربائية" data-category="ELC" data-desc="مقاومة للدوائر الكهربائية">مقاومة كهربائية</option>
-                                                        <option value="مكثف كهربائي" data-category="ELC" data-desc="مكثف لتخزين الطاقة">مكثف كهربائي</option>
-                                                        <option value="ترانس كهربائي" data-category="ELC" data-desc="محول كهربائي">ترانس كهربائي</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- قطع ميكانيكية -->
-                                                    <optgroup label="⚙️ قطع ميكانيكية">
-                                                        <option value="محمل معدني" data-category="MEC" data-desc="محمل للأجزاء المتحركة">محمل معدني</option>
-                                                        <option value="ترس معدني" data-category="MEC" data-desc="ترس نقل الحركة">ترس معدني</option>
-                                                        <option value="سير ناقل" data-category="BLT" data-desc="سير نقل الحركة">سير ناقل</option>
-                                                        <option value="زنبرك معدني" data-category="SPG" data-desc="زنبرك مرن">زنبرك معدني</option>
-                                                        <option value="جوان مطاطي" data-category="GSK" data-desc="جوان منع التسريب">جوان مطاطي</option>
-                                                        <option value="برغي معدني" data-category="FAS" data-desc="برغي تثبيت">برغي معدني</option>
-                                                        <option value="صامولة معدنية" data-category="FAS" data-desc="صامولة تثبيت">صامولة معدنية</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- مضخات وصمامات -->
-                                                    <optgroup label="🚰 مضخات وصمامات">
-                                                        <option value="مضخة مياه" data-category="PMP" data-desc="مضخة ضخ المياه">مضخة مياه</option>
-                                                        <option value="مضخة زيت" data-category="PMP" data-desc="مضخة ضخ الزيت">مضخة زيت</option>
-                                                        <option value="صمام تحكم" data-category="VAL" data-desc="صمام للتحكم في التدفق">صمام تحكم</option>
-                                                        <option value="صمام أمان" data-category="VAL" data-desc="صمام الأمان والحماية">صمام أمان</option>
-                                                        <option value="صمام كرة" data-category="VAL" data-desc="صمام كروي">صمام كرة</option>
-                                                        <option value="صمام فراشة" data-category="VAL" data-desc="صمام فراشة للتحكم">صمام فراشة</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- حساسات ومقاييس -->
-                                                    <optgroup label="📊 حساسات ومقاييس">
-                                                        <option value="حساس حرارة" data-category="SEN" data-desc="حساس قياس الحرارة">حساس حرارة</option>
-                                                        <option value="حساس ضغط" data-category="SEN" data-desc="حساس قياس الضغط">حساس ضغط</option>
-                                                        <option value="حساس رطوبة" data-category="SEN" data-desc="حساس قياس الرطوبة">حساس رطوبة</option>
-                                                        <option value="مقياس تدفق" data-category="SEN" data-desc="مقياس معدل التدفق">مقياس تدفق</option>
-                                                        <option value="حساس مستوى" data-category="SEN" data-desc="حساس قياس المستوى">حساس مستوى</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- فلاتر ومرشحات -->
-                                                    <optgroup label="🔍 فلاتر ومرشحات">
-                                                        <option value="فلتر هواء" data-category="FLT" data-desc="فلتر تنقية الهواء">فلتر هواء</option>
-                                                        <option value="فلتر مياه" data-category="FLT" data-desc="فلتر تنقية المياه">فلتر مياه</option>
-                                                        <option value="فلتر زيت" data-category="FLT" data-desc="فلتر تنقية الزيت">فلتر زيت</option>
-                                                        <option value="فلتر وقود" data-category="FLT" data-desc="فلتر تنقية الوقود">فلتر وقود</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- تكييف وتبريد -->
-                                                    <optgroup label="❄️ تكييف وتبريد">
-                                                        <option value="كمبروسر تكييف" data-category="HVC" data-desc="ضاغط مكيف الهواء">كمبروسر تكييف</option>
-                                                        <option value="مروحة تكييف" data-category="HVC" data-desc="مروحة نظام التكييف">مروحة تكييف</option>
-                                                        <option value="ملف تبريد" data-category="HVC" data-desc="ملف التبريد">ملف تبريد</option>
-                                                        <option value="ثرموستات" data-category="HVC" data-desc="منظم الحرارة">ثرموستات</option>
-                                                        <option value="غاز تبريد" data-category="HVC" data-desc="غاز المبرد">غاز تبريد</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- أدوات السلامة -->
-                                                    <optgroup label="🦺 أدوات السلامة">
-                                                        <option value="مطفأة حريق" data-category="SAF" data-desc="مطفأة للحماية من الحريق">مطفأة حريق</option>
-                                                        <option value="كاشف دخان" data-category="SAF" data-desc="جهاز كشف الدخان">كاشف دخان</option>
-                                                        <option value="إنذار حريق" data-category="SAF" data-desc="جهاز إنذار الحريق">إنذار حريق</option>
-                                                        <option value="مخرج طوارئ" data-category="SAF" data-desc="لوحة مخرج الطوارئ">مخرج طوارئ</option>
-                                                        <option value="كاميرا مراقبة" data-category="SAF" data-desc="كاميرا نظام المراقبة">كاميرا مراقبة</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- أدوات ومعدات -->
-                                                    <optgroup label="🔧 أدوات ومعدات">
-                                                        <option value="مفك براغي" data-category="TOL" data-desc="مفك لفك وربط البراغي">مفك براغي</option>
-                                                        <option value="مفتاح إنجليزي" data-category="TOL" data-desc="مفتاح قابل للتعديل">مفتاح إنجليزي</option>
-                                                        <option value="كماشة" data-category="TOL" data-desc="كماشة للإمساك">كماشة</option>
-                                                        <option value="منشار معدني" data-category="TOL" data-desc="منشار للقطع">منشار معدني</option>
-                                                        <option value="مثقاب كهربائي" data-category="TOL" data-desc="مثقاب للثقب">مثقاب كهربائي</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- أخرى -->
-                                                    <optgroup label="📦 أخرى">
-                                                        <option value="أخرى - حدد في الوصف" data-category="GEN" data-desc="نوع آخر - يرجى التحديد في الوصف">أخرى - حدد في الوصف</option>
-                                                    </optgroup>
+                                                    <option value="">اختر قطعة الغيار</option>
+                                                    @foreach($allSpareParts as $part)
+                                                        <option value="{{ $part->id }}" data-code="{{ $part->code }}" data-name="{{ $part->name }}">{{ $part->name }}</option>
+                                                    @endforeach
                                                 </select>
                                             </div>
                                             <div>
@@ -1638,13 +1590,13 @@
                                     throw new Error(`الرجاء إدخال السعر في الصف ${index + 1}`);
                                 }
 
-                                // Get or use category from option
+                                // Get spare part name from the selected option
                                 const selectedOption = nameSelect.querySelector(`option[value="${nameSelect.value}"]`);
-                                const category = selectedOption?.getAttribute('data-category') || 'GEN';
+                                const sparePartName = selectedOption?.textContent || '';
 
                                 data.items.push({
-                                    name: nameSelect.value,
-                                    spare_part_type_id: 1, // Default ID - will be matched by name if needed
+                                    name: sparePartName,
+                                    spare_part_type_id: null,
                                     quantity: parseInt(quantityInput.value),
                                     unit_price: parseFloat(priceInput.value),
                                     description: descInput?.value || '',
@@ -1729,11 +1681,236 @@
             }
         }
 
+        // دوال إجراءات جدول القطع المصدرة
+        function viewExportDetails(transactionId) {
+            // البحث عن بيانات العملية من الجدول
+            const row = document.querySelector(`tr[data-transaction-id="${transactionId}"]`);
+            if (!row) return;
+
+            const cells = row.querySelectorAll('td');
+            const date = cells[0].textContent.trim();
+            const partName = cells[1].textContent.trim();
+            const code = cells[2].textContent.trim();
+            const quantity = cells[3].textContent.trim();
+            const price = cells[4].textContent.trim();
+            const total = cells[5].textContent.trim();
+            const equipment = cells[6].textContent.trim();
+            const user = cells[7].textContent.trim();
+
+            const modalHTML = `
+                <div id="viewExportDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-xl">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="ri-eye-line"></i>
+                                    تفاصيل العملية
+                                </h3>
+                                <button type="button" onclick="closeViewExportDetailsModal()" class="text-white hover:text-gray-200">
+                                    <i class="ri-close-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6" dir="rtl">
+                            <div class="space-y-4">
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">رقم العملية</p>
+                                    <p class="text-lg font-semibold text-gray-900">#${transactionId}</p>
+                                </div>
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">التاريخ</p>
+                                    <p class="text-lg font-semibold text-gray-900">${date}</p>
+                                </div>
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">اسم القطعة</p>
+                                    <p class="text-lg font-semibold text-gray-900">${partName}</p>
+                                </div>
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">الكود</p>
+                                    <p class="text-lg font-semibold text-gray-900 font-mono">${code}</p>
+                                </div>
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">الكمية</p>
+                                    <p class="text-lg font-semibold text-gray-900">${quantity}</p>
+                                </div>
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">السعر الواحد</p>
+                                    <p class="text-lg font-semibold text-gray-900">${price}</p>
+                                </div>
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">الإجمالي</p>
+                                    <p class="text-lg font-semibold text-blue-600">${total}</p>
+                                </div>
+                                <div class="border-b pb-3">
+                                    <p class="text-sm text-gray-600">المعدة</p>
+                                    <p class="text-lg font-semibold text-gray-900">${equipment}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">المصدِّر</p>
+                                    <p class="text-lg font-semibold text-gray-900">${user}</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex gap-3">
+                                <button type="button" onclick="printExportDetailsModal(${transactionId})"
+                                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                    <i class="ri-printer-line"></i>
+                                    طباعة
+                                </button>
+                                <button type="button" onclick="closeViewExportDetailsModal()"
+                                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 py-2 rounded-lg transition-colors">
+                                    إغلاق
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function closeViewExportDetailsModal() {
+            const modal = document.getElementById('viewExportDetailsModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function printExportDetailsModal(transactionId) {
+            closeViewExportDetailsModal();
+            window.print();
+        }
+
+        function printExportRecord(transactionId) {
+            const row = document.querySelector(`tr[data-transaction-id="${transactionId}"]`);
+            if (!row) return;
+
+            const cells = row.querySelectorAll('td');
+            const date = cells[0].textContent.trim();
+            const partName = cells[1].textContent.trim();
+            const code = cells[2].textContent.trim();
+            const quantity = cells[3].textContent.trim();
+            const price = cells[4].textContent.trim();
+            const total = cells[5].textContent.trim();
+
+            const modalHTML = `
+                <div id="printExportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl">
+                        <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-t-xl">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="ri-printer-line"></i>
+                                    طباعة السجل
+                                </h3>
+                                <button type="button" onclick="closePrintExportModal()" class="text-white hover:text-gray-200">
+                                    <i class="ri-close-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 text-center" dir="rtl">
+                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="ri-printer-line text-2xl text-green-600"></i>
+                            </div>
+                            <p class="text-gray-700 font-medium mb-2">هل تريد طباعة هذا السجل؟</p>
+                            <p class="text-gray-600 text-sm mb-6">القطعة: <span class="font-semibold">${partName}</span> | الكمية: <span class="font-semibold">${quantity}</span></p>
+                            <div class="flex gap-3">
+                                <button type="button" onclick="confirmPrintExportRecord(${transactionId})"
+                                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors font-medium">
+                                    طباعة
+                                </button>
+                                <button type="button" onclick="closePrintExportModal()"
+                                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 py-2 rounded-lg transition-colors font-medium">
+                                    إلغاء
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function closePrintExportModal() {
+            const modal = document.getElementById('printExportModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function confirmPrintExportRecord(transactionId) {
+            closePrintExportModal();
+            window.print();
+        }
+
+        function deleteExportRecord(transactionId) {
+            const row = document.querySelector(`tr[data-transaction-id="${transactionId}"]`);
+            if (!row) return;
+
+            const cells = row.querySelectorAll('td');
+            const partName = cells[1].textContent.trim();
+
+            const modalHTML = `
+                <div id="deleteExportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl">
+                        <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-xl">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="ri-delete-bin-line"></i>
+                                    تأكيد الحذف
+                                </h3>
+                                <button type="button" onclick="closeDeleteExportModal()" class="text-white hover:text-gray-200">
+                                    <i class="ri-close-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 text-center" dir="rtl">
+                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="ri-error-warning-line text-2xl text-red-600"></i>
+                            </div>
+                            <p class="text-gray-900 font-bold mb-2">هل أنت متأكد من حذف هذا السجل؟</p>
+                            <p class="text-gray-600 text-sm mb-2">القطعة: <span class="font-semibold text-gray-900">${partName}</span></p>
+                            <p class="text-red-600 text-sm font-medium">هذا الإجراء لا يمكن التراجع عنه</p>
+                            <div class="flex gap-3 mt-6">
+                                <button type="button" onclick="confirmDeleteExportRecord(${transactionId})"
+                                        class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition-colors font-medium">
+                                    حذف
+                                </button>
+                                <button type="button" onclick="closeDeleteExportModal()"
+                                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 py-2 rounded-lg transition-colors font-medium">
+                                    إلغاء
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function closeDeleteExportModal() {
+            const modal = document.getElementById('deleteExportModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function confirmDeleteExportRecord(transactionId) {
+            closeDeleteExportModal();
+            // يمكن إضافة حذف فعلي من قاعدة البيانات هنا
+            alert('سيتم حذف السجل رقم: ' + transactionId);
+        }
+
         // البيانات المتاحة بشكل عام
         const damagedPartsModalData = {
             equipments: @json($equipments),
             employees: @json($employees),
-            spareParts: @json($sparePartsForJson ?? [])
+            spareParts: @json($sparePartsForJson ?? []),
+            allSpareParts: @json($allSpareParts->map(function($p) { return ['id' => $p->id, 'name' => $p->name, 'code' => $p->code]; })->values()),
+            currentUser: @json(Auth::user()?->load('employee')),
+            locations: @json($locationsForJson ?? []),
+            currentWarehouseId: {{ $warehouse->id }}
         };
 
         // دالة فتح modal استلام قطع غيار تالفة
@@ -1794,6 +1971,15 @@
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                                             ${employeeOptions}
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <i class="ri-user-check-line text-blue-600 text-xl"></i>
+                                        <div>
+                                            <p class="text-sm font-medium text-blue-900">المستقبل بواسطة (تلقائياً)</p>
+                                            <p class="text-lg font-bold text-blue-700">${damagedPartsModalData.currentUser?.employee?.name || damagedPartsModalData.currentUser?.name || 'المستخدم الحالي'}</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mt-4">
@@ -2176,10 +2362,284 @@
             });
         }
 
+        // دالة فتح modal نقل قطع الغيار بين المستودعات
+        function openWarehouseTransferModal() {
+            const locations = damagedPartsModalData.locations;
+            const allSpareParts = damagedPartsModalData.allSpareParts;
+            const currentWarehouseId = damagedPartsModalData.currentWarehouseId;
+
+            // تصفية المستودعات لاستبعاد المستودع الحالي
+            const otherWarehouses = locations.filter(loc => loc.id !== currentWarehouseId);
+
+            let warehouseOptions = '<option value="">اختر المستودع المقصد</option>';
+            otherWarehouses.forEach(warehouse => {
+                warehouseOptions += `<option value="${warehouse.id}">${warehouse.name}</option>`;
+            });
+
+            let sparePartOptions = '<option value="">اختر قطعة الغيار</option>';
+            allSpareParts.forEach(part => {
+                sparePartOptions += `<option value="${part.id}" data-code="${part.code}">${part.name}</option>`;
+            });
+
+            const modalHTML = `
+                <div id="warehouseTransferModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl max-w-3xl w-full overflow-y-auto shadow-2xl" style="max-height: 90vh;">
+                        <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white rounded-t-2xl">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-2xl font-bold flex items-center gap-3">
+                                    <i class="ri-building-2-line text-3xl"></i>
+                                    نقل قطع الغيار بين المستودعات
+                                </h3>
+                                <button type="button" onclick="closeWarehouseTransferModal()"
+                                        class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center hover:bg-opacity-30 transition-colors">
+                                    <i class="ri-close-line text-white text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <form id="warehouseTransferForm" class="p-8">
+                            <!-- معلومات النقل -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-info-line text-purple-600"></i>
+                                    معلومات النقل
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">المستودع المقصد *</label>
+                                        <select name="destination_warehouse_id" id="destWarehouseSelect" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                            ${warehouseOptions}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات النقل</label>
+                                        <input type="text" name="transfer_notes" placeholder="مثال: نقل طارئ"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- قطع الغيار المراد نقلها -->
+                            <div class="mb-8">
+                                <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-tools-line text-purple-600"></i>
+                                    قطع الغيار المراد نقلها
+                                </h4>
+                                <div id="transferSparePartsContainer" class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-purple-300">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
+                                            <select name="spare_part_id[]" class="transfer_spare_part_select" required
+                                                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                                                ${sparePartOptions}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">الكود</label>
+                                            <input type="text" name="spare_part_code[]" class="transfer_spare_part_code" readonly
+                                                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f3f4f6; color: #6b7280;"
+                                                   placeholder="تلقائي">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">المتاح</label>
+                                            <input type="text" name="spare_part_stock[]" class="transfer_spare_part_stock" readonly
+                                                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f3f4f6; color: #6b7280;"
+                                                   placeholder="0">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">الكمية *</label>
+                                            <input type="number" name="transfer_quantity[]" required min="1" value="1"
+                                                   style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addTransferSparePartRow()"
+                                        class="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2">
+                                    <i class="ri-add-line"></i>
+                                    إضافة قطعة أخرى
+                                </button>
+                            </div>
+
+                            <!-- أزرار الإجراء -->
+                            <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                                <button type="button" onclick="closeWarehouseTransferModal()"
+                                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                                    إلغاء
+                                </button>
+                                <button type="submit"
+                                        class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-colors">
+                                    <i class="ri-check-line"></i>
+                                    تأكيد النقل
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // إضافة event listeners
+            const container = document.getElementById('transferSparePartsContainer');
+            const firstRow = container.querySelector('.transfer_spare_part_select');
+            if (firstRow) {
+                firstRow.addEventListener('change', handleTransferSparePartSelection);
+            }
+
+            // إضافة event listener للـ form
+            document.getElementById('warehouseTransferForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitWarehouseTransfer();
+            });
+        }
+
+        function handleTransferSparePartSelection(e) {
+            const select = e.target;
+            const selectedOption = select.options[select.selectedIndex];
+            const code = selectedOption.getAttribute('data-code') || '';
+            const stock = selectedOption.getAttribute('data-stock') || '0';
+            const row = select.closest('.grid');
+            const codeInput = row.querySelector('.transfer_spare_part_code');
+            const stockInput = row.querySelector('.transfer_spare_part_stock');
+            if (codeInput) {
+                codeInput.value = code;
+            }
+            if (stockInput) {
+                stockInput.value = stock;
+            }
+        }
+
+        function addTransferSparePartRow() {
+            const container = document.getElementById('transferSparePartsContainer');
+            const allSpareParts = damagedPartsModalData.allSpareParts;
+
+            let sparePartOptions = '<option value="">اختر قطعة الغيار</option>';
+            allSpareParts.forEach(part => {
+                sparePartOptions += `<option value="${part.id}" data-code="${part.code}">${part.name}</option>`;
+            });
+
+            const newRowHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-purple-300">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
+                        <select name="spare_part_id[]" class="transfer_spare_part_select" required
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                            ${sparePartOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الكود</label>
+                        <input type="text" name="spare_part_code[]" class="transfer_spare_part_code" readonly
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f3f4f6; color: #6b7280;"
+                               placeholder="تلقائي">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">المتاح</label>
+                        <input type="text" name="spare_part_stock[]" class="transfer_spare_part_stock" readonly
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f3f4f6; color: #6b7280;"
+                               placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية *</label>
+                        <input type="number" name="transfer_quantity[]" required min="1" value="1"
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', newRowHTML);
+
+            // إضافة event listener للـ select الجديد
+            const newSelect = container.lastElementChild.querySelector('.transfer_spare_part_select');
+            newSelect.addEventListener('change', handleTransferSparePartSelection);
+        }
+
+        function closeWarehouseTransferModal() {
+            const modal = document.getElementById('warehouseTransferModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function submitWarehouseTransfer() {
+            const form = document.getElementById('warehouseTransferForm');
+            const destWarehouseId = form.querySelector('[name="destination_warehouse_id"]').value;
+            const transferNotes = form.querySelector('[name="transfer_notes"]').value;
+
+            // جمع بيانات القطع
+            const spareParts = [];
+            const container = document.getElementById('transferSparePartsContainer');
+            const rows = container.querySelectorAll('.grid');
+
+            rows.forEach(row => {
+                const selectElement = row.querySelector('select[name="spare_part_id[]"]');
+                const quantityElement = row.querySelector('input[name="transfer_quantity[]"]');
+
+                if (selectElement && selectElement.value && quantityElement && quantityElement.value) {
+                    spareParts.push({
+                        spare_part_id: selectElement.value,
+                        quantity: parseInt(quantityElement.value)
+                    });
+                }
+            });
+
+            if (spareParts.length === 0) {
+                showDamagedPartsModal('تنبيه', 'يرجى إضافة قطعة غيار واحدة على الأقل', false);
+                return;
+            }
+
+            if (!destWarehouseId) {
+                showDamagedPartsModal('تنبيه', 'يرجى اختيار المستودع المقصد', false);
+                return;
+            }
+
+            // إرسال البيانات
+            const sourceWarehouseId = {{ $warehouse->id }};
+            const url = `/warehouses/${sourceWarehouseId}/transfer-spare-parts`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    destination_warehouse_id: destWarehouseId,
+                    transfer_notes: transferNotes,
+                    spare_parts: spareParts
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showDamagedPartsModal('نجح', data.message, true, () => {
+                        closeWarehouseTransferModal();
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    });
+                } else {
+                    showDamagedPartsModal('خطأ', 'خطأ: ' + data.message, false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showDamagedPartsModal('خطأ', 'حدث خطأ في الاتصال بالخادم', false);
+            });
+        }
+
         // دوال إدارة قطع الغيار في النموذج
         function addSparePartRow() {
             const container = document.getElementById('sparePartsContainer');
             const rowCount = container.children.length;
+
+            // بناء قائمة قطع الغيار من قاعدة البيانات
+            const allSpareParts = damagedPartsModalData.allSpareParts;
+            let sparePartOptions = '<option value="">اختر قطعة الغيار</option>';
+            allSpareParts.forEach(part => {
+                sparePartOptions += `<option value="${part.id}" data-code="${part.code}" data-name="${part.name}">${part.name}</option>`;
+            });
 
             const newRowHTML = `
                 <div class="spare-part-row bg-gray-50 p-4 rounded-lg mb-4">
@@ -2188,87 +2648,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">اسم القطعة *</label>
                             <select name="spare_parts[${rowCount}][name]" id="sparePartName_${rowCount}" required onchange="handleSparePartNameChange(${rowCount}, this)"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">اختر نوع قطعة الغيار</option>
-                                
-                                <!-- قطع كهربائية -->
-                                <optgroup label="⚡ قطع كهربائية">
-                                    <option value="محرك كهربائي" data-category="ELC" data-desc="محرك كهربائي للمعدات الصناعية">محرك كهربائي</option>
-                                    <option value="مفتاح كهربائي" data-category="ELC" data-desc="مفتاح تحكم كهربائي">مفتاح كهربائي</option>
-                                    <option value="كابل كهربائي" data-category="ELC" data-desc="كابل نقل الطاقة الكهربائية">كابل كهربائي</option>
-                                    <option value="مقاومة كهربائية" data-category="ELC" data-desc="مقاومة للدوائر الكهربائية">مقاومة كهربائية</option>
-                                    <option value="مكثف كهربائي" data-category="ELC" data-desc="مكثف لتخزين الطاقة">مكثف كهربائي</option>
-                                    <option value="ترانس كهربائي" data-category="ELC" data-desc="محول كهربائي">ترانس كهربائي</option>
-                                </optgroup>
-                                
-                                <!-- قطع ميكانيكية -->
-                                <optgroup label="⚙️ قطع ميكانيكية">
-                                    <option value="محمل معدني" data-category="MEC" data-desc="محمل للأجزاء المتحركة">محمل معدني</option>
-                                    <option value="ترس معدني" data-category="MEC" data-desc="ترس نقل الحركة">ترس معدني</option>
-                                    <option value="سير ناقل" data-category="BLT" data-desc="سير نقل الحركة">سير ناقل</option>
-                                    <option value="زنبرك معدني" data-category="SPG" data-desc="زنبرك مرن">زنبرك معدني</option>
-                                    <option value="جوان مطاطي" data-category="GSK" data-desc="جوان منع التسريب">جوان مطاطي</option>
-                                    <option value="برغي معدني" data-category="FAS" data-desc="برغي تثبيت">برغي معدني</option>
-                                    <option value="صامولة معدنية" data-category="FAS" data-desc="صامولة تثبيت">صامولة معدنية</option>
-                                </optgroup>
-                                
-                                <!-- مضخات وصمامات -->
-                                <optgroup label="🚰 مضخات وصمامات">
-                                    <option value="مضخة مياه" data-category="PMP" data-desc="مضخة ضخ المياه">مضخة مياه</option>
-                                    <option value="مضخة زيت" data-category="PMP" data-desc="مضخة ضخ الزيت">مضخة زيت</option>
-                                    <option value="صمام تحكم" data-category="VAL" data-desc="صمام للتحكم في التدفق">صمام تحكم</option>
-                                    <option value="صمام أمان" data-category="VAL" data-desc="صمام الأمان والحماية">صمام أمان</option>
-                                    <option value="صمام كرة" data-category="VAL" data-desc="صمام كروي">صمام كرة</option>
-                                    <option value="صمام فراشة" data-category="VAL" data-desc="صمام فراشة للتحكم">صمام فراشة</option>
-                                </optgroup>
-                                
-                                <!-- حساسات ومقاييس -->
-                                <optgroup label="📊 حساسات ومقاييس">
-                                    <option value="حساس حرارة" data-category="SEN" data-desc="حساس قياس الحرارة">حساس حرارة</option>
-                                    <option value="حساس ضغط" data-category="SEN" data-desc="حساس قياس الضغط">حساس ضغط</option>
-                                    <option value="حساس رطوبة" data-category="SEN" data-desc="حساس قياس الرطوبة">حساس رطوبة</option>
-                                    <option value="مقياس تدفق" data-category="SEN" data-desc="مقياس معدل التدفق">مقياس تدفق</option>
-                                    <option value="حساس مستوى" data-category="SEN" data-desc="حساس قياس المستوى">حساس مستوى</option>
-                                </optgroup>
-                                
-                                <!-- فلاتر ومرشحات -->
-                                <optgroup label="🔍 فلاتر ومرشحات">
-                                    <option value="فلتر هواء" data-category="FLT" data-desc="فلتر تنقية الهواء">فلتر هواء</option>
-                                    <option value="فلتر مياه" data-category="FLT" data-desc="فلتر تنقية المياه">فلتر مياه</option>
-                                    <option value="فلتر زيت" data-category="FLT" data-desc="فلتر تنقية الزيت">فلتر زيت</option>
-                                    <option value="فلتر وقود" data-category="FLT" data-desc="فلتر تنقية الوقود">فلتر وقود</option>
-                                </optgroup>
-                                
-                                <!-- تكييف وتبريد -->
-                                <optgroup label="❄️ تكييف وتبريد">
-                                    <option value="كمبروسر تكييف" data-category="HVC" data-desc="ضاغط مكيف الهواء">كمبروسر تكييف</option>
-                                    <option value="مروحة تكييف" data-category="HVC" data-desc="مروحة نظام التكييف">مروحة تكييف</option>
-                                    <option value="ملف تبريد" data-category="HVC" data-desc="ملف التبريد">ملف تبريد</option>
-                                    <option value="ثرموستات" data-category="HVC" data-desc="منظم الحرارة">ثرموستات</option>
-                                    <option value="غاز تبريد" data-category="HVC" data-desc="غاز المبرد">غاز تبريد</option>
-                                </optgroup>
-                                
-                                <!-- أدوات السلامة -->
-                                <optgroup label="🦺 أدوات السلامة">
-                                    <option value="مطفأة حريق" data-category="SAF" data-desc="مطفأة للحماية من الحريق">مطفأة حريق</option>
-                                    <option value="كاشف دخان" data-category="SAF" data-desc="جهاز كشف الدخان">كاشف دخان</option>
-                                    <option value="إنذار حريق" data-category="SAF" data-desc="جهاز إنذار الحريق">إنذار حريق</option>
-                                    <option value="مخرج طوارئ" data-category="SAF" data-desc="لوحة مخرج الطوارئ">مخرج طوارئ</option>
-                                    <option value="كاميرا مراقبة" data-category="SAF" data-desc="كاميرا نظام المراقبة">كاميرا مراقبة</option>
-                                </optgroup>
-                                
-                                <!-- أدوات ومعدات -->
-                                <optgroup label="🔧 أدوات ومعدات">
-                                    <option value="مفك براغي" data-category="TOL" data-desc="مفك لفك وربط البراغي">مفك براغي</option>
-                                    <option value="مفتاح إنجليزي" data-category="TOL" data-desc="مفتاح قابل للتعديل">مفتاح إنجليزي</option>
-                                    <option value="كماشة" data-category="TOL" data-desc="كماشة للإمساك">كماشة</option>
-                                    <option value="منشار معدني" data-category="TOL" data-desc="منشار للقطع">منشار معدني</option>
-                                    <option value="مثقاب كهربائي" data-category="TOL" data-desc="مثقاب للثقب">مثقاب كهربائي</option>
-                                </optgroup>
-                                
-                                <!-- أخرى -->
-                                <optgroup label="📦 أخرى">
-                                    <option value="أخرى - حدد في الوصف" data-category="GEN" data-desc="نوع آخر - يرجى التحديد في الوصف">أخرى - حدد في الوصف</option>
-                                </optgroup>
+                                ${sparePartOptions}
                             </select>
                         </div>
                         <div>
@@ -2491,16 +2871,11 @@
 
                             <!-- أزرار العمل -->
                             <div class="flex justify-end gap-4 pt-6 border-t">
-                                <button type="button" onclick="closeProjectExportModal()" 
+                                <button type="button" onclick="closeProjectExportModal()"
                                         class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
                                     إلغاء
                                 </button>
-                                <button type="button" onclick="previewExportForm()"
-                                        class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center gap-2 transition-colors">
-                                    <i class="ri-eye-line"></i>
-                                    معاينة
-                                </button>
-                                <button type="submit" 
+                                <button type="submit"
                                         class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-colors">
                                     <i class="ri-check-line"></i>
                                     تأكيد التصدير
@@ -2846,10 +3221,6 @@
                     stockInput.classList.remove('bg-gray-100', 'bg-yellow-100');
                 }
             }
-        }
-
-        function previewExportForm() {
-            showDevelopmentModal('معاينة التصدير', 'سيتم تطوير وظيفة معاينة التصدير قبل التأكيد قريباً');
         }
 
         // وظائف إدارة الموردين

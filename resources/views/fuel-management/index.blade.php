@@ -188,6 +188,16 @@
 
                         <!-- Action Buttons -->
                         <div class="space-y-2 mt-4">
+                            <!-- Add Fuel Quantity Button -->
+                            @if ($equipment->fuelTruck)
+                                <button onclick="openAddFuelQuantityModal({{ $equipment->id }}, {{ $equipment->fuelTruck->id }}, {{ $equipment->fuelTruck->current_quantity }})"
+                                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
+                                    <i class="ri-add-circle-line ml-2"></i>
+                                    <span>إضافة كمية محروقات</span>
+                                    <span class="mr-2 text-xs opacity-90">(الحالية: {{ number_format($equipment->fuelTruck->current_quantity, 2) }} لتر)</span>
+                                </button>
+                            @endif
+
                             <div class="flex gap-2">
                                 <button onclick="openAddFuelModal({{ $equipment->id }})"
                                     class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
@@ -309,6 +319,78 @@
         </div>
     </div>
 
+    <!-- Add Fuel Quantity Modal -->
+    <div id="addFuelQuantityModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-lg bg-white"
+            dir="rtl">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">إضافة كمية محروقات</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors"
+                    onclick="closeAddFuelQuantityModal()">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="addFuelQuantityForm" class="mt-4">
+                @csrf
+                <div class="space-y-4">
+                    <!-- Fuel Type Selection -->
+                    <div>
+                        <label for="fuelTypeSelect" class="block text-sm font-medium text-gray-700 mb-2">نوع المحروقات</label>
+                        <select id="fuelTypeSelect" name="fuel_type" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">اختر نوع المحروقات</option>
+                            <option value="diesel">ديزل</option>
+                            <option value="gasoline">بنزين</option>
+                            <option value="engine_oil">زيت ماكينة</option>
+                            <option value="hydraulic_oil">زيت هيدروليك</option>
+                            <option value="radiator_water">ماء ردياتير</option>
+                            <option value="brake_oil">زيت فرامل</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+
+                    <!-- Quantity Input -->
+                    <div>
+                        <label for="quantityInput" class="block text-sm font-medium text-gray-700 mb-2">الكمية (لتر)</label>
+                        <input type="number" id="quantityInput" name="quantity" step="0.01" min="0.01" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="أدخل الكمية المراد إضافتها">
+                    </div>
+
+                    <!-- Current Quantity Display -->
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <p class="text-sm text-gray-600">الكمية الحالية:</p>
+                        <p id="currentQuantityDisplay" class="text-lg font-semibold text-blue-600">0.00 لتر</p>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label for="fuelQuantityNotes" class="block text-sm font-medium text-gray-700 mb-2">ملاحظات (اختيارية)</label>
+                        <textarea id="fuelQuantityNotes" name="notes" rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="أضف أي ملاحظات..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="flex items-center justify-end space-x-3 space-x-reverse pt-4 border-t mt-6">
+                    <button type="button" onclick="closeAddFuelQuantityModal()"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
+                        <i class="ri-check-line ml-1"></i>
+                        إضافة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Distributions Modal -->
     <div id="distributionsModal"
         class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
@@ -334,6 +416,8 @@
 
     <script>
         let currentEquipmentId = null;
+        let currentFuelTruckId = null;
+        let currentFuelQuantity = null;
 
         // Notification function
         function showNotification(message, type = 'success') {
@@ -368,6 +452,23 @@
             currentEquipmentId = null;
         }
 
+        function openAddFuelQuantityModal(equipmentId, fuelTruckId, currentQuantity) {
+            currentEquipmentId = equipmentId;
+            currentFuelTruckId = fuelTruckId;
+            currentFuelQuantity = currentQuantity;
+            document.getElementById('currentQuantityDisplay').textContent =
+                (parseFloat(currentQuantity) || 0).toFixed(2) + ' لتر';
+            document.getElementById('addFuelQuantityModal').classList.remove('hidden');
+        }
+
+        function closeAddFuelQuantityModal() {
+            document.getElementById('addFuelQuantityModal').classList.add('hidden');
+            document.getElementById('addFuelQuantityForm').reset();
+            currentEquipmentId = null;
+            currentFuelTruckId = null;
+            currentFuelQuantity = null;
+        }
+
         function closeDistributionsModal() {
             document.getElementById('distributionsModal').classList.add('hidden');
         }
@@ -392,6 +493,38 @@
                 .then(data => {
                     if (data.success) {
                         closeAddFuelModal();
+                        showNotification(data.message, 'success');
+                        location.reload();
+                    } else {
+                        showNotification(data.message || 'حدث خطأ', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('حدث خطأ', 'error');
+                });
+        });
+
+        // Handle add fuel quantity form submission
+        document.getElementById('addFuelQuantityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (!currentFuelTruckId) return;
+
+            const formData = new FormData(this);
+
+            fetch(`/fuel-management/fuel-truck/${currentFuelTruckId}/add-quantity`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        closeAddFuelQuantityModal();
                         showNotification(data.message, 'success');
                         location.reload();
                     } else {
@@ -562,6 +695,12 @@
             }
         });
 
+        document.getElementById('addFuelQuantityModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddFuelQuantityModal();
+            }
+        });
+
         document.getElementById('distributionsModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeDistributionsModal();
@@ -573,6 +712,9 @@
             if (e.key === 'Escape') {
                 if (!document.getElementById('addFuelModal').classList.contains('hidden')) {
                     closeAddFuelModal();
+                }
+                if (!document.getElementById('addFuelQuantityModal').classList.contains('hidden')) {
+                    closeAddFuelQuantityModal();
                 }
                 if (!document.getElementById('distributionsModal').classList.contains('hidden')) {
                     closeDistributionsModal();

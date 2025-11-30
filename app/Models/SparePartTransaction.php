@@ -21,6 +21,9 @@ class SparePartTransaction extends Model
         'reference_number',
         'notes',
         'transaction_date',
+        'transaction_time',
+        'destination_location_id',
+        'created_by',
         'additional_data',
     ];
 
