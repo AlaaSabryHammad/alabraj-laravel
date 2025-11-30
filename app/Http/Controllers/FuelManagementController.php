@@ -83,10 +83,13 @@ class FuelManagementController extends Controller
     /**
      * Show fuel distributions for a truck
      */
-    public function showDistributions(FuelTruck $fuelTruck)
+    public function showDistributions($fuelTruck)
     {
+        // Handle both model binding and ID parameter
+        $fuelTruckId = $fuelTruck instanceof FuelTruck ? $fuelTruck->id : $fuelTruck;
+
         $distributions = FuelDistribution::with(['targetEquipment', 'distributedBy', 'approvedBy'])
-            ->where('fuel_truck_id', $fuelTruck->id)
+            ->where('fuel_truck_id', $fuelTruckId)
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($distribution) {
