@@ -150,11 +150,18 @@ class FuelManagementController extends Controller
                 ], 401);
             }
 
-            \Log::info('Current user: ' . $user->id . ', user->employee_id: ' . ($user->employee_id ?? 'null'));
-            \Log::info('Fuel truck equipment driver_id: ' . ($fuelTruck->equipment->driver_id ?? 'null'));
+            // Load employee relationship if not already loaded
+            if (!$user->relationLoaded('employee')) {
+                $user->load('employee');
+            }
 
-            if (!$user->employee_id || $fuelTruck->equipment->driver_id !== $user->employee_id) {
-                \Log::warning('User not authorized to distribute from this fuel truck. User employee_id: ' . ($user->employee_id ?? 'null') . ', Truck driver_id: ' . ($fuelTruck->equipment->driver_id ?? 'null'));
+            $employeeId = $user->employee?->id;
+            $driverId = $fuelTruck->equipment->driver_id;
+
+            \Log::info('Current user: ' . $user->id . ', employee_id: ' . ($employeeId ?? 'null') . ', truck driver_id: ' . ($driverId ?? 'null'));
+
+            if (!$employeeId || $driverId !== $employeeId) {
+                \Log::warning('User not authorized to distribute from this fuel truck. User employee_id: ' . ($employeeId ?? 'null') . ', Truck driver_id: ' . ($driverId ?? 'null'));
                 return response()->json([
                     'success' => false,
                     'message' => 'غير مصرح لك بتوزيع المحروقات من هذه السيارة'
