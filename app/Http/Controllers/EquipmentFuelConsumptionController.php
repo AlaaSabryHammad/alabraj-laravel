@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\FuelConsumptionApprovalNotification;
+use App\Notifications\FuelConsumptionRequestNotification;
 
 class EquipmentFuelConsumptionController extends Controller
 {
@@ -36,7 +37,10 @@ class EquipmentFuelConsumptionController extends Controller
         // إرسال إشعار لمدير الموقع إذا وجد
         $this->notifyLocationManager($fuelConsumption, $validated['equipment_id']);
 
-        return redirect()->back()->with('success', 'تم تسجيل استهلاك المحروقات وإرسال طلب موافقة لمدير الموقع');
+        // إرسال إشعار لسائق المعدة بتأكيد استهلاك المحروقات
+        $this->notifyEquipmentDriver($fuelConsumption, $validated['equipment_id']);
+
+        return redirect()->back()->with('success', 'تم تسجيل استهلاك المحروقات وإرسال إشعار لسائق المعدة');
     }
 
     /**
@@ -287,6 +291,26 @@ class EquipmentFuelConsumptionController extends Controller
             }
         } catch (\Exception $e) {
             Log::info('Failed to send fuel consumption notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * إرسال إشعار لسائق المعدة بتأكيد استهلاك المحروقات
+     */
+    private function notifyEquipmentDriver(EquipmentFuelConsumption $fuelConsumption, int $equipmentId): void
+    {
+        try {
+            // الحصول على المعدة والسائق
+            $equipment = Equipment::with('driver.user')->find($equipmentId);
+
+            if (!$equipment || !$equipment->driver || !$equipment->driver->user) {
+                return;
+            }
+
+            // إرسال إشعار لسائق المعدة
+            $equipment->driver->user->notify(new FuelConsumptionRequestNotification($fuelConsumption));
+        } catch (\Exception $e) {
+            Log::info('Failed to send fuel consumption request notification to driver: ' . $e->getMessage());
         }
     }
 }
