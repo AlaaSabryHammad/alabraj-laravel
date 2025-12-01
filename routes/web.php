@@ -29,6 +29,7 @@ use App\Http\Controllers\SparePartReportController;
 use App\Http\Controllers\SparePartTypeController;
 use App\Http\Controllers\FuelManagementController;
 use App\Http\Controllers\SparePartSupplierController;
+use App\Http\Controllers\FuelManagementUnifiedController;
 
 // Authentication Routes (Public)
 Route::middleware('guest')->group(function () {
