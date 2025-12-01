@@ -21,26 +21,59 @@ class EquipmentFuelConsumptionController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'equipment_id' => 'required|exists:equipment,id',
-            'fuel_type' => 'required|in:diesel,engine_oil,hydraulic_oil,radiator_water',
-            'quantity' => 'required|numeric|min:0.01|max:99999.99',
-            'consumption_date' => 'required|date|before_or_equal:today',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        try {
+            $validated = $request->validate([
+                'equipment_id' => 'required|exists:equipment,id',
+                'fuel_type' => 'required|in:diesel,engine_oil,hydraulic_oil,radiator_water,gasoline,brake_oil,other',
+                'quantity' => 'required|numeric|min:0.01|max:99999.99',
+                'consumption_date' => 'required|date|before_or_equal:today',
+                'notes' => 'nullable|string|max:1000',
+            ]);
 
-        $validated['user_id'] = Auth::id();
-        $validated['approval_status'] = 'pending'; // الحالة الافتراضية
+            $validated['user_id'] = Auth::id();
+            $validated['approval_status'] = 'pending'; // الحالة الافتراضية
 
-        $fuelConsumption = EquipmentFuelConsumption::create($validated);
+            $fuelConsumption = EquipmentFuelConsumption::create($validated);
 
-        // إرسال إشعار لمدير الموقع إذا وجد
-        $this->notifyLocationManager($fuelConsumption, $validated['equipment_id']);
+            // إرسال إشعار لمدير الموقع إذا وجد
+            $this->notifyLocationManager($fuelConsumption, $validated['equipment_id']);
 
-        // إرسال إشعار لسائق المعدة بتأكيد استهلاك المحروقات
-        $this->notifyEquipmentDriver($fuelConsumption, $validated['equipment_id']);
+            // إرسال إشعار لسائق المعدة بتأكيد استهلاك المحروقات
+            $this->notifyEquipmentDriver($fuelConsumption, $validated['equipment_id']);
 
-        return redirect()->back()->with('success', 'تم تسجيل استهلاك المحروقات وإرسال إشعار لسائق المعدة');
+            $message = 'تم تسجيل استهلاك المحروقات وإرسال إشعار لسائق المعدة';
+
+            // إذا كان طلب AJAX، أرجع JSON
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'consumption' => $fuelConsumption
+                ]);
+            }
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'خطأ في التحقق من البيانات',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Fuel Consumption Store Error: ' . $e->getMessage());
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage());
+        }
     }
 
     /**
