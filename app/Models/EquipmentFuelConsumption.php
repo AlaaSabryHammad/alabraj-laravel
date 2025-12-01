@@ -12,6 +12,7 @@ class EquipmentFuelConsumption extends Model
 
     protected $fillable = [
         'equipment_id',
+        'fuel_truck_id',
         'user_id',
         'fuel_type',
         'quantity',
@@ -43,6 +44,11 @@ class EquipmentFuelConsumption extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function fuelTruck()
+    {
+        return $this->belongsTo(Equipment::class, 'fuel_truck_id');
     }
 
     // خصائص محسوبة

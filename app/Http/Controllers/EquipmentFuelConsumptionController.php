@@ -24,6 +24,7 @@ class EquipmentFuelConsumptionController extends Controller
         try {
             $validated = $request->validate([
                 'equipment_id' => 'required|exists:equipment,id',
+                'fuel_truck_id' => 'required|exists:equipment,id',
                 'fuel_type' => 'required|in:diesel,engine_oil,hydraulic_oil,radiator_water,gasoline,brake_oil,other',
                 'quantity' => 'required|numeric|min:0.01|max:99999.99',
                 'consumption_date' => 'required|date|before_or_equal:today',
@@ -264,66 +265,52 @@ class EquipmentFuelConsumptionController extends Controller
     private function deductFromFuelTruck(EquipmentFuelConsumption $fuelConsumption): void
     {
         try {
-            // Get the equipment that consumed the fuel
-            $consumingEquipment = $fuelConsumption->equipment;
-            if (!$consumingEquipment) {
-                Log::info('No equipment found for fuel consumption: ' . $fuelConsumption->id);
-                return;
-            }
+            $fuelTruck = null;
 
-            // Check if the consuming equipment itself is a fuel truck
-            // If yes, deduct from its own fuel truck record
-            if ($consumingEquipment->fuelTruck) {
-                $fuelTruck = $consumingEquipment->fuelTruck;
-
-                if ($fuelTruck->current_quantity >= $fuelConsumption->quantity) {
-                    $previousQuantity = $fuelTruck->current_quantity;
-                    $newQuantity = $fuelTruck->current_quantity - $fuelConsumption->quantity;
-
-                    $fuelTruck->update([
-                        'current_quantity' => $newQuantity
-                    ]);
-
-                    Log::info('Successfully deducted fuel from equipment fuel truck. ' .
-                        'Equipment ID: ' . $consumingEquipment->id .
-                        ', Equipment Name: ' . $consumingEquipment->name .
-                        ', Fuel Truck ID: ' . $fuelTruck->id .
-                        ', Previous quantity: ' . $previousQuantity .
-                        ', New quantity: ' . $newQuantity .
-                        ', Deducted: ' . $fuelConsumption->quantity . ' ' . $fuelConsumption->fuel_type);
-                } else {
-                    Log::warning('Insufficient fuel in truck. ' .
-                        'Equipment ID: ' . $consumingEquipment->id .
-                        ', Equipment Name: ' . $consumingEquipment->name .
-                        ', Fuel Truck ID: ' . $fuelTruck->id .
-                        ', Available: ' . $fuelTruck->current_quantity .
-                        ', Required: ' . $fuelConsumption->quantity);
+            // First, try to use the fuel_truck_id directly from consumption record (new approach)
+            if ($fuelConsumption->fuel_truck_id) {
+                $fuelTruckEquipment = Equipment::find($fuelConsumption->fuel_truck_id);
+                if ($fuelTruckEquipment && $fuelTruckEquipment->fuelTruck) {
+                    $fuelTruck = $fuelTruckEquipment->fuelTruck;
                 }
+            }
+
+            // Fallback: Use the old logic for backward compatibility with records that don't have fuel_truck_id
+            if (!$fuelTruck) {
+                $consumingEquipment = $fuelConsumption->equipment;
+                if (!$consumingEquipment) {
+                    Log::info('No equipment found for fuel consumption: ' . $fuelConsumption->id);
+                    return;
+                }
+
+                // Check if the consuming equipment itself is a fuel truck
+                if ($consumingEquipment->fuelTruck) {
+                    $fuelTruck = $consumingEquipment->fuelTruck;
+                } else {
+                    // Find the fuel truck that distributed to this equipment
+                    $fuelTruckEquipment = Equipment::with('fuelTruck')
+                        ->whereHas('fuelTruck')
+                        ->get()
+                        ->first(function ($equipment) use ($consumingEquipment) {
+                            return $equipment->fuelTruck &&
+                                   $equipment->fuelTruck->distributions()
+                                       ->where('target_equipment_id', $consumingEquipment->id)
+                                       ->whereIn('approval_status', ['approved', 'pending'])
+                                       ->exists();
+                        });
+
+                    if ($fuelTruckEquipment && $fuelTruckEquipment->fuelTruck) {
+                        $fuelTruck = $fuelTruckEquipment->fuelTruck;
+                    }
+                }
+            }
+
+            if (!$fuelTruck) {
+                Log::info('No fuel truck found for consumption ID: ' . $fuelConsumption->id);
                 return;
             }
 
-            // If consuming equipment is not a fuel truck, try to find the fuel truck
-            // that distributed fuel to this equipment through FuelDistribution records
-            $fuelTruck = Equipment::with('fuelTruck')
-                ->whereHas('fuelTruck')
-                ->get()
-                ->first(function ($equipment) use ($consumingEquipment) {
-                    // Find a fuel truck that has distributions to this equipment
-                    // Check both approved and pending distributions
-                    return $equipment->fuelTruck &&
-                           $equipment->fuelTruck->distributions()
-                               ->where('target_equipment_id', $consumingEquipment->id)
-                               ->whereIn('approval_status', ['approved', 'pending'])
-                               ->exists();
-                });
-
-            if (!$fuelTruck || !$fuelTruck->fuelTruck) {
-                Log::info('No fuel truck found that supplies equipment ID: ' . $consumingEquipment->id);
-                return;
-            }
-
-            $fuelTruck = $fuelTruck->fuelTruck;
-
+            // Deduct the fuel quantity
             if ($fuelTruck->current_quantity >= $fuelConsumption->quantity) {
                 $previousQuantity = $fuelTruck->current_quantity;
                 $newQuantity = $fuelTruck->current_quantity - $fuelConsumption->quantity;
@@ -332,18 +319,17 @@ class EquipmentFuelConsumptionController extends Controller
                     'current_quantity' => $newQuantity
                 ]);
 
-                Log::info('Successfully deducted fuel from source fuel truck. ' .
-                    'Equipment ID: ' . $consumingEquipment->id .
-                    ', Equipment Name: ' . $consumingEquipment->name .
-                    ', Source Fuel Truck ID: ' . $fuelTruck->id .
+                Log::info('Successfully deducted fuel from truck. ' .
+                    'Consumption ID: ' . $fuelConsumption->id .
+                    ', Fuel Truck ID: ' . $fuelTruck->id .
+                    ', Equipment ID: ' . ($fuelConsumption->equipment->id ?? 'N/A') .
                     ', Previous quantity: ' . $previousQuantity .
                     ', New quantity: ' . $newQuantity .
                     ', Deducted: ' . $fuelConsumption->quantity . ' ' . $fuelConsumption->fuel_type);
             } else {
-                Log::warning('Insufficient fuel in source truck. ' .
-                    'Equipment ID: ' . $consumingEquipment->id .
-                    ', Equipment Name: ' . $consumingEquipment->name .
-                    ', Source Fuel Truck ID: ' . $fuelTruck->id .
+                Log::warning('Insufficient fuel in truck. ' .
+                    'Consumption ID: ' . $fuelConsumption->id .
+                    ', Fuel Truck ID: ' . $fuelTruck->id .
                     ', Available: ' . $fuelTruck->current_quantity .
                     ', Required: ' . $fuelConsumption->quantity);
             }

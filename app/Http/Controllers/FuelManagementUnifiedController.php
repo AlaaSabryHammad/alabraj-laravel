@@ -128,21 +128,32 @@ class FuelManagementUnifiedController extends Controller
             ->orderBy('consumption_date', 'desc')
             ->get()
             ->map(function ($consumption) {
-                // Find the source fuel truck (either direct if equipment is a fuel truck, or from distributions)
+                // Find the source fuel truck using fuel_truck_id first (new approach), then fallback to old logic
                 $fuelTruckName = '-';
 
-                if ($consumption->equipment->fuelTruck) {
-                    // Equipment is itself a fuel truck
-                    $fuelTruckName = $consumption->equipment->name;
-                } else {
-                    // Equipment is not a fuel truck, find which fuel truck distributed to it
-                    $distribution = \App\Models\FuelDistribution::where('target_equipment_id', $consumption->equipment->id)
-                        ->whereIn('approval_status', ['approved', 'pending'])
-                        ->latest('distribution_date')
-                        ->first();
+                // First, try to use the fuel_truck_id directly from consumption record
+                if ($consumption->fuel_truck_id) {
+                    $fuelTruckEquipment = Equipment::find($consumption->fuel_truck_id);
+                    if ($fuelTruckEquipment) {
+                        $fuelTruckName = $fuelTruckEquipment->name;
+                    }
+                }
 
-                    if ($distribution && $distribution->fuelTruck && $distribution->fuelTruck->equipment) {
-                        $fuelTruckName = $distribution->fuelTruck->equipment->name;
+                // Fallback: Use old logic if fuel_truck_id is not set
+                if ($fuelTruckName === '-') {
+                    if ($consumption->equipment->fuelTruck) {
+                        // Equipment is itself a fuel truck
+                        $fuelTruckName = $consumption->equipment->name;
+                    } else {
+                        // Equipment is not a fuel truck, find which fuel truck distributed to it
+                        $distribution = \App\Models\FuelDistribution::where('target_equipment_id', $consumption->equipment->id)
+                            ->whereIn('approval_status', ['approved', 'pending'])
+                            ->latest('distribution_date')
+                            ->first();
+
+                        if ($distribution && $distribution->fuelTruck && $distribution->fuelTruck->equipment) {
+                            $fuelTruckName = $distribution->fuelTruck->equipment->name;
+                        }
                     }
                 }
 
@@ -212,21 +223,32 @@ class FuelManagementUnifiedController extends Controller
                 ->orderBy('consumption_date', 'desc')
                 ->get()
                 ->map(function ($consumption) {
-                    // Find the source fuel truck (either direct if equipment is a fuel truck, or from distributions)
+                    // Find the source fuel truck using fuel_truck_id first (new approach), then fallback to old logic
                     $fuelTruckName = '-';
 
-                    if ($consumption->equipment->fuelTruck) {
-                        // Equipment is itself a fuel truck
-                        $fuelTruckName = $consumption->equipment->name;
-                    } else {
-                        // Equipment is not a fuel truck, find which fuel truck distributed to it
-                        $distribution = \App\Models\FuelDistribution::where('target_equipment_id', $consumption->equipment->id)
-                            ->whereIn('approval_status', ['approved', 'pending'])
-                            ->latest('distribution_date')
-                            ->first();
+                    // First, try to use the fuel_truck_id directly from consumption record
+                    if ($consumption->fuel_truck_id) {
+                        $fuelTruckEquipment = Equipment::find($consumption->fuel_truck_id);
+                        if ($fuelTruckEquipment) {
+                            $fuelTruckName = $fuelTruckEquipment->name;
+                        }
+                    }
 
-                        if ($distribution && $distribution->fuelTruck && $distribution->fuelTruck->equipment) {
-                            $fuelTruckName = $distribution->fuelTruck->equipment->name;
+                    // Fallback: Use old logic if fuel_truck_id is not set
+                    if ($fuelTruckName === '-') {
+                        if ($consumption->equipment->fuelTruck) {
+                            // Equipment is itself a fuel truck
+                            $fuelTruckName = $consumption->equipment->name;
+                        } else {
+                            // Equipment is not a fuel truck, find which fuel truck distributed to it
+                            $distribution = \App\Models\FuelDistribution::where('target_equipment_id', $consumption->equipment->id)
+                                ->whereIn('approval_status', ['approved', 'pending'])
+                                ->latest('distribution_date')
+                                ->first();
+
+                            if ($distribution && $distribution->fuelTruck && $distribution->fuelTruck->equipment) {
+                                $fuelTruckName = $distribution->fuelTruck->equipment->name;
+                            }
                         }
                     }
 
