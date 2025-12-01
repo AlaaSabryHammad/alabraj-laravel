@@ -306,6 +306,7 @@ class EquipmentFuelConsumptionController extends Controller
             // that distributed fuel to this equipment through FuelDistribution records
             $fuelTruck = Equipment::with('fuelTruck')
                 ->whereHas('fuelTruck')
+                ->get()
                 ->first(function ($equipment) use ($consumingEquipment) {
                     // Find a fuel truck that has distributions to this equipment
                     // Check both approved and pending distributions
