@@ -281,7 +281,6 @@ class FuelManagementController extends Controller
     public function addQuantity(Request $request, FuelTruck $fuelTruck)
     {
         $request->validate([
-            'fuel_type' => 'required|in:diesel,gasoline,engine_oil,hydraulic_oil,radiator_water,brake_oil,other',
             'quantity' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string'
         ]);
@@ -292,20 +291,33 @@ class FuelManagementController extends Controller
         if ($fuelTruck->current_quantity + $quantity > $fuelTruck->capacity) {
             return response()->json([
                 'success' => false,
-                'message' => 'الكمية المراد إضافتها تتجاوز السعة الكلية للتانكر'
+                'message' => 'الكمية المراد إضافتها ('. $quantity .') تتجاوز السعة المتاحة ('. ($fuelTruck->capacity - $fuelTruck->current_quantity) .')'
             ], 400);
         }
 
         // Update current quantity
-        $fuelTruck->update([
+        $updateData = [
             'current_quantity' => $fuelTruck->current_quantity + $quantity,
-            'fuel_type' => $request->fuel_type,
-            'notes' => $request->notes
+        ];
+
+        // Update notes if provided
+        if ($request->has('notes') && !empty($request->notes)) {
+            $updateData['notes'] = $request->notes;
+        }
+
+        $fuelTruck->update($updateData);
+
+        Log::info('Fuel quantity added', [
+            'fuel_truck_id' => $fuelTruck->id,
+            'quantity_added' => $quantity,
+            'new_total' => $fuelTruck->current_quantity,
+            'capacity' => $fuelTruck->capacity,
+            'added_by' => Auth::id()
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'تم إضافة الكمية بنجاح',
+            'message' => 'تم إضافة ' . $quantity . ' لتر بنجاح',
             'fuel_truck' => $fuelTruck
         ]);
     }

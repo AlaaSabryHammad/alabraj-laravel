@@ -103,18 +103,18 @@
                                 <!-- Fuel Level Info -->
                                 <div class="space-y-2 mb-4">
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600">الكمية المتاحة:</span>
-                                        <span class="font-bold text-green-600">
-                                            {{ number_format($truck->fuelTruck->remaining_quantity, 2) }} لتر
+                                        <span class="text-gray-600">الكمية الحالية:</span>
+                                        <span class="font-bold text-blue-600">
+                                            {{ number_format($truck->fuelTruck->current_quantity, 2) }} لتر
                                         </span>
-                                    </div>
-                                    <div class="flex justify-between text-sm mb-2">
-                                        <span class="text-gray-600">الكمية الكلية:</span>
-                                        <span class="font-medium">{{ number_format($truck->fuelTruck->current_quantity, 2) }} لتر</span>
                                     </div>
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600">السعة:</span>
                                         <span class="font-medium">{{ number_format($truck->fuelTruck->capacity, 2) }} لتر</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">المتاح للإضافة:</span>
+                                        <span class="font-medium text-orange-600">{{ number_format($truck->fuelTruck->capacity - $truck->fuelTruck->current_quantity, 2) }} لتر</span>
                                     </div>
                                 </div>
 
@@ -134,20 +134,11 @@
 
                                 <!-- Action Buttons -->
                                 <div class="flex gap-2">
-                                    @if($truck->fuelTruck->remaining_quantity > 0)
-                                    <button onclick="event.stopPropagation(); openDistributeModal({{ $truck->fuelTruck->id }}, '{{ $truck->name }}')"
-                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
-                                        <i class="ri-gas-station-line ml-1"></i>
-                                        توزيع
+                                    <button onclick="event.stopPropagation(); openAddFuelModal({{ $truck->fuelTruck->id }}, '{{ $truck->name }}', {{ $truck->fuelTruck->capacity }}, {{ $truck->fuelTruck->current_quantity }})"
+                                        class="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                                        <i class="ri-add-circle-line ml-1"></i>
+                                        إضافة كمية محروقات
                                     </button>
-                                    @else
-                                    <button disabled
-                                        class="flex-1 bg-gray-400 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed opacity-60"
-                                        title="الكمية المتبقية: {{ number_format($truck->fuelTruck->remaining_quantity, 2) }} لتر - لا توجد كمية متاحة">
-                                        <i class="ri-gas-station-line ml-1"></i>
-                                        توزيع
-                                    </button>
-                                    @endif
                                     <button onclick="event.stopPropagation(); openConsumptionModal()"
                                         class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                                         <i class="ri-bar-chart-line ml-1"></i>
@@ -339,6 +330,76 @@
                         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center">
                         <i class="ri-gas-station-line ml-1"></i>
                         توزيع المحروقات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Fuel Modal -->
+    <div id="addFuelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 shadow-lg rounded-lg bg-white" dir="rtl">
+            <div class="flex items-center justify-between pb-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">إضافة كمية محروقات</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600"
+                    onclick="closeAddFuelModal()">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <form id="addFuelForm" class="mt-4 space-y-4">
+                @csrf
+                <!-- Truck Info Display -->
+                <div class="bg-blue-50 rounded-lg p-4 space-y-2 border border-blue-200">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">اسم السيارة:</span>
+                        <span id="addFuelTruckName" class="font-semibold text-blue-900"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">السعة:</span>
+                        <span id="addFuelCapacity" class="font-semibold text-blue-900"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">الكمية الحالية:</span>
+                        <span id="addFuelCurrent" class="font-semibold text-blue-900"></span>
+                    </div>
+                    <div class="flex justify-between items-center border-t pt-2">
+                        <span class="text-sm font-medium text-gray-700">المتاح للإضافة:</span>
+                        <span id="addFuelAvailable" class="font-semibold text-orange-600"></span>
+                    </div>
+                </div>
+
+                <!-- Add Quantity Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-droplet-line ml-1"></i>
+                        الكمية المراد إضافتها (لتر)
+                    </label>
+                    <input type="number" id="addFuelQuantity" name="quantity" step="0.01" min="0.01" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="أدخل الكمية المراد إضافتها"
+                        oninput="validateAddFuelQuantity()">
+                    <p id="addFuelError" class="text-red-600 text-sm mt-1 hidden"></p>
+                    <p id="addFuelSuccess" class="text-green-600 text-sm mt-1 hidden"></p>
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات (اختيارية)</label>
+                    <textarea name="notes" rows="3" id="addFuelNotes"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        placeholder="أضف أي ملاحظات..."></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button" onclick="closeAddFuelModal()"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                        إلغاء
+                    </button>
+                    <button type="submit" id="addFuelSubmitBtn"
+                        class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center">
+                        <i class="ri-add-circle-line ml-1"></i>
+                        إضافة الكمية
                     </button>
                 </div>
             </form>
@@ -791,6 +852,107 @@
             if (e.target === this) closeIncompleteInfoModal();
         });
 
+        // Add Fuel Functions
+        let addFuelTruckId = null;
+        let addFuelCapacity = 0;
+        let addFuelCurrent = 0;
+
+        function openAddFuelModal(fuelTruckId, truckName, capacity, current) {
+            addFuelTruckId = fuelTruckId;
+            addFuelCapacity = parseFloat(capacity);
+            addFuelCurrent = parseFloat(current);
+
+            document.getElementById('addFuelTruckName').innerText = truckName;
+            document.getElementById('addFuelCapacity').innerText = capacity.toFixed(2) + ' لتر';
+            document.getElementById('addFuelCurrent').innerText = current.toFixed(2) + ' لتر';
+            document.getElementById('addFuelAvailable').innerText = (capacity - current).toFixed(2) + ' لتر';
+
+            document.getElementById('addFuelQuantity').value = '';
+            document.getElementById('addFuelNotes').value = '';
+            document.getElementById('addFuelError').classList.add('hidden');
+            document.getElementById('addFuelSuccess').classList.add('hidden');
+
+            document.getElementById('addFuelModal').classList.remove('hidden');
+        }
+
+        function closeAddFuelModal() {
+            document.getElementById('addFuelModal').classList.add('hidden');
+        }
+
+        function validateAddFuelQuantity() {
+            const quantity = parseFloat(document.getElementById('addFuelQuantity').value) || 0;
+            const available = addFuelCapacity - addFuelCurrent;
+            const errorEl = document.getElementById('addFuelError');
+            const successEl = document.getElementById('addFuelSuccess');
+            const submitBtn = document.getElementById('addFuelSubmitBtn');
+
+            errorEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+
+            if (quantity > available) {
+                errorEl.innerText = `الكمية المدخلة (${quantity.toFixed(2)} لتر) تتجاوز المتاح (${available.toFixed(2)} لتر)`;
+                errorEl.classList.remove('hidden');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (quantity > 0) {
+                const newTotal = addFuelCurrent + quantity;
+                successEl.innerText = `✓ الكمية الجديدة ستكون: ${newTotal.toFixed(2)} لتر (من سعة ${addFuelCapacity.toFixed(2)} لتر)`;
+                successEl.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Handle Add Fuel Form Submit
+        document.getElementById('addFuelForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const quantity = parseFloat(document.getElementById('addFuelQuantity').value);
+            const notes = document.getElementById('addFuelNotes').value;
+
+            if (!quantity || quantity <= 0) {
+                alert('يجب إدخال كمية صحيحة');
+                return;
+            }
+
+            const available = addFuelCapacity - addFuelCurrent;
+            if (quantity > available) {
+                alert('الكمية تتجاوز المتاح');
+                return;
+            }
+
+            try {
+                const response = await fetch('/fuel-management/fuel-truck/' + addFuelTruckId + '/add-quantity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: JSON.stringify({
+                        quantity: quantity,
+                        notes: notes
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showNotification(data.message || 'تم إضافة الكمية بنجاح', 'success');
+                    closeAddFuelModal();
+                    // Reload the page after 1 second
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.message || 'حدث خطأ', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('حدث خطأ في الإضافة', 'error');
+            }
+        });
+
         // Close modals on Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -798,7 +960,13 @@
                 closeDistributeModal();
                 closeConsumptionModal();
                 closeIncompleteInfoModal();
+                closeAddFuelModal();
             }
+        });
+
+        // Close Add Fuel Modal on outside click
+        document.getElementById('addFuelModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddFuelModal();
         });
     </script>
 @endsection
