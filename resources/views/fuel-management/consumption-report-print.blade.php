@@ -376,6 +376,7 @@
                     <tr>
                         <th>التاريخ</th>
                         <th>المعدة</th>
+                        <th>سيارة المحروقات</th>
                         <th>نوع المحروقات</th>
                         <th>الكمية</th>
                         <th>المسجل</th>
@@ -388,6 +389,7 @@
                         <tr>
                             <td>{{ $consumption['date_formatted'] ?? '-' }}</td>
                             <td>{{ $consumption['equipment_name'] ?? '-' }}</td>
+                            <td>{{ $consumption['fuel_truck_name'] ?? '-' }}</td>
                             <td>{{ $consumption['fuel_type'] ?? '-' }}</td>
                             <td>{{ $consumption['quantity'] ?? 0 }} لتر</td>
                             <td>{{ $consumption['user_name'] ?? '-' }}</td>
@@ -408,7 +410,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 20px;">لم يتم تسجيل أي استهلاك للمحروقات</td>
+                            <td colspan="8" style="text-align: center; padding: 20px;">لم يتم تسجيل أي استهلاك للمحروقات</td>
                         </tr>
                     @endforelse
                 </tbody>

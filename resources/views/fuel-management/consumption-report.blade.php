@@ -161,6 +161,7 @@ if (window.matchMedia('print').matches) {
                             <tr class="border-b border-gray-200 bg-gray-50">
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-700">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-700">المعدة</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-700">سيارة المحروقات</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-700">نوع المحروقات</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-700">الكمية</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-700">المسجل</th>
@@ -176,6 +177,11 @@ if (window.matchMedia('print').matches) {
                                     </td>
                                     <td class="px-6 py-3">
                                         <span class="text-sm font-medium text-gray-900">{{ $consumption['equipment_name'] }}</span>
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <span class="text-sm font-medium text-orange-700 bg-orange-50 px-3 py-1 rounded">
+                                            {{ $consumption['fuel_truck_name'] }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-3">
                                         <span class="text-sm text-gray-900">{{ $consumption['fuel_type'] }}</span>
