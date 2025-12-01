@@ -178,8 +178,14 @@ class FuelManagementUnifiedController extends Controller
     public function printConsumptionReport(Request $request)
     {
         try {
-            $startDate = $request->has('start_date') ? Carbon::createFromFormat('Y-m-d', $request->get('start_date')) : now()->startOfMonth();
-            $endDate = $request->has('end_date') ? Carbon::createFromFormat('Y-m-d', $request->get('end_date')) : now()->endOfMonth();
+            $startDate = $request->has('start_date')
+                ? Carbon::createFromFormat('Y-m-d', $request->get('start_date'))->startOfDay()
+                : now()->startOfMonth();
+            $endDate = $request->has('end_date')
+                ? Carbon::createFromFormat('Y-m-d', $request->get('end_date'))->endOfDay()
+                : now()->endOfMonth();
+
+            Log::info("Print Report Date Range: $startDate to $endDate");
 
             // Get all consumption records for display in table (both approved and rejected)
             $consumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
@@ -203,34 +209,25 @@ class FuelManagementUnifiedController extends Controller
                 })->toArray();
 
             // Get only approved records for calculations
-            $approvedConsumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
+            $approvedRecords = EquipmentFuelConsumption::with(['equipment', 'user'])
                 ->whereBetween('consumption_date', [$startDate, $endDate])
                 ->where('approval_status', 'approved')
-                ->get()
-                ->map(function ($consumption) {
-                    return [
-                        'id' => $consumption->id,
-                        'equipment_name' => $consumption->equipment->name,
-                        'fuel_type' => $consumption->fuel_type_text,
-                        'quantity' => $consumption->quantity,
-                        'consumption_date' => $consumption->consumption_date,
-                        'date_formatted' => $consumption->consumption_date?->locale('ar')->isoFormat('dddd، D MMMM YYYY'),
-                        'status' => $consumption->approval_status_text,
-                        'status_color' => $consumption->approval_status_color,
-                        'user_name' => $consumption->user->name,
-                        'notes' => $consumption->notes
-                    ];
-                });
+                ->get();
 
-            // Calculate summary - based on approved records only
-            $totalConsumption = $approvedConsumptions->sum('quantity');
-            $byFuelType = $approvedConsumptions->groupBy('fuel_type')->map(function ($items) {
+            $totalConsumption = $approvedRecords->sum('quantity');
+
+            // Group by fuel_type text
+            $byFuelType = $approvedRecords->groupBy(function ($consumption) {
+                return $consumption->fuel_type_text;
+            })->map(function ($items) {
                 return $items->sum('quantity');
             })->toArray();
 
+            Log::info("Total Consumptions: " . count($consumptions) . ", Total: " . $totalConsumption . ", By Type: " . json_encode($byFuelType));
+
             return view('fuel-management.consumption-report-print', compact('consumptions', 'totalConsumption', 'byFuelType', 'startDate', 'endDate'));
         } catch (\Exception $e) {
-            Log::error('Print Consumption Report Error: ' . $e->getMessage());
+            Log::error('Print Consumption Report Error: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
             return redirect()->route('fuel-management.consumption-report')->with('error', 'حدث خطأ في الطباعة: ' . $e->getMessage());
         }
     }
