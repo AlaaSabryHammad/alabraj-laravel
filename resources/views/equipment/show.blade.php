@@ -1717,7 +1717,7 @@
                                                             class="text-green-600 hover:text-green-900" title="اعتماد">
                                                         <i class="ri-check-line"></i>
                                                     </button>
-                                                    <button onclick="rejectFuelConsumption(${consumption.id})"
+                                                    <button onclick="rejectFuelConsumption(${consumption.id}, '${consumption.quantity}', '${getFuelTypeText(consumption.fuel_type)}', '${consumption.user.name}')"
                                                             class="text-red-600 hover:text-red-900" title="رفض">
                                                         <i class="ri-close-line"></i>
                                                     </button>` : ''
