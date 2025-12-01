@@ -590,6 +590,7 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::post('/fuel-truck/{fuelTruck}/distribute', [FuelManagementController::class, 'distributeFuel'])->name('distribute');
         Route::patch('/distribution/{distribution}/approve', [FuelManagementController::class, 'approveDistribution'])->name('approve-distribution');
         Route::patch('/distribution/{distribution}/reject', [FuelManagementController::class, 'rejectDistribution'])->name('reject-distribution');
+        Route::delete('/distribution/{distribution}/cancel', [FuelManagementController::class, 'cancelDistribution'])->name('cancel-distribution');
     });
 
     // Test Route for Spare Part Creation

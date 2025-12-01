@@ -597,15 +597,19 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${distribution.approval_status === 'pending' ? 
+                            ${distribution.approval_status === 'pending' ?
                                 `<div class="flex items-center gap-2">
-                                                    <button onclick="approveDistribution(${distribution.id})" 
+                                                    <button onclick="approveDistribution(${distribution.id})"
                                                             class="text-green-600 hover:text-green-900" title="اعتماد">
                                                         <i class="ri-check-line"></i>
                                                     </button>
-                                                    <button onclick="rejectDistribution(${distribution.id})" 
+                                                    <button onclick="rejectDistribution(${distribution.id})"
                                                             class="text-red-600 hover:text-red-900" title="رفض">
                                                         <i class="ri-close-line"></i>
+                                                    </button>
+                                                    <button onclick="cancelDistribution(${distribution.id})"
+                                                            class="text-gray-600 hover:text-gray-900" title="إلغاء">
+                                                        <i class="ri-delete-bin-line"></i>
                                                     </button>
                                                 </div>` : '-'
                             }
@@ -674,6 +678,32 @@
                         body: JSON.stringify({
                             approval_notes: notes
                         })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification(data.message, 'success');
+                            // Refresh distributions view
+                            location.reload();
+                        } else {
+                            showNotification(data.message || 'حدث خطأ', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('حدث خطأ', 'error');
+                    });
+            }
+        }
+
+        function cancelDistribution(distributionId) {
+            if (confirm('هل أنت متأكد من رغبتك في إلغاء هذا التوزيع؟')) {
+                fetch(`/fuel-management/distribution/${distributionId}/cancel`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
                     })
                     .then(response => response.json())
                     .then(data => {

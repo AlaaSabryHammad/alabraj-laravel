@@ -251,6 +251,29 @@ class FuelManagementController extends Controller
     }
 
     /**
+     * Cancel/Delete fuel distribution (only for pending distributions)
+     */
+    public function cancelDistribution(FuelDistribution $distribution)
+    {
+        // Only allow cancellation of pending distributions
+        if ($distribution->approval_status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن إلغاء توزيع تمت معالجته بالفعل'
+            ], 400);
+        }
+
+        $distribution->delete();
+
+        \Log::info('Distribution cancelled - ID: ' . $distribution->id . ', fuel_truck_id: ' . $distribution->fuel_truck_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إلغاء التوزيع بنجاح'
+        ]);
+    }
+
+    /**
      * Add quantity to fuel truck
      */
     public function addQuantity(Request $request, FuelTruck $fuelTruck)
