@@ -134,7 +134,7 @@ class FuelManagementController extends Controller
             \Log::info('Request data: ' . json_encode($request->all()));
 
             $validated = $request->validate([
-                'target_equipment_id' => 'required|exists:equipments,id',
+                'target_equipment_id' => 'required|exists:equipment,id',
                 'quantity' => 'required|numeric|min:0.1',
                 'distribution_date' => 'required|date',
                 'notes' => 'nullable|string'
