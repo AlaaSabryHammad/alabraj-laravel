@@ -341,8 +341,18 @@ class FuelManagementController extends Controller
     {
         $employeeId = Auth::user()->employee_id;
 
+        // If user is not linked to an employee, return empty array
+        if (!$employeeId) {
+            return response()->json([]);
+        }
+
         // Get equipment assigned to the current driver
         $driverEquipment = Equipment::where('driver_id', $employeeId)->pluck('id');
+
+        // If no equipment found, return empty array
+        if ($driverEquipment->isEmpty()) {
+            return response()->json([]);
+        }
 
         // Get consumption records for driver's equipment
         $consumptions = EquipmentFuelConsumption::with(['equipment', 'user', 'approvedBy'])
