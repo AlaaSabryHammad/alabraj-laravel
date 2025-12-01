@@ -200,7 +200,7 @@ class FuelManagementUnifiedController extends Controller
                     'notes' => $consumption->notes,
                     'approval_status' => $consumption->approval_status
                 ];
-            });
+            })->toArray();
 
         // Get only approved records for calculations
         $approvedConsumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
@@ -226,7 +226,7 @@ class FuelManagementUnifiedController extends Controller
         $totalConsumption = $approvedConsumptions->sum('quantity');
         $byFuelType = $approvedConsumptions->groupBy('fuel_type')->map(function ($items) {
             return $items->sum('quantity');
-        });
+        })->toArray();
 
         return view('fuel-management.consumption-report-print', compact('consumptions', 'totalConsumption', 'byFuelType', 'startDate', 'endDate'));
     }

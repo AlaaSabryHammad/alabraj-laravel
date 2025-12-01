@@ -209,7 +209,7 @@
 
             <div class="card">
                 <p>عدد السجلات</p>
-                <div class="card-value">{{ $consumptions->count() }}</div>
+                <div class="card-value">{{ count($consumptions) }}</div>
                 <div class="card-unit">عملية استهلاك</div>
             </div>
 
@@ -221,17 +221,18 @@
 
             <div class="card">
                 <p>عدد أنواع المحروقات</p>
-                <div class="card-value">{{ $byFuelType->count() }}</div>
+                <div class="card-value">{{ count($byFuelType) }}</div>
                 <div class="card-unit">نوع</div>
             </div>
         </div>
 
         <!-- Consumption by Fuel Type -->
-        @if($byFuelType->count() > 0)
+        @php $byFuelTypeCount = is_array($byFuelType) ? count($byFuelType) : $byFuelType->count(); @endphp
+        @if($byFuelTypeCount > 0)
             <h2>الاستهلاك حسب نوع المحروقات</h2>
             <div class="fuel-type-section">
                 <div class="fuel-cards">
-                    @foreach($byFuelType as $fuelType => $quantity)
+                    @forelse($byFuelType as $fuelType => $quantity)
                         @php
                             $fuelTypeMap = [
                                 'diesel' => 'ديزل',
@@ -255,7 +256,9 @@
                                 <span class="fuel-card-value">{{ $totalConsumption > 0 ? number_format(($quantity / $totalConsumption) * 100, 1) : 0 }}%</span>
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <p style="text-align: center; padding: 20px; color: #666;">لا توجد بيانات استهلاك</p>
+                    @endforelse
                 </div>
             </div>
         @endif
@@ -263,7 +266,7 @@
         <!-- Detailed Table -->
         <h2>سجلات الاستهلاك التفصيلية</h2>
 
-        @if($consumptions->count() > 0)
+        @if(count($consumptions) > 0)
             <table>
                 <thead>
                     <tr>
@@ -277,25 +280,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($consumptions as $consumption)
+                    @forelse($consumptions as $consumption)
                         <tr>
-                            <td>{{ $consumption['date_formatted'] }}</td>
-                            <td>{{ $consumption['equipment_name'] }}</td>
-                            <td>{{ $consumption['fuel_type'] }}</td>
-                            <td>{{ $consumption['quantity'] }} لتر</td>
-                            <td>{{ $consumption['user_name'] }}</td>
+                            <td>{{ $consumption['date_formatted'] ?? '-' }}</td>
+                            <td>{{ $consumption['equipment_name'] ?? '-' }}</td>
+                            <td>{{ $consumption['fuel_type'] ?? '-' }}</td>
+                            <td>{{ $consumption['quantity'] ?? 0 }} لتر</td>
+                            <td>{{ $consumption['user_name'] ?? '-' }}</td>
                             <td>
-                                @if($consumption['approval_status'] === 'approved')
-                                    <span class="status-approved">{{ $consumption['status'] }}</span>
-                                @elseif($consumption['approval_status'] === 'rejected')
-                                    <span class="status-rejected">{{ $consumption['status'] }}</span>
+                                @if(isset($consumption['approval_status']))
+                                    @if($consumption['approval_status'] === 'approved')
+                                        <span class="status-approved">{{ $consumption['status'] }}</span>
+                                    @elseif($consumption['approval_status'] === 'rejected')
+                                        <span class="status-rejected">{{ $consumption['status'] }}</span>
+                                    @else
+                                        <span class="status-pending">{{ $consumption['status'] }}</span>
+                                    @endif
                                 @else
-                                    <span class="status-pending">{{ $consumption['status'] }}</span>
+                                    <span class="status-pending">-</span>
                                 @endif
                             </td>
                             <td>{{ $consumption['notes'] ?? '-' }}</td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px;">لم يتم تسجيل أي استهلاك للمحروقات</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         @else
