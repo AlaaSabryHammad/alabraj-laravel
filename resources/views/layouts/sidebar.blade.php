@@ -56,6 +56,13 @@
                     'color' => 'from-violet-600 to-violet-700',
                 ],
                 [
+                    'id' => 'fuel-distribution',
+                    'title' => 'توزيع المحروقات',
+                    'icon' => 'ri-gas-station-fill',
+                    'route' => 'fuel-management.driver',
+                    'color' => 'from-purple-600 to-purple-700',
+                ],
+                [
                     'id' => 'locations',
                     'title' => 'إدارة المواقع',
                     'icon' => 'ri-map-pin-line',
