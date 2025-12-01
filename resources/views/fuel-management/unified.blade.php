@@ -186,11 +186,19 @@
                                     </div>
                                 </div>
 
-                                <!-- Action Button -->
-                                <button class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50" disabled>
-                                    <i class="ri-lock-line ml-1"></i>
-                                    معطلة (تحتاج إكمال البيانات)
-                                </button>
+                                <!-- Action Buttons -->
+                                <div class="flex gap-2">
+                                    <a href="{{ route('equipment.edit', $truck->id) }}"
+                                       class="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
+                                        <i class="ri-edit-line ml-1"></i>
+                                        استكمال البيانات
+                                    </a>
+                                    <button onclick="showIncompleteInfo({{ $truck->id }}, '{{ $truck->name }}')"
+                                       class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
+                                        <i class="ri-information-line ml-1"></i>
+                                        المزيد
+                                    </button>
+                                </div>
                             </div>
                             @endif
                         @endforeach
@@ -326,6 +334,37 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Incomplete Truck Info Modal -->
+    <div id="incompleteInfoModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-lg bg-white" dir="rtl">
+            <div class="flex items-center justify-between pb-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">بيانات السيارة الناقصة</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600"
+                    onclick="closeIncompleteInfoModal()">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <div id="incompleteInfoContent" class="mt-4 space-y-4">
+                <div class="text-center">
+                    <i class="ri-loader-4-line text-2xl animate-spin"></i>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t mt-4">
+                <button type="button" onclick="closeIncompleteInfoModal()"
+                    class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                    إغلاق
+                </button>
+                <a id="completeDataLink" href="#" target="_blank"
+                    class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center">
+                    <i class="ri-edit-line ml-1"></i>
+                    استكمال البيانات
+                </a>
+            </div>
         </div>
     </div>
 
@@ -548,6 +587,61 @@
             document.getElementById('consumptionForm').reset();
         }
 
+        function showIncompleteInfo(truckId, truckName) {
+            // بناء محتوى معلومات السيارة الناقصة
+            let content = '<div class="space-y-4">';
+
+            // رسالة تحذيرية
+            content += '<div class="p-4 bg-orange-50 border border-orange-300 rounded-lg">';
+            content += '<div class="flex items-start">';
+            content += '<i class="ri-alert-fill text-2xl text-orange-600 ml-3 mt-1"></i>';
+            content += '<div>';
+            content += '<h4 class="font-bold text-orange-900 mb-1">بيانات ناقصة</h4>';
+            content += '<p class="text-sm text-orange-800">السيارة "' + truckName + '" تحتاج إلى استكمال البيانات التالية:</p>';
+            content += '</div>';
+            content += '</div>';
+            content += '</div>';
+
+            // قائمة البيانات الناقصة
+            content += '<div class="bg-gray-50 rounded-lg p-4">';
+            content += '<h4 class="font-semibold text-gray-900 mb-3">المتطلبات:</h4>';
+            content += '<ul class="space-y-2">';
+            content += '<li class="flex items-center text-gray-700">';
+            content += '<i class="ri-checkbox-blank-circle-fill text-xl text-orange-500 ml-2"></i>';
+            content += 'بيانات سيارة المحروقات (السعة، نوع المحروقات)';
+            content += '</li>';
+            content += '<li class="flex items-center text-gray-700">';
+            content += '<i class="ri-checkbox-blank-circle-fill text-xl text-orange-500 ml-2"></i>';
+            content += 'الكمية الحالية والكمية المتبقية';
+            content += '</li>';
+            content += '<li class="flex items-center text-gray-700">';
+            content += '<i class="ri-checkbox-blank-circle-fill text-xl text-orange-500 ml-2"></i>';
+            content += 'معلومات الموقع والسائق';
+            content += '</li>';
+            content += '</ul>';
+            content += '</div>';
+
+            // الفوائد
+            content += '<div class="bg-blue-50 rounded-lg p-4">';
+            content += '<h4 class="font-semibold text-blue-900 mb-2">فوائد إكمال البيانات:</h4>';
+            content += '<ul class="space-y-1 text-sm text-blue-800">';
+            content += '<li><i class="ri-check-line ml-1"></i>تفعيل عمليات التوزيع والاستهلاك</li>';
+            content += '<li><i class="ri-check-line ml-1"></i>تتبع دقيق لمستويات المحروقات</li>';
+            content += '<li><i class="ri-check-line ml-1"></i>إدارة أفضل للسيارات والموارد</li>';
+            content += '</ul>';
+            content += '</div>';
+
+            content += '</div>';
+
+            document.getElementById('incompleteInfoContent').innerHTML = content;
+            document.getElementById('completeDataLink').href = '/equipment/' + truckId + '/edit';
+            document.getElementById('incompleteInfoModal').classList.remove('hidden');
+        }
+
+        function closeIncompleteInfoModal() {
+            document.getElementById('incompleteInfoModal').classList.add('hidden');
+        }
+
         // Validate quantity input in real-time
         function validateQuantityInput() {
             const quantityInput = document.getElementById('quantityInput');
@@ -685,6 +779,9 @@
         document.getElementById('consumptionModal').addEventListener('click', function(e) {
             if (e.target === this) closeConsumptionModal();
         });
+        document.getElementById('incompleteInfoModal').addEventListener('click', function(e) {
+            if (e.target === this) closeIncompleteInfoModal();
+        });
 
         // Close modals on Escape
         document.addEventListener('keydown', function(e) {
@@ -692,6 +789,7 @@
                 closeTruckModal();
                 closeDistributeModal();
                 closeConsumptionModal();
+                closeIncompleteInfoModal();
             }
         });
     </script>
