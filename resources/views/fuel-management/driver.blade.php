@@ -94,13 +94,13 @@
                     <div class="flex" role="tablist">
                         <button type="button" role="tab" aria-selected="true" aria-controls="distributions-panel"
                             class="tab-button active px-6 py-4 text-sm font-medium text-gray-900 border-b-2 border-blue-600"
-                            onclick="switchTab('distributions')">
+                            onclick="switchTab('distributions', event)">
                             <i class="ri-gas-station-line ml-2"></i>
                             توزيعات المحروقات
                         </button>
                         <button type="button" role="tab" aria-selected="false" aria-controls="consumption-panel"
                             class="tab-button px-6 py-4 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300"
-                            onclick="switchTab('consumption')">
+                            onclick="switchTab('consumption', event)">
                             <i class="ri-bar-chart-line ml-2"></i>
                             استهلاك المحروقات
                         </button>
@@ -406,7 +406,7 @@
         }
 
         // Switch between tabs
-        function switchTab(tabName) {
+        function switchTab(tabName, clickEvent) {
             // Hide all panels
             document.getElementById('distributions-panel').classList.add('hidden');
             document.getElementById('consumption-panel').classList.add('hidden');
@@ -417,15 +417,22 @@
                 btn.classList.add('border-transparent', 'text-gray-500');
             });
 
+            // Get the clicked button
+            const activeButton = clickEvent ? clickEvent.target.closest('.tab-button') : document.querySelector(`[aria-controls="${tabName}-panel"]`);
+
             // Show selected panel
             if (tabName === 'distributions') {
                 document.getElementById('distributions-panel').classList.remove('hidden');
-                event.target.closest('.tab-button').classList.remove('border-transparent', 'text-gray-500');
-                event.target.closest('.tab-button').classList.add('border-blue-600', 'text-gray-900');
+                if (activeButton) {
+                    activeButton.classList.remove('border-transparent', 'text-gray-500');
+                    activeButton.classList.add('border-blue-600', 'text-gray-900');
+                }
             } else if (tabName === 'consumption') {
                 document.getElementById('consumption-panel').classList.remove('hidden');
-                event.target.closest('.tab-button').classList.remove('border-transparent', 'text-gray-500');
-                event.target.closest('.tab-button').classList.add('border-blue-600', 'text-gray-900');
+                if (activeButton) {
+                    activeButton.classList.remove('border-transparent', 'text-gray-500');
+                    activeButton.classList.add('border-blue-600', 'text-gray-900');
+                }
                 loadFuelConsumption();
             }
         }
