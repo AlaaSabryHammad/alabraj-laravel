@@ -1704,8 +1704,10 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                             ${consumption.quantity} لتر
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-500">
-                            ${consumption.notes || '-'}
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            <div title="${consumption.notes || ''}" class="break-words">
+                                ${consumption.notes && consumption.notes.trim() ? `<span class="block">${consumption.notes}</span>` : '<span class="text-gray-400">-</span>'}
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             ${consumption.user.name}
