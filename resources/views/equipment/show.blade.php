@@ -1852,19 +1852,36 @@
                     fetch(`/equipment-fuel-consumption/${currentConsumptionId}`, {
                         method: 'DELETE',
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
                         }
-                    }).then(response => {
-                        if (response.ok) {
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error('Server responded with status ' + response.status + ': ' + text);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
                             closeDeleteModal();
                             loadFuelConsumptions();
                             loadFuelConsumptionSummary();
+                            // Show success notification
+                            const notification = document.createElement('div');
+                            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                            notification.textContent = 'تم حذف السجل بنجاح';
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 3000);
                         } else {
-                            alert('حدث خطأ أثناء حذف السجل');
+                            alert('فشل حذف السجل: ' + (data.message || 'خطأ غير معروف'));
                         }
-                    }).catch(error => {
+                    })
+                    .catch(error => {
                         console.error('Error:', error);
-                        alert('حدث خطأ أثناء حذف السجل');
+                        alert('حدث خطأ أثناء حذف السجل: ' + error.message);
                     });
                 });
             }

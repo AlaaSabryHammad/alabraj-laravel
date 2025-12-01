@@ -79,9 +79,17 @@ class EquipmentFuelConsumptionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(EquipmentFuelConsumption $equipmentFuelConsumption)
+    public function destroy(EquipmentFuelConsumption $equipmentFuelConsumption, Request $request)
     {
         $equipmentFuelConsumption->delete();
+
+        // إذا كان طلب AJAX، أرجع JSON
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حذف سجل استهلاك المحروقات بنجاح'
+            ]);
+        }
 
         return redirect()->back()->with('success', 'تم حذف سجل استهلاك المحروقات بنجاح');
     }
