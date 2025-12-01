@@ -8,6 +8,7 @@ use App\Models\FuelDistribution;
 use App\Models\EquipmentFuelConsumption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class FuelManagementUnifiedController extends Controller
 {
@@ -94,11 +95,48 @@ class FuelManagementUnifiedController extends Controller
                 'capacity' => $truck->fuelTruck->capacity,
                 'current_quantity' => $truck->fuelTruck->current_quantity,
                 'remaining_quantity' => $truck->fuelTruck->remaining_quantity,
-                'percentage' => $truck->fuelTruck->capacity > 0 
-                    ? ($truck->fuelTruck->remaining_quantity / $truck->fuelTruck->capacity) * 100 
+                'percentage' => $truck->fuelTruck->capacity > 0
+                    ? ($truck->fuelTruck->remaining_quantity / $truck->fuelTruck->capacity) * 100
                     : 0
             ],
             'distributions' => $distributions
         ]);
+    }
+
+    /**
+     * Get fuel consumption report
+     */
+    public function consumptionReport(Request $request)
+    {
+        $startDate = $request->has('start_date') ? Carbon::createFromFormat('Y-m-d', $request->get('start_date')) : now()->startOfMonth();
+        $endDate = $request->has('end_date') ? Carbon::createFromFormat('Y-m-d', $request->get('end_date')) : now()->endOfMonth();
+
+        // Get consumption records with grouping
+        $consumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
+            ->whereBetween('consumption_date', [$startDate, $endDate])
+            ->orderBy('consumption_date', 'desc')
+            ->get()
+            ->map(function ($consumption) {
+                return [
+                    'id' => $consumption->id,
+                    'equipment_name' => $consumption->equipment->name,
+                    'fuel_type' => $consumption->fuel_type_text,
+                    'quantity' => $consumption->quantity,
+                    'consumption_date' => $consumption->consumption_date,
+                    'date_formatted' => $consumption->consumption_date?->locale('ar')->isoFormat('dddd، D MMMM YYYY'),
+                    'status' => $consumption->approval_status_text,
+                    'status_color' => $consumption->approval_status_color,
+                    'user_name' => $consumption->user->name,
+                    'notes' => $consumption->notes
+                ];
+            });
+
+        // Calculate summary
+        $totalConsumption = $consumptions->sum('quantity');
+        $byFuelType = $consumptions->groupBy('fuel_type')->map(function ($items) {
+            return $items->sum('quantity');
+        });
+
+        return view('fuel-management.consumption-report', compact('consumptions', 'totalConsumption', 'byFuelType', 'startDate', 'endDate'));
     }
 }

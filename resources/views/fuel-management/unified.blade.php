@@ -10,6 +10,11 @@
                 <h1 class="text-3xl font-bold text-gray-900">إدارة المحروقات</h1>
                 <p class="mt-1 text-sm text-gray-600">إدارة شاملة لسيارات المحروقات والتوزيعات والاستهلاك</p>
             </div>
+            <a href="{{ route('fuel-management.consumption-report') }}"
+                class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                <i class="ri-bar-chart-line ml-2"></i>
+                تقرير الاستهلاك
+            </a>
         </div>
 
         <!-- Summary Cards -->

@@ -18,7 +18,8 @@
       "Bash(if [ -f \"storage/logs/laravel.log\" ])",
       "Bash(then tail -50 \"storage/logs/laravel.log\")",
       "Bash(else echo \"Log file not found\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": [],
