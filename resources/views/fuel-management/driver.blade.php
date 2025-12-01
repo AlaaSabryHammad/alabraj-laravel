@@ -442,17 +442,23 @@
             fetch('/api/driver/fuel-consumption', {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 renderConsumptionTable(data);
             })
             .catch(error => {
                 console.error('Error loading fuel consumption:', error);
-                showNotification('خطأ في تحميل بيانات استهلاك المحروقات', 'error');
+                // Show empty message instead of error notification
+                renderConsumptionTable([]);
             });
         }
 
