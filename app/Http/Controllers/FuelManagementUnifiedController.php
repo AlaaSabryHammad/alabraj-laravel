@@ -64,43 +64,55 @@ class FuelManagementUnifiedController extends Controller
      */
     public function getTruckDetails($truckId)
     {
-        $truck = Equipment::with(['fuelTruck', 'location', 'driver'])
-            ->findOrFail($truckId);
+        try {
+            $truck = Equipment::with(['fuelTruck', 'location', 'driver'])
+                ->findOrFail($truckId);
 
-        $distributions = FuelDistribution::with(['targetEquipment', 'distributedBy', 'approvedBy'])
-            ->where('fuel_truck_id', $truck->fuelTruck->id)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($dist) {
-                return [
-                    'id' => $dist->id,
-                    'type' => 'distribution',
-                    'equipment_name' => $dist->targetEquipment->name,
-                    'quantity' => $dist->quantity,
-                    'date' => $dist->distribution_date,
-                    'date_formatted' => $dist->distribution_date?->locale('ar')->isoFormat('dddd، D MMMM YYYY'),
-                    'status' => $dist->approval_status,
-                    'status_text' => $dist->approval_status_text,
-                    'status_color' => $dist->approval_status_color,
-                    'notes' => $dist->notes,
-                    'created_by' => $dist->distributedBy->name
-                ];
-            });
+            if (!$truck->fuelTruck) {
+                return response()->json([
+                    'error' => 'Fuel truck not found for this equipment'
+                ], 404);
+            }
 
-        return response()->json([
-            'truck' => [
-                'id' => $truck->id,
-                'name' => $truck->name,
-                'fuel_type' => $truck->fuelTruck->fuel_type_text,
-                'capacity' => $truck->fuelTruck->capacity,
-                'current_quantity' => $truck->fuelTruck->current_quantity,
-                'remaining_quantity' => $truck->fuelTruck->remaining_quantity,
-                'percentage' => $truck->fuelTruck->capacity > 0
-                    ? ($truck->fuelTruck->remaining_quantity / $truck->fuelTruck->capacity) * 100
-                    : 0
-            ],
-            'distributions' => $distributions
-        ]);
+            $distributions = FuelDistribution::with(['targetEquipment', 'distributedBy', 'approvedBy'])
+                ->where('fuel_truck_id', $truck->fuelTruck->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($dist) {
+                    return [
+                        'id' => $dist->id,
+                        'type' => 'distribution',
+                        'equipment_name' => $dist->targetEquipment->name,
+                        'quantity' => (float) $dist->quantity,
+                        'date' => $dist->distribution_date,
+                        'date_formatted' => $dist->distribution_date?->locale('ar')->isoFormat('dddd، D MMMM YYYY'),
+                        'status' => $dist->approval_status,
+                        'status_text' => $dist->approval_status_text,
+                        'status_color' => $dist->approval_status_color,
+                        'notes' => $dist->notes,
+                        'created_by' => $dist->distributedBy->name
+                    ];
+                });
+
+            return response()->json([
+                'truck' => [
+                    'id' => $truck->id,
+                    'name' => $truck->name,
+                    'fuel_type' => $truck->fuelTruck->fuel_type_text,
+                    'capacity' => (float) $truck->fuelTruck->capacity,
+                    'current_quantity' => (float) $truck->fuelTruck->current_quantity,
+                    'remaining_quantity' => (float) $truck->fuelTruck->remaining_quantity,
+                    'percentage' => $truck->fuelTruck->capacity > 0
+                        ? ($truck->fuelTruck->remaining_quantity / $truck->fuelTruck->capacity) * 100
+                        : 0
+                ],
+                'distributions' => $distributions
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -341,8 +341,18 @@
 
         function openTruckModal(truckId, truckName) {
             fetch('/fuel-management/truck/' + truckId + '/details')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load truck details: ' + response.status);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (data.error) {
+                        document.getElementById('truckDetailsContent').innerHTML = '<p class="text-red-600">خطأ: ' + data.error + '</p>';
+                        return;
+                    }
+
                     const truck = data.truck;
                     const distributions = data.distributions;
 
@@ -353,13 +363,13 @@
                     html += '</div>';
 
                     html += '<div class="grid grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg">';
-                    html += '<div><p class="text-xs text-gray-600">السعة</p><p class="font-bold text-blue-900">' + truck.capacity.toFixed(2) + '</p><p class="text-xs text-gray-500">لتر</p></div>';
-                    html += '<div><p class="text-xs text-gray-600">الحالية</p><p class="font-bold text-blue-900">' + truck.current_quantity.toFixed(2) + '</p><p class="text-xs text-gray-500">لتر</p></div>';
-                    html += '<div><p class="text-xs text-gray-600">المتبقية</p><p class="font-bold text-green-600">' + truck.remaining_quantity.toFixed(2) + '</p><p class="text-xs text-gray-500">لتر</p></div>';
+                    html += '<div><p class="text-xs text-gray-600">السعة</p><p class="font-bold text-blue-900">' + parseFloat(truck.capacity).toFixed(2) + '</p><p class="text-xs text-gray-500">لتر</p></div>';
+                    html += '<div><p class="text-xs text-gray-600">الحالية</p><p class="font-bold text-blue-900">' + parseFloat(truck.current_quantity).toFixed(2) + '</p><p class="text-xs text-gray-500">لتر</p></div>';
+                    html += '<div><p class="text-xs text-gray-600">المتبقية</p><p class="font-bold text-green-600">' + parseFloat(truck.remaining_quantity).toFixed(2) + '</p><p class="text-xs text-gray-500">لتر</p></div>';
                     html += '</div>';
 
                     html += '<div><div class="w-full bg-gray-200 rounded-full h-3 mb-2"><div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full" style="width: ' + truck.percentage + '%"></div></div>';
-                    html += '<p class="text-xs text-center text-gray-600">' + truck.percentage.toFixed(1) + '% متاح</p></div>';
+                    html += '<p class="text-xs text-center text-gray-600">' + parseFloat(truck.percentage).toFixed(1) + '% متاح</p></div>';
 
                     html += '<div><h4 class="font-bold text-gray-900 mb-3">التوزيعات الأخيرة</h4>';
                     if (distributions.length > 0) {
@@ -367,7 +377,7 @@
                         distributions.forEach(dist => {
                             html += '<div class="flex items-center justify-between p-2 bg-gray-50 rounded">';
                             html += '<div><p class="text-sm font-medium">' + dist.equipment_name + '</p><p class="text-xs text-gray-500">' + dist.date_formatted + '</p></div>';
-                            html += '<div class="text-right"><p class="text-sm font-bold">' + dist.quantity.toFixed(2) + ' لتر</p>';
+                            html += '<div class="text-right"><p class="text-sm font-bold">' + parseFloat(dist.quantity).toFixed(2) + ' لتر</p>';
                             html += '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ' + dist.status_color + '">' + dist.status_text + '</span></div>';
                             html += '</div>';
                         });
@@ -381,7 +391,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('truckDetailsContent').innerHTML = '<p class="text-red-600">حدث خطأ في تحميل البيانات</p>';
+                    document.getElementById('truckDetailsContent').innerHTML = '<p class="text-red-600">حدث خطأ في تحميل البيانات: ' + error.message + '</p>';
                 });
 
             document.getElementById('truckDetailsModal').classList.remove('hidden');
@@ -394,14 +404,27 @@
         function openDistributeModal(fuelTruckId, truckName) {
             currentFuelTruckId = fuelTruckId;
             fetch('/fuel-management/truck/' + fuelTruckId + '/details')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load truck details');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    availableQuantity = data.truck.remaining_quantity;
+                    if (data.error) {
+                        showNotification(data.error, 'error');
+                        return;
+                    }
+                    availableQuantity = parseFloat(data.truck.remaining_quantity);
                     let info = '<div><strong>اسم السيارة:</strong> ' + data.truck.name + '</div>';
                     info += '<div><strong>نوع المحروقات:</strong> ' + data.truck.fuel_type + '</div>';
-                    info += '<div><strong>الكمية المتاحة:</strong> ' + data.truck.remaining_quantity.toFixed(2) + ' لتر</div>';
+                    info += '<div><strong>الكمية المتاحة:</strong> ' + parseFloat(data.truck.remaining_quantity).toFixed(2) + ' لتر</div>';
                     document.getElementById('truckInfo').innerHTML = info;
                     document.querySelector('[name="quantity"]').max = availableQuantity;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('خطأ في تحميل بيانات السيارة', 'error');
                 });
             document.getElementById('distributeModal').classList.remove('hidden');
         }
