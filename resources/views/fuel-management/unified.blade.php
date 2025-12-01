@@ -134,12 +134,20 @@
 
                                 <!-- Action Buttons -->
                                 <div class="flex gap-2">
+                                    @if($truck->fuelTruck->remaining_quantity > 0)
                                     <button onclick="event.stopPropagation(); openDistributeModal({{ $truck->fuelTruck->id }}, '{{ $truck->name }}')"
-                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                                        {{ $truck->fuelTruck->remaining_quantity <= 0 ? 'disabled' : '' }}>
+                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
                                         <i class="ri-gas-station-line ml-1"></i>
                                         توزيع
                                     </button>
+                                    @else
+                                    <button disabled
+                                        class="flex-1 bg-gray-400 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed opacity-60"
+                                        title="الكمية المتبقية: {{ number_format($truck->fuelTruck->remaining_quantity, 2) }} لتر - لا توجد كمية متاحة">
+                                        <i class="ri-gas-station-line ml-1"></i>
+                                        توزيع
+                                    </button>
+                                    @endif
                                     <button onclick="event.stopPropagation(); openConsumptionModal()"
                                         class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                                         <i class="ri-bar-chart-line ml-1"></i>

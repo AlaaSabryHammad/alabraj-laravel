@@ -19,7 +19,8 @@
       "Bash(then tail -50 \"storage/logs/laravel.log\")",
       "Bash(else echo \"Log file not found\")",
       "Bash(fi)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": [],
