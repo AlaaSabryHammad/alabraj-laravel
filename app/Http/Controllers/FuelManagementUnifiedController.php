@@ -75,7 +75,7 @@ class FuelManagementUnifiedController extends Controller
 
             $distributions = FuelDistribution::with(['targetEquipment', 'distributedBy', 'approvedBy'])
                 ->where('fuel_truck_id', $truck->fuelTruck->id)
-                ->orderBy('created_at', 'desc')
+                ->orderBy('distribution_date', 'desc')
                 ->get()
                 ->map(function ($dist) {
                     return [
