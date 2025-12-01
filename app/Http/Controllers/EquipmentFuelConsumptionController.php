@@ -307,10 +307,12 @@ class EquipmentFuelConsumptionController extends Controller
             $fuelTruck = Equipment::with('fuelTruck')
                 ->whereHas('fuelTruck')
                 ->first(function ($equipment) use ($consumingEquipment) {
-                    // Find a fuel truck that has approved distributions to this equipment
+                    // Find a fuel truck that has distributions to this equipment
+                    // Check both approved and pending distributions
                     return $equipment->fuelTruck &&
-                           $equipment->fuelTruck->approvedDistributions()
+                           $equipment->fuelTruck->distributions()
                                ->where('target_equipment_id', $consumingEquipment->id)
+                               ->whereIn('approval_status', ['approved', 'pending'])
                                ->exists();
                 });
 
