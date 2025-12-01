@@ -464,7 +464,14 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error('Server responded with status ' + response.status + ': ' + text);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     closeDistributeModal();
@@ -476,7 +483,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('حدث خطأ', 'error');
+                showNotification('خطأ: ' + error.message, 'error');
             });
         });
 
@@ -492,7 +499,14 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error('Server responded with status ' + response.status + ': ' + text);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success || !data.error) {
                     closeConsumptionModal();
@@ -504,7 +518,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('حدث خطأ', 'error');
+                showNotification('خطأ: ' + error.message, 'error');
             });
         });
 
