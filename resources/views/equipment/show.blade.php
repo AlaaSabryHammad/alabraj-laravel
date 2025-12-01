@@ -1800,18 +1800,39 @@
         }
 
         function deleteFuelConsumption(id) {
-            if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
-                fetch(`/equipment-fuel-consumption/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                }).then(() => {
+            currentConsumptionId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            currentConsumptionId = null;
+        }
+
+        // Handle delete form submission
+        document.getElementById('deleteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (!currentConsumptionId) return;
+
+            fetch(`/equipment-fuel-consumption/${currentConsumptionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            }).then(response => {
+                if (response.ok) {
+                    closeDeleteModal();
                     loadFuelConsumptions();
                     loadFuelConsumptionSummary();
-                });
-            }
-        }
+                } else {
+                    alert('حدث خطأ أثناء حذف السجل');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء حذف السجل');
+            });
+        });
 
         // Load data on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -2327,6 +2348,52 @@
                         class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center">
                         <i class="ri-close-circle-line ml-1"></i>
                         تأكيد الرفض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-lg bg-white"
+            dir="rtl">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b">
+                <h3 class="text-lg font-semibold text-red-600 flex items-center">
+                    <i class="ri-delete-bin-line ml-2"></i>
+                    حذف استهلاك المحروقات
+                </h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors"
+                    onclick="closeDeleteModal()">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="deleteForm" method="POST" class="mt-4">
+                <!-- Warning Message -->
+                <div class="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div class="flex items-start gap-3">
+                        <i class="ri-alert-line text-red-600 text-xl mt-0.5 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="font-semibold text-red-900 mb-2">تحذير من الحذف الدائم</h4>
+                            <p class="text-sm text-red-800">هل أنت متأكد من رغبتك في حذف هذا السجل؟</p>
+                            <p class="text-xs text-red-700 mt-2">هذا الإجراء <span class="font-bold">لا يمكن التراجع عنه</span> ولن تتمكن من استرجاع البيانات بعد الحذف.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="flex items-center justify-end space-x-3 space-x-reverse pt-4 border-t">
+                    <button type="button" onclick="closeDeleteModal()"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center">
+                        <i class="ri-delete-bin-line ml-1"></i>
+                        تأكيد الحذف
                     </button>
                 </div>
             </form>
