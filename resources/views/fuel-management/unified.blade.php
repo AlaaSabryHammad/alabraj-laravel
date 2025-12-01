@@ -170,7 +170,7 @@
                                 <div class="p-4 bg-orange-100 rounded-lg border border-orange-300 mb-4">
                                     <p class="text-sm text-orange-800 leading-relaxed">
                                         <i class="ri-alert-line ml-2"></i>
-                                        لم يتم إضافة بيانات المحروقات لهذه السيارة بعد. يجب إكمال بيانات الموقع والسائق والسعة قبل استخدامها.
+                                        لم يتم إضافة بيانات المحروقات لهذه السيارة بعد. يجب إضافة بيانات السعة ونوع المحروقات والكمية الحالية قبل استخدامها.
                                     </p>
                                 </div>
 
@@ -188,10 +188,10 @@
 
                                 <!-- Action Buttons -->
                                 <div class="flex gap-2">
-                                    <a href="{{ route('equipment.edit', $truck->id) }}"
+                                    <a href="{{ route('fuel-truck.create', $truck->id) }}"
                                        class="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
                                         <i class="ri-edit-line ml-1"></i>
-                                        استكمال البيانات
+                                        إضافة بيانات المحروقات
                                     </a>
                                     <button onclick="showIncompleteInfo({{ $truck->id }}, '{{ $truck->name }}')"
                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">

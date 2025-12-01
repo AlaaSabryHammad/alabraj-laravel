@@ -28,6 +28,7 @@ use App\Http\Controllers\MyTasksController;
 use App\Http\Controllers\SparePartReportController;
 use App\Http\Controllers\SparePartTypeController;
 use App\Http\Controllers\FuelManagementController;
+use App\Http\Controllers\FuelTruckController;
 use App\Http\Controllers\SparePartSupplierController;
 use App\Http\Controllers\FuelManagementUnifiedController;
 
@@ -595,6 +596,15 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::patch('/distribution/{distribution}/approve', [FuelManagementController::class, 'approveDistribution'])->name('approve-distribution');
         Route::patch('/distribution/{distribution}/reject', [FuelManagementController::class, 'rejectDistribution'])->name('reject-distribution');
         Route::delete('/distribution/{distribution}/cancel', [FuelManagementController::class, 'cancelDistribution'])->name('cancel-distribution');
+    });
+
+    // Fuel Truck Management Routes
+    Route::prefix('fuel-truck')->name('fuel-truck.')->group(function () {
+        Route::get('/equipment/{equipment}/create', [FuelTruckController::class, 'create'])->name('create');
+        Route::post('/equipment/{equipment}', [FuelTruckController::class, 'store'])->name('store');
+        Route::post('/equipment/{equipment}/modal', [FuelTruckController::class, 'storeViaModal'])->name('store-modal');
+        Route::get('/equipment/{equipment}/edit', [FuelTruckController::class, 'edit'])->name('edit');
+        Route::put('/equipment/{equipment}', [FuelTruckController::class, 'update'])->name('update');
     });
 
     // Test Route for Spare Part Creation
