@@ -139,7 +139,7 @@
                                         <i class="ri-add-circle-line ml-1"></i>
                                         إضافة كمية محروقات
                                     </button>
-                                    <button onclick="event.stopPropagation(); openConsumptionModal()"
+                                    <button onclick="event.stopPropagation(); openConsumptionModal({{ $truck->id }}, '{{ $truck->name }}')"
                                         class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                                         <i class="ri-bar-chart-line ml-1"></i>
                                         استهلاك
@@ -450,6 +450,20 @@
 
             <form id="consumptionForm" class="mt-4 space-y-4">
                 @csrf
+                <!-- Hidden fuel truck ID field -->
+                <input type="hidden" name="fuel_truck_id" id="fuelTruckId">
+
+                <!-- Truck info display -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hidden" id="truckInfoDisplay">
+                    <div class="flex items-center gap-2">
+                        <i class="ri-gas-station-fill text-blue-600 text-lg"></i>
+                        <div>
+                            <p class="text-xs text-blue-600 font-medium">سيارة المحروقات المختارة:</p>
+                            <p class="text-sm font-semibold text-blue-900" id="truckNameDisplay"></p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">المعدة</label>
@@ -465,23 +479,6 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">سيارة المحروقات</label>
-                        <select name="fuel_truck_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
-                            <option value="">اختر سيارة المحروقات</option>
-                            @foreach($fuelTrucks as $truck)
-                                @if($truck->fuelTruck)
-                                    <option value="{{ $truck->id }}">
-                                        {{ $truck->name }} - {{ $truck->fuelTruck->fuel_type_text }}
-                                    </option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">نوع المحروقات</label>
                         <select name="fuel_type" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
@@ -495,7 +492,9 @@
                             <option value="other">أخرى</option>
                         </select>
                     </div>
+                </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الكمية (لتر)</label>
                         <input type="number" name="quantity" step="0.01" min="0.1" required
@@ -664,13 +663,23 @@
             currentFuelTruckId = null;
         }
 
-        function openConsumptionModal() {
+        function openConsumptionModal(truckId, truckName) {
+            // Set the fuel truck ID in the hidden input
+            document.getElementById('fuelTruckId').value = truckId;
+
+            // Show the truck info display
+            const truckInfoDisplay = document.getElementById('truckInfoDisplay');
+            document.getElementById('truckNameDisplay').textContent = truckName;
+            truckInfoDisplay.classList.remove('hidden');
+
+            // Open the modal
             document.getElementById('consumptionModal').classList.remove('hidden');
         }
 
         function closeConsumptionModal() {
             document.getElementById('consumptionModal').classList.add('hidden');
             document.getElementById('consumptionForm').reset();
+            document.getElementById('truckInfoDisplay').classList.add('hidden');
         }
 
         function showIncompleteInfo(truckId, truckName) {
