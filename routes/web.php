@@ -586,6 +586,7 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/', [FuelManagementUnifiedController::class, 'index'])->name('index');
         Route::get('/truck/{truck}/details', [FuelManagementUnifiedController::class, 'getTruckDetails'])->name('truck-details');
         Route::get('/consumption-report', [FuelManagementUnifiedController::class, 'consumptionReport'])->name('consumption-report');
+        Route::get('/consumption-report/print', [FuelManagementUnifiedController::class, 'printConsumptionReport'])->name('consumption-report-print');
         Route::get('/driver', [FuelManagementController::class, 'driverIndex'])->name('driver');
         Route::post('/equipment/{equipment}/add-fuel', [FuelManagementController::class, 'addFuel'])->name('add-fuel');
         Route::post('/fuel-truck/{fuelTruck}/add-quantity', [FuelManagementController::class, 'addQuantity'])->name('add-quantity');

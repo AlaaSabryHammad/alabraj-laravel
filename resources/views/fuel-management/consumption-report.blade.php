@@ -3,6 +3,14 @@
 @section('title', 'تقرير استهلاك المحروقات')
 
 @section('content')
+
+<script>
+// إضافة class لفرض الطباعة
+if (window.matchMedia('print').matches) {
+    document.documentElement.classList.add('print-mode');
+    document.body.classList.add('print-mode');
+}
+</script>
     <div class="space-y-6" dir="rtl">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -196,10 +204,10 @@
 
                 <!-- Print & Export Actions -->
                 <div class="px-6 py-4 border-t border-gray-200 flex gap-3">
-                    <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                    <a href="{{ route('fuel-management.consumption-report-print', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
                         <i class="ri-printer-line ml-2"></i>
                         طباعة
-                    </button>
+                    </a>
                 </div>
             @else
                 <div class="p-12 text-center">
@@ -218,16 +226,227 @@
 
     <style>
         @media print {
-            .hidden-print {
-                display: none !important;
+            @page {
+                size: A4;
+                margin: 10mm;
             }
 
-            body {
-                background: white;
+            /* إخفاء عناصر غير ضرورية بقوة */
+            div.fixed.right-0.top-0.h-full.w-64,
+            [class*="sidebar"],
+            nav,
+            button,
+            a[href*="fuel-management"],
+            .hidden-print {
+                display: none !important;
+                visibility: hidden !important;
+            }
+
+            /* إظهار جميع العناصر */
+            body.print-mode *,
+            body.print-mode body {
+                visibility: visible !important;
+                display: block !important;
+                opacity: 1 !important;
+            }
+
+            /* الخلفيات البيضاء */
+            body.print-mode {
+                background: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* المحتوى الرئيسي */
+            .main-content-wrapper {
+                width: 100% !important;
+                display: block !important;
+                visibility: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
             }
 
             .space-y-6 {
-                margin-bottom: 0 !important;
+                display: block !important;
+            }
+
+            /* الرؤوس */
+            h1 {
+                font-size: 18pt !important;
+                margin: 0 0 12pt 0 !important;
+                color: #000 !important;
+                page-break-after: avoid !important;
+            }
+
+            h2 {
+                font-size: 14pt !important;
+                margin: 12pt 0 8pt 0 !important;
+                color: #000 !important;
+                border-bottom: 2px solid #000 !important;
+                padding-bottom: 4pt !important;
+                page-break-after: avoid !important;
+            }
+
+            p {
+                margin: 0 0 6pt 0 !important;
+                color: #000 !important;
+                font-size: 9pt !important;
+            }
+
+            /* البطاقات */
+            .bg-white {
+                background: white !important;
+                display: block !important;
+                visibility: visible !important;
+                page-break-inside: avoid !important;
+            }
+
+            .rounded-lg {
+                border-radius: 0 !important;
+            }
+
+            .shadow {
+                box-shadow: none !important;
+            }
+
+            .grid {
+                display: block !important;
+                margin-bottom: 12pt !important;
+            }
+
+            .grid > div {
+                display: inline-block !important;
+                width: 22% !important;
+                margin: 4pt 2% 4pt 0 !important;
+                padding: 6pt !important;
+                border: 1px solid #ccc !important;
+                background: white !important;
+                vertical-align: top !important;
+                page-break-inside: avoid !important;
+            }
+
+            /* الجداول */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin: 12pt 0 !important;
+                display: table !important;
+            }
+
+            thead {
+                display: table-header-group !important;
+            }
+
+            tbody {
+                display: table-row-group !important;
+            }
+
+            tr {
+                display: table-row !important;
+                page-break-inside: avoid !important;
+            }
+
+            th, td {
+                display: table-cell !important;
+                border: 1px solid #999 !important;
+                padding: 4pt !important;
+                text-align: right !important;
+                color: #000 !important;
+                font-size: 9pt !important;
+            }
+
+            th {
+                background: #e8e8e8 !important;
+                font-weight: bold !important;
+            }
+
+            /* الألوان والنصوص */
+            .text-gray-900,
+            .text-gray-800,
+            .text-gray-700 {
+                color: #000 !important;
+            }
+
+            .text-gray-600,
+            .text-gray-500,
+            .text-gray-400 {
+                color: #333 !important;
+            }
+
+            .text-blue-600 {
+                color: #0066cc !important;
+            }
+
+            .text-sm {
+                font-size: 9pt !important;
+            }
+
+            .text-xs {
+                font-size: 8pt !important;
+            }
+
+            /* إزالة الخلفيات */
+            .bg-blue-50,
+            .bg-green-50,
+            .bg-red-50,
+            .bg-yellow-50,
+            .bg-purple-50,
+            .bg-gray-50,
+            [class*="bg-blue"],
+            [class*="bg-green"],
+            [class*="bg-red"] {
+                background: white !important;
+            }
+
+            /* الأيقونات */
+            i[class*="ri-"] {
+                display: none !important;
+            }
+
+            /* الفلاتر والأزرار */
+            .flex.items-center.justify-between {
+                display: block !important;
+            }
+
+            /* العلامات */
+            .inline-flex {
+                display: inline !important;
+                border: 1px solid #666 !important;
+                padding: 1pt 3pt !important;
+                background: white !important;
+            }
+
+            .rounded-full {
+                border-radius: 0 !important;
+            }
+
+            /* النصوص المقطوعة */
+            .line-clamp-1,
+            .truncate {
+                white-space: normal !important;
+                overflow: visible !important;
+            }
+
+            /* الوسائط والمسافات */
+            .m-0, .mt-0, .mb-0, .ml-0, .mr-0 {
+                margin: 0 !important;
+            }
+
+            .p-0 {
+                padding: 0 !important;
+            }
+
+            .gap-4, .space-y-4 {
+                gap: 8pt !important;
+            }
+
+            /* الفونت */
+            * {
+                font-family: Arial, 'Tajawal', sans-serif !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         }
     </style>

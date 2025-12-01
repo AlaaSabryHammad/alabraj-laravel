@@ -123,10 +123,31 @@ class FuelManagementUnifiedController extends Controller
         $startDate = $request->has('start_date') ? Carbon::createFromFormat('Y-m-d', $request->get('start_date')) : now()->startOfMonth();
         $endDate = $request->has('end_date') ? Carbon::createFromFormat('Y-m-d', $request->get('end_date')) : now()->endOfMonth();
 
-        // Get consumption records with grouping
+        // Get all consumption records for display in table (both approved and rejected)
         $consumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
             ->whereBetween('consumption_date', [$startDate, $endDate])
             ->orderBy('consumption_date', 'desc')
+            ->get()
+            ->map(function ($consumption) {
+                return [
+                    'id' => $consumption->id,
+                    'equipment_name' => $consumption->equipment->name,
+                    'fuel_type' => $consumption->fuel_type_text,
+                    'quantity' => $consumption->quantity,
+                    'consumption_date' => $consumption->consumption_date,
+                    'date_formatted' => $consumption->consumption_date?->locale('ar')->isoFormat('dddd، D MMMM YYYY'),
+                    'status' => $consumption->approval_status_text,
+                    'status_color' => $consumption->approval_status_color,
+                    'user_name' => $consumption->user->name,
+                    'notes' => $consumption->notes,
+                    'approval_status' => $consumption->approval_status
+                ];
+            });
+
+        // Get only approved records for calculations
+        $approvedConsumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
+            ->whereBetween('consumption_date', [$startDate, $endDate])
+            ->where('approval_status', 'approved')
             ->get()
             ->map(function ($consumption) {
                 return [
@@ -143,12 +164,70 @@ class FuelManagementUnifiedController extends Controller
                 ];
             });
 
-        // Calculate summary
-        $totalConsumption = $consumptions->sum('quantity');
-        $byFuelType = $consumptions->groupBy('fuel_type')->map(function ($items) {
+        // Calculate summary - based on approved records only
+        $totalConsumption = $approvedConsumptions->sum('quantity');
+        $byFuelType = $approvedConsumptions->groupBy('fuel_type')->map(function ($items) {
             return $items->sum('quantity');
         });
 
         return view('fuel-management.consumption-report', compact('consumptions', 'totalConsumption', 'byFuelType', 'startDate', 'endDate'));
+    }
+
+    /**
+     * Print fuel consumption report
+     */
+    public function printConsumptionReport(Request $request)
+    {
+        $startDate = $request->has('start_date') ? Carbon::createFromFormat('Y-m-d', $request->get('start_date')) : now()->startOfMonth();
+        $endDate = $request->has('end_date') ? Carbon::createFromFormat('Y-m-d', $request->get('end_date')) : now()->endOfMonth();
+
+        // Get all consumption records for display in table (both approved and rejected)
+        $consumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
+            ->whereBetween('consumption_date', [$startDate, $endDate])
+            ->orderBy('consumption_date', 'desc')
+            ->get()
+            ->map(function ($consumption) {
+                return [
+                    'id' => $consumption->id,
+                    'equipment_name' => $consumption->equipment->name,
+                    'fuel_type' => $consumption->fuel_type_text,
+                    'quantity' => $consumption->quantity,
+                    'consumption_date' => $consumption->consumption_date,
+                    'date_formatted' => $consumption->consumption_date?->locale('ar')->isoFormat('dddd، D MMMM YYYY'),
+                    'status' => $consumption->approval_status_text,
+                    'status_color' => $consumption->approval_status_color,
+                    'user_name' => $consumption->user->name,
+                    'notes' => $consumption->notes,
+                    'approval_status' => $consumption->approval_status
+                ];
+            });
+
+        // Get only approved records for calculations
+        $approvedConsumptions = EquipmentFuelConsumption::with(['equipment', 'user'])
+            ->whereBetween('consumption_date', [$startDate, $endDate])
+            ->where('approval_status', 'approved')
+            ->get()
+            ->map(function ($consumption) {
+                return [
+                    'id' => $consumption->id,
+                    'equipment_name' => $consumption->equipment->name,
+                    'fuel_type' => $consumption->fuel_type_text,
+                    'quantity' => $consumption->quantity,
+                    'consumption_date' => $consumption->consumption_date,
+                    'date_formatted' => $consumption->consumption_date?->locale('ar')->isoFormat('dddd، D MMMM YYYY'),
+                    'status' => $consumption->approval_status_text,
+                    'status_color' => $consumption->approval_status_color,
+                    'user_name' => $consumption->user->name,
+                    'notes' => $consumption->notes
+                ];
+            });
+
+        // Calculate summary - based on approved records only
+        $totalConsumption = $approvedConsumptions->sum('quantity');
+        $byFuelType = $approvedConsumptions->groupBy('fuel_type')->map(function ($items) {
+            return $items->sum('quantity');
+        });
+
+        return view('fuel-management.consumption-report-print', compact('consumptions', 'totalConsumption', 'byFuelType', 'startDate', 'endDate'));
     }
 }
