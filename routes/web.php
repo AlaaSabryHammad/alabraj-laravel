@@ -582,7 +582,8 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
 
     // Fuel Management Routes
     Route::prefix('fuel-management')->name('fuel-management.')->group(function () {
-        Route::get('/', [FuelManagementController::class, 'index'])->name('index');
+        Route::get('/', [FuelManagementUnifiedController::class, 'index'])->name('index');
+        Route::get('/truck/{truck}/details', [FuelManagementUnifiedController::class, 'getTruckDetails'])->name('truck-details');
         Route::get('/driver', [FuelManagementController::class, 'driverIndex'])->name('driver');
         Route::post('/equipment/{equipment}/add-fuel', [FuelManagementController::class, 'addFuel'])->name('add-fuel');
         Route::post('/fuel-truck/{fuelTruck}/add-quantity', [FuelManagementController::class, 'addQuantity'])->name('add-quantity');
