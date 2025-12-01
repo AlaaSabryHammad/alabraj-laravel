@@ -6,10 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Equipment;
 use App\Models\FuelTruck;
 use App\Models\FuelDistribution;
+use App\Models\EquipmentFuelConsumption;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\FuelDistributionNotification;
+use Carbon\Carbon;
 
 class FuelManagementController extends Controller
 {
@@ -330,6 +332,54 @@ class FuelManagementController extends Controller
             ->get();
 
         return view('fuel-management.driver', compact('driverFuelTrucks', 'targetEquipments'));
+    }
+
+    /**
+     * Get fuel consumption records for driver's equipment
+     */
+    public function getDriverFuelConsumption()
+    {
+        $employeeId = Auth::user()->employee_id;
+
+        // Get equipment assigned to the current driver
+        $driverEquipment = Equipment::where('driver_id', $employeeId)->pluck('id');
+
+        // Get consumption records for driver's equipment
+        $consumptions = EquipmentFuelConsumption::with(['equipment', 'user', 'approvedBy'])
+            ->whereIn('equipment_id', $driverEquipment)
+            ->orderBy('consumption_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($consumption) {
+                $consumptionDateFormatted = $consumption->consumption_date
+                    ? Carbon::parse($consumption->consumption_date)->locale('ar')->isoFormat('dddd، D MMMM YYYY')
+                    : null;
+
+                $approvedAtFormatted = $consumption->approved_at
+                    ? Carbon::parse($consumption->approved_at)->locale('ar')->isoFormat('dddd، D MMMM YYYY HH:mm')
+                    : null;
+
+                return [
+                    'id' => $consumption->id,
+                    'equipment_id' => $consumption->equipment_id,
+                    'equipment_name' => $consumption->equipment->name,
+                    'fuel_type' => $consumption->fuel_type,
+                    'fuel_type_text' => $consumption->fuel_type_text,
+                    'fuel_type_color' => $consumption->fuel_type_color,
+                    'quantity' => $consumption->quantity,
+                    'consumption_date' => $consumption->consumption_date,
+                    'consumption_date_formatted' => $consumptionDateFormatted,
+                    'approval_status' => $consumption->approval_status,
+                    'approval_status_text' => $consumption->approval_status_text,
+                    'approval_status_color' => $consumption->approval_status_color,
+                    'notes' => $consumption->notes,
+                    'user_name' => $consumption->user->name,
+                    'approved_by_name' => $consumption->approvedBy?->name,
+                    'approved_at' => $approvedAtFormatted
+                ];
+            });
+
+        return response()->json($consumptions);
     }
 
     /**

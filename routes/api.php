@@ -26,6 +26,8 @@ Route::get('fuel-truck/{fuelTruck}/distributions', [FuelManagementController::cl
 
 // Protected routes (authentication required)
 Route::middleware('auth:sanctum')->group(function () {
+    // Fuel consumption routes
+    Route::get('driver/fuel-consumption', [FuelManagementController::class, 'getDriverFuelConsumption']);
     // Auth routes
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('user', [AuthController::class, 'user']);

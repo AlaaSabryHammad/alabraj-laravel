@@ -88,32 +88,73 @@
                 </div>
             </div>
 
-            <!-- Filled Equipment Table -->
+            <!-- Tabs for different views -->
             <div class="bg-white shadow rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">المعدات المعبأة من سيارة المحروقات</h3>
-                    <p class="mt-1 text-sm text-gray-600">جميع التوزيعات التي تم إجراؤها من شاحنة المحروقات الخاصة بك</p>
+                <div class="border-b border-gray-200">
+                    <div class="flex" role="tablist">
+                        <button type="button" role="tab" aria-selected="true" aria-controls="distributions-panel"
+                            class="tab-button active px-6 py-4 text-sm font-medium text-gray-900 border-b-2 border-blue-600"
+                            onclick="switchTab('distributions')">
+                            <i class="ri-gas-station-line ml-2"></i>
+                            توزيعات المحروقات
+                        </button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="consumption-panel"
+                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300"
+                            onclick="switchTab('consumption')">
+                            <i class="ri-bar-chart-line ml-2"></i>
+                            استهلاك المحروقات
+                        </button>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم المعدة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية المعبأة (لتر)</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ التوزيع</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">حالة الموافقة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ملاحظات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="filledEquipmentBody">
-                            <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                                    <i class="ri-loader-4-line text-2xl animate-spin mb-2"></i>
-                                    <p>جاري تحميل البيانات...</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                <!-- Distributions Tab -->
+                <div id="distributions-panel" role="tabpanel" class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم المعدة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية (لتر)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="filledEquipmentBody">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="ri-loader-4-line text-2xl animate-spin mb-2"></i>
+                                        <p>جاري تحميل البيانات...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Consumption Tab -->
+                <div id="consumption-panel" role="tabpanel" class="p-6 hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المعدة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع المحروقات</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية (لتر)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="consumptionBody">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="ri-loader-4-line text-2xl animate-spin mb-2"></i>
+                                        <p>جاري تحميل البيانات...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         @else
@@ -356,6 +397,102 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">
                             ${dist.notes ? `<span title="${dist.notes}" class="truncate block max-w-xs">${dist.notes}</span>` : '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rows.join('');
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Hide all panels
+            document.getElementById('distributions-panel').classList.add('hidden');
+            document.getElementById('consumption-panel').classList.add('hidden');
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-blue-600', 'text-gray-900');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Show selected panel
+            if (tabName === 'distributions') {
+                document.getElementById('distributions-panel').classList.remove('hidden');
+                event.target.closest('.tab-button').classList.remove('border-transparent', 'text-gray-500');
+                event.target.closest('.tab-button').classList.add('border-blue-600', 'text-gray-900');
+            } else if (tabName === 'consumption') {
+                document.getElementById('consumption-panel').classList.remove('hidden');
+                event.target.closest('.tab-button').classList.remove('border-transparent', 'text-gray-500');
+                event.target.closest('.tab-button').classList.add('border-blue-600', 'text-gray-900');
+                loadFuelConsumption();
+            }
+        }
+
+        // Load fuel consumption for driver's equipment
+        function loadFuelConsumption() {
+            fetch('/api/driver/fuel-consumption', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderConsumptionTable(data);
+            })
+            .catch(error => {
+                console.error('Error loading fuel consumption:', error);
+                showNotification('خطأ في تحميل بيانات استهلاك المحروقات', 'error');
+            });
+        }
+
+        // Render fuel consumption table
+        function renderConsumptionTable(consumptions) {
+            const tbody = document.getElementById('consumptionBody');
+
+            if (!consumptions || consumptions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="ri-inbox-line text-4xl mb-2"></i>
+                            <p>لا توجد سجلات استهلاك محروقات حتى الآن</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const rows = consumptions.map(consumption => {
+                let statusClass = 'bg-yellow-100 text-yellow-800';
+                if (consumption.approval_status === 'approved') {
+                    statusClass = 'bg-green-100 text-green-800';
+                } else if (consumption.approval_status === 'rejected') {
+                    statusClass = 'bg-red-100 text-red-800';
+                }
+
+                return `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="font-medium">${consumption.equipment_name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${consumption.fuel_type_color}">
+                                ${consumption.fuel_type_text}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${parseFloat(consumption.quantity).toFixed(2)} لتر
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            ${consumption.consumption_date_formatted || consumption.consumption_date}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                                ${consumption.approval_status_text}
+                            </span>
                         </td>
                     </tr>
                 `;
