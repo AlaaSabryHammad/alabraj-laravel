@@ -1836,35 +1836,38 @@
             currentConsumptionId = null;
         }
 
-        // Handle delete form submission
-        document.getElementById('deleteForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            if (!currentConsumptionId) return;
-
-            fetch(`/equipment-fuel-consumption/${currentConsumptionId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            }).then(response => {
-                if (response.ok) {
-                    closeDeleteModal();
-                    loadFuelConsumptions();
-                    loadFuelConsumptionSummary();
-                } else {
-                    alert('حدث خطأ أثناء حذف السجل');
-                }
-            }).catch(error => {
-                console.error('Error:', error);
-                alert('حدث خطأ أثناء حذف السجل');
-            });
-        });
-
         // Load data on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadFuelConsumptions();
             loadFuelConsumptionSummary();
+
+            // Handle delete form submission
+            const deleteForm = document.getElementById('deleteForm');
+            if (deleteForm) {
+                deleteForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    if (!currentConsumptionId) return;
+
+                    fetch(`/equipment-fuel-consumption/${currentConsumptionId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            closeDeleteModal();
+                            loadFuelConsumptions();
+                            loadFuelConsumptionSummary();
+                        } else {
+                            alert('حدث خطأ أثناء حذف السجل');
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                        alert('حدث خطأ أثناء حذف السجل');
+                    });
+                });
+            }
         });
     </script>
 
