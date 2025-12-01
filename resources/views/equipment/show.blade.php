@@ -2274,6 +2274,65 @@
         </div>
     </div>
 
+    <!-- Rejection Modal -->
+    <div id="rejectionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-lg bg-white"
+            dir="rtl">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b">
+                <h3 class="text-lg font-semibold text-red-600 flex items-center">
+                    <i class="ri-close-circle-line ml-2"></i>
+                    رفض استهلاك المحروقات
+                </h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors"
+                    onclick="closeRejectionModal()">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="rejectionForm" method="POST" class="mt-4">
+                @csrf
+                @method('PATCH')
+
+                <!-- Consumption Info -->
+                <div class="mb-4 p-4 bg-red-50 rounded-lg">
+                    <div class="flex items-center text-red-800">
+                        <i class="ri-warning-line ml-2"></i>
+                        <span class="font-medium">معلومات الاستهلاك</span>
+                    </div>
+                    <div id="rejectionConsumptionInfo" class="mt-2 text-sm text-red-700">
+                        <!-- سيتم ملء هذا القسم بالـ JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Rejection Notes (Required) -->
+                <div class="mb-4">
+                    <label for="rejectionNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                        <span class="text-red-600">*</span> سبب الرفض (مطلوب)
+                    </label>
+                    <textarea id="rejectionNotes" name="approval_notes" rows="4"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        placeholder="اشرح السبب من رفضك لهذا الاستهلاك..." required></textarea>
+                    <p class="text-xs text-gray-500 mt-1">يجب تقديم سبب واضح للرفض</p>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="flex items-center justify-end space-x-3 space-x-reverse pt-4 border-t">
+                    <button type="button" onclick="closeRejectionModal()"
+                        class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center">
+                        <i class="ri-close-circle-line ml-1"></i>
+                        تأكيد الرفض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Approval Functions -->
     <script>
         let currentConsumptionId = null;
@@ -2364,40 +2423,52 @@
             }
         });
 
-        // Reject fuel consumption
-        function rejectFuelConsumption(consumptionId) {
-            const notes = prompt('سبب الرفض (مطلوب):');
+        // Reject fuel consumption with modal
+        function rejectFuelConsumption(consumptionId, quantity = '', fuelType = '', addedBy = '') {
+            currentConsumptionId = consumptionId;
+            currentConsumptionData = {
+                quantity,
+                fuelType,
+                addedBy
+            };
 
-            if (notes && notes.trim()) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/equipment-fuel-consumption/${consumptionId}/reject`;
-                form.style.display = 'none';
+            // Clear previous notes
+            document.getElementById('rejectionNotes').value = '';
 
-                const csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = '_token';
-                csrfToken.value = '{{ csrf_token() }}';
-                form.appendChild(csrfToken);
+            // Display consumption info
+            let infoHtml = '<ul class="list-disc list-inside space-y-1">';
+            if (addedBy) infoHtml += `<li><strong>المسجل:</strong> ${addedBy}</li>`;
+            if (fuelType) infoHtml += `<li><strong>نوع المحروقات:</strong> ${fuelType}</li>`;
+            if (quantity) infoHtml += `<li><strong>الكمية:</strong> ${parseFloat(quantity).toFixed(2)} لتر</li>`;
+            infoHtml += '</ul>';
+            document.getElementById('rejectionConsumptionInfo').innerHTML = infoHtml;
 
-                const methodField = document.createElement('input');
-                methodField.type = 'hidden';
-                methodField.name = '_method';
-                methodField.value = 'PATCH';
-                form.appendChild(methodField);
+            // Set form action
+            document.getElementById('rejectionForm').action = `/equipment-fuel-consumption/${consumptionId}/reject`;
 
-                const notesField = document.createElement('input');
-                notesField.type = 'hidden';
-                notesField.name = 'approval_notes';
-                notesField.value = notes;
-                form.appendChild(notesField);
-
-                document.body.appendChild(form);
-                form.submit();
-            } else if (notes !== null) {
-                alert('سبب الرفض مطلوب');
-            }
+            // Show modal
+            document.getElementById('rejectionModal').classList.remove('hidden');
         }
+
+        // Close rejection modal
+        function closeRejectionModal() {
+            document.getElementById('rejectionModal').classList.add('hidden');
+            document.getElementById('rejectionForm').reset();
+            currentConsumptionId = null;
+        }
+
+        // Handle rejection form submission
+        document.getElementById('rejectionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const notes = document.getElementById('rejectionNotes').value.trim();
+
+            if (!notes) {
+                alert('يجب تقديم سبب للرفض');
+                return;
+            }
+
+            this.submit();
+        });
 
         // Link equipment modal functions
         function openLinkModal() {
