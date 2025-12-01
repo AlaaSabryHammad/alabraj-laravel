@@ -264,41 +264,84 @@ class EquipmentFuelConsumptionController extends Controller
     private function deductFromFuelTruck(EquipmentFuelConsumption $fuelConsumption): void
     {
         try {
-            // Find the fuel truck that recorded this consumption
-            // This assumes the user who recorded the consumption is a fuel truck driver
-            $user = $fuelConsumption->user;
-            if (!$user) {
-                Log::info('No user found for fuel consumption: ' . $fuelConsumption->id);
+            // Get the equipment that consumed the fuel
+            $consumingEquipment = $fuelConsumption->equipment;
+            if (!$consumingEquipment) {
+                Log::info('No equipment found for fuel consumption: ' . $fuelConsumption->id);
                 return;
             }
 
-            // Find equipment assigned to this user (should be a fuel truck)
-            // The equipment's driver_id references an employee, and that employee has a user_id
-            $fuelTruckEquipment = Equipment::whereHas('driver', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })->whereHas('fuelTruck')->first();
+            // Check if the consuming equipment itself is a fuel truck
+            // If yes, deduct from its own fuel truck record
+            if ($consumingEquipment->fuelTruck) {
+                $fuelTruck = $consumingEquipment->fuelTruck;
 
-            if (!$fuelTruckEquipment) {
-                Log::info('No fuel truck equipment found for user ID: ' . $user->id);
+                if ($fuelTruck->current_quantity >= $fuelConsumption->quantity) {
+                    $previousQuantity = $fuelTruck->current_quantity;
+                    $newQuantity = $fuelTruck->current_quantity - $fuelConsumption->quantity;
+
+                    $fuelTruck->update([
+                        'current_quantity' => $newQuantity
+                    ]);
+
+                    Log::info('Successfully deducted fuel from equipment fuel truck. ' .
+                        'Equipment ID: ' . $consumingEquipment->id .
+                        ', Equipment Name: ' . $consumingEquipment->name .
+                        ', Fuel Truck ID: ' . $fuelTruck->id .
+                        ', Previous quantity: ' . $previousQuantity .
+                        ', New quantity: ' . $newQuantity .
+                        ', Deducted: ' . $fuelConsumption->quantity . ' ' . $fuelConsumption->fuel_type);
+                } else {
+                    Log::warning('Insufficient fuel in truck. ' .
+                        'Equipment ID: ' . $consumingEquipment->id .
+                        ', Equipment Name: ' . $consumingEquipment->name .
+                        ', Fuel Truck ID: ' . $fuelTruck->id .
+                        ', Available: ' . $fuelTruck->current_quantity .
+                        ', Required: ' . $fuelConsumption->quantity);
+                }
                 return;
             }
 
-            $fuelTruck = $fuelTruckEquipment->fuelTruck;
+            // If consuming equipment is not a fuel truck, try to find the fuel truck
+            // that distributed fuel to this equipment through FuelDistribution records
+            $fuelTruck = Equipment::with('fuelTruck')
+                ->whereHas('fuelTruck')
+                ->first(function ($equipment) use ($consumingEquipment) {
+                    // Find a fuel truck that has approved distributions to this equipment
+                    return $equipment->fuelTruck &&
+                           $equipment->fuelTruck->approvedDistributions()
+                               ->where('target_equipment_id', $consumingEquipment->id)
+                               ->exists();
+                });
 
-            // Check if fuel truck has sufficient quantity
-            if ($fuelTruck && $fuelTruck->current_quantity >= $fuelConsumption->quantity) {
+            if (!$fuelTruck || !$fuelTruck->fuelTruck) {
+                Log::info('No fuel truck found that supplies equipment ID: ' . $consumingEquipment->id);
+                return;
+            }
+
+            $fuelTruck = $fuelTruck->fuelTruck;
+
+            if ($fuelTruck->current_quantity >= $fuelConsumption->quantity) {
+                $previousQuantity = $fuelTruck->current_quantity;
                 $newQuantity = $fuelTruck->current_quantity - $fuelConsumption->quantity;
+
                 $fuelTruck->update([
                     'current_quantity' => $newQuantity
                 ]);
 
-                Log::info('Successfully deducted fuel from truck. Truck ID: ' . $fuelTruck->id .
-                    ', Previous quantity: ' . ($fuelTruck->current_quantity + $fuelConsumption->quantity) .
+                Log::info('Successfully deducted fuel from source fuel truck. ' .
+                    'Equipment ID: ' . $consumingEquipment->id .
+                    ', Equipment Name: ' . $consumingEquipment->name .
+                    ', Source Fuel Truck ID: ' . $fuelTruck->id .
+                    ', Previous quantity: ' . $previousQuantity .
                     ', New quantity: ' . $newQuantity .
-                    ', Deducted: ' . $fuelConsumption->quantity);
+                    ', Deducted: ' . $fuelConsumption->quantity . ' ' . $fuelConsumption->fuel_type);
             } else {
-                Log::warning('Insufficient fuel in truck. Truck ID: ' . ($fuelTruck ? $fuelTruck->id : 'N/A') .
-                    ', Available: ' . ($fuelTruck ? $fuelTruck->current_quantity : 'N/A') .
+                Log::warning('Insufficient fuel in source truck. ' .
+                    'Equipment ID: ' . $consumingEquipment->id .
+                    ', Equipment Name: ' . $consumingEquipment->name .
+                    ', Source Fuel Truck ID: ' . $fuelTruck->id .
+                    ', Available: ' . $fuelTruck->current_quantity .
                     ', Required: ' . $fuelConsumption->quantity);
             }
         } catch (\Exception $e) {
