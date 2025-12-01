@@ -87,6 +87,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Filled Equipment Table -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">المعدات المعبأة من سيارة المحروقات</h3>
+                    <p class="mt-1 text-sm text-gray-600">جميع التوزيعات التي تم إجراؤها من شاحنة المحروقات الخاصة بك</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم المعدة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية المعبأة (لتر)</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ التوزيع</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">حالة الموافقة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="filledEquipmentBody">
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                    <i class="ri-loader-4-line text-2xl animate-spin mb-2"></i>
+                                    <p>جاري تحميل البيانات...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         @else
             <div class="text-center py-12">
                 <i class="ri-truck-line text-6xl text-gray-300 mb-4"></i>
@@ -244,7 +273,10 @@
                     if (data.success) {
                         closeDistributeModal();
                         showNotification(data.message, 'success');
-                        location.reload();
+                        // Reload distributions table
+                        setTimeout(() => {
+                            loadAllDistributions();
+                        }, 500);
                     } else {
                         showNotification(data.message || 'حدث خطأ', 'error');
                     }
@@ -259,6 +291,83 @@
             // Redirect to main fuel management page with truck selected
             window.location.href = `/fuel-management?truck=${fuelTruckId}`;
         }
+
+        // Load all fuel distributions from driver's fuel trucks
+        function loadAllDistributions() {
+            @if ($driverFuelTrucks->count() > 0)
+                // Get all fuel truck IDs from the page
+                const fuelTruckIds = [{{ implode(',', $driverFuelTrucks->pluck('fuelTruck.id')->toArray()) }}];
+
+                Promise.all(fuelTruckIds.map(id =>
+                    fetch(`/fuel-management/fuel-truck/${id}/distributions`)
+                        .then(response => response.json())
+                ))
+                .then(results => {
+                    // Flatten all distributions
+                    const allDistributions = results.flat();
+                    renderDistributionsTable(allDistributions);
+                })
+                .catch(error => {
+                    console.error('Error loading distributions:', error);
+                    showNotification('خطأ في تحميل التوزيعات', 'error');
+                });
+            @endif
+        }
+
+        // Render distributions in table
+        function renderDistributionsTable(distributions) {
+            const tbody = document.getElementById('filledEquipmentBody');
+
+            if (!distributions || distributions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="ri-inbox-line text-4xl mb-2"></i>
+                            <p>لا توجد توزيعات محروقات حتى الآن</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const rows = distributions.map(dist => {
+                let statusClass = 'bg-yellow-100 text-yellow-800';
+                if (dist.approval_status === 'approved') {
+                    statusClass = 'bg-green-100 text-green-800';
+                } else if (dist.approval_status === 'rejected') {
+                    statusClass = 'bg-red-100 text-red-800';
+                }
+
+                return `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="font-medium">${dist.target_equipment.name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${parseFloat(dist.quantity).toFixed(2)} لتر
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            ${dist.distribution_date_formatted || dist.distribution_date}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                                ${dist.approval_status_text}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">
+                            ${dist.notes ? `<span title="${dist.notes}" class="truncate block max-w-xs">${dist.notes}</span>` : '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rows.join('');
+        }
+
+        // Load distributions when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllDistributions();
+        });
 
         // Close modal when clicking outside
         document.getElementById('distributeModal').addEventListener('click', function(e) {
