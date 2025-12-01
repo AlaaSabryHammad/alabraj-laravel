@@ -1658,12 +1658,17 @@
         } // Load fuel consumption data
         function loadFuelConsumptions() {
             fetch(`/equipment-fuel-consumption/{{ $equipment->id }}/consumptions`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const tbody = document.getElementById('fuelConsumptionsTableBody');
                     tbody.innerHTML = '';
 
-                    if (data.length === 0) {
+                    if (!data || data.length === 0) {
                         tbody.innerHTML = `
                     <tr>
                         <td colspan="7" class="px-6 py-8 text-center text-gray-500">
@@ -1707,17 +1712,17 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div class="flex items-center gap-2">
-                                ${consumption.approval_status === 'pending' && {{ $equipment->driver->user_id ?? 0 }} == {{ Auth::id() ?? 0 }} ? 
-                                    `<button onclick="approveFuelConsumption(${consumption.id}, '${consumption.quantity}', '${getFuelTypeText(consumption.fuel_type)}', '${consumption.user.name}')" 
+                                ${consumption.approval_status === 'pending' && {{ $equipment->driver->user_id ?? 0 }} == {{ Auth::id() ?? 0 }} ?
+                                    `<button onclick="approveFuelConsumption(${consumption.id}, '${consumption.quantity}', '${getFuelTypeText(consumption.fuel_type)}', '${consumption.user.name}')"
                                                             class="text-green-600 hover:text-green-900" title="اعتماد">
                                                         <i class="ri-check-line"></i>
                                                     </button>
-                                                    <button onclick="rejectFuelConsumption(${consumption.id})" 
+                                                    <button onclick="rejectFuelConsumption(${consumption.id})"
                                                             class="text-red-600 hover:text-red-900" title="رفض">
                                                         <i class="ri-close-line"></i>
                                                     </button>` : ''
                                 }
-                                <button onclick="deleteFuelConsumption(${consumption.id})" 
+                                <button onclick="deleteFuelConsumption(${consumption.id})"
                                         class="text-red-600 hover:text-red-900" title="حذف">
                                     <i class="ri-delete-bin-line"></i>
                                 </button>
@@ -1733,9 +1738,9 @@
                     const tbody = document.getElementById('fuelConsumptionsTableBody');
                     tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="px-6 py-8 text-center text-red-500">
+                    <td colspan="7" class="px-6 py-8 text-center text-red-500">
                         <i class="ri-error-warning-line text-4xl mb-2"></i>
-                        <p>خطأ في تحميل البيانات</p>
+                        <p>خطأ في تحميل البيانات: ${error.message}</p>
                     </td>
                 </tr>
             `;
@@ -1744,12 +1749,17 @@
 
         function loadFuelConsumptionSummary() {
             fetch(`/equipment-fuel-consumption/{{ $equipment->id }}/summary`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const tbody = document.getElementById('fuelSummaryTableBody');
                     tbody.innerHTML = '';
 
-                    if (data.length === 0) {
+                    if (!data || data.length === 0) {
                         tbody.innerHTML = `
                     <tr>
                         <td colspan="3" class="px-6 py-8 text-center text-gray-500">لا توجد بيانات</td>
@@ -1776,6 +1786,9 @@
                 `;
                         tbody.innerHTML += row;
                     });
+                })
+                .catch(error => {
+                    console.error('Error loading fuel consumption summary:', error);
                 });
         }
 
