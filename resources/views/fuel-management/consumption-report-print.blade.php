@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقرير استهلاك المحروقات</title>
+    <title>تقرير استهلاك المحروقات - شركة الأبراج للمقاولات</title>
     <style>
         * {
             margin: 0;
@@ -12,124 +12,193 @@
         }
 
         body {
-            font-family: Arial, 'Tajawal', sans-serif;
+            font-family: 'Tajawal', Arial, sans-serif;
             background: white;
-            color: #000;
-            line-height: 1.4;
-            padding: 20px;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
         }
 
         .container {
             max-width: 210mm;
             margin: 0 auto;
             background: white;
+            padding: 10mm 8mm;
+            page-break-after: always;
         }
 
+        /* Header Professional */
         .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 10px 8px;
+            border-bottom: 2px solid #2c5a7e;
+            background: white;
+            border-radius: 0;
+            gap: 8px;
+        }
+
+        .logo-section {
+            flex: 0 0 auto;
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #000;
+        }
+
+        .logo-section img {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .company-info {
+            flex: 1;
+            text-align: center;
+            margin: 0 8px;
+        }
+
+        .company-name {
+            font-size: 13pt;
+            font-weight: 700;
+            color: #2c5a7e;
+            margin-bottom: 1px;
+        }
+
+        .company-subtitle {
+            font-size: 9pt;
+            color: #5a6c7d;
+            font-weight: 500;
+        }
+
+        .report-title {
+            flex: 0 0 auto;
+            text-align: center;
         }
 
         h1 {
-            font-size: 18pt;
-            margin-bottom: 5px;
-            color: #000;
+            font-size: 15pt;
+            margin: 0;
+            color: #2c5a7e;
+            font-weight: 700;
+        }
+
+        .report-date {
+            font-size: 8pt;
+            color: #666;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 11pt;
+            margin-top: 8px;
         }
 
         h2 {
-            font-size: 14pt;
-            margin: 15px 0 10px 0;
-            border-bottom: 1px solid #000;
-            padding-bottom: 5px;
-            color: #000;
+            font-size: 11pt;
+            margin: 8px 0 6px 0;
+            border-right: 3px solid #2c5a7e;
+            padding-right: 6px;
+            color: #2c5a7e;
+            font-weight: 700;
         }
 
         p {
-            font-size: 10pt;
-            margin-bottom: 5px;
+            font-size: 9pt;
+            margin-bottom: 3px;
             color: #333;
         }
 
         .summary-cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 10px;
         }
 
         .card {
-            border: 1px solid #999;
+            border: 1px solid #d0dce8;
             padding: 8px;
             background: white;
             page-break-inside: avoid;
+            border-radius: 3px;
+            border-top: 3px solid #2c5a7e;
+            box-shadow: none;
         }
 
         .card p:first-child {
-            font-size: 9pt;
-            color: #666;
+            font-size: 8pt;
+            color: #5a6c7d;
             margin-bottom: 3px;
+            font-weight: 600;
         }
 
         .card-value {
             font-size: 16pt;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 3px;
+            font-weight: 700;
+            color: #2c5a7e;
+            margin-bottom: 2px;
         }
 
         .card-unit {
-            font-size: 8pt;
-            color: #666;
+            font-size: 7pt;
+            color: #7a8a9d;
+            font-weight: 500;
         }
 
         .fuel-type-section {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .fuel-cards {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 6px;
+            margin-bottom: 8px;
         }
 
         .fuel-card {
-            border: 1px solid #999;
+            border: 1px solid #d0dce8;
             padding: 8px;
             background: white;
             page-break-inside: avoid;
+            border-radius: 3px;
+            border-right: 2px solid #2c5a7e;
+            box-shadow: none;
         }
 
         .fuel-card h4 {
-            font-size: 10pt;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #000;
+            font-size: 9pt;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #2c5a7e;
+            border-bottom: 1px solid #d0dce8;
+            padding-bottom: 2px;
         }
 
         .fuel-card-row {
             display: flex;
             justify-content: space-between;
-            font-size: 9pt;
-            margin-bottom: 3px;
+            font-size: 8pt;
+            margin-bottom: 2px;
+            padding: 1px 0;
         }
 
         .fuel-card-label {
-            color: #666;
+            color: #5a6c7d;
+            font-weight: 500;
         }
 
         .fuel-card-value {
-            font-weight: bold;
-            color: #000;
+            font-weight: 700;
+            color: #2c5a7e;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 9pt;
+            margin: 6px 0;
+            font-size: 8pt;
         }
 
         thead {
@@ -141,20 +210,31 @@
         }
 
         th {
-            background: #e8e8e8;
-            color: #000;
-            border: 1px solid #999;
-            padding: 5px;
+            background: #2c5a7e;
+            color: #fff;
+            border: 1px solid #1f3f5a;
+            padding: 5px 6px;
             text-align: right;
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 8pt;
+            letter-spacing: 0px;
         }
 
         td {
-            border: 1px solid #999;
-            padding: 5px;
-            color: #000;
+            border: 1px solid #e0e0e0;
+            padding: 4px 6px;
+            color: #1a1a1a;
             background: white;
             text-align: right;
+            font-size: 8pt;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f9fc;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: white;
         }
 
         tr {
@@ -162,21 +242,36 @@
         }
 
         .status-approved {
-            border: 1px solid #059669;
-            color: #059669;
-            padding: 1px 3px;
+            background: #d1e7dd;
+            border: 1px solid #0a6e47;
+            color: #0a3622;
+            padding: 2px 4px;
+            border-radius: 1px;
+            font-weight: 600;
+            font-size: 7pt;
+            display: inline-block;
         }
 
         .status-rejected {
-            border: 1px solid #dc2626;
-            color: #dc2626;
-            padding: 1px 3px;
+            background: #f8d7da;
+            border: 1px solid #842029;
+            color: #842029;
+            padding: 2px 4px;
+            border-radius: 1px;
+            font-weight: 600;
+            font-size: 7pt;
+            display: inline-block;
         }
 
         .status-pending {
-            border: 1px solid #d97706;
-            color: #d97706;
-            padding: 1px 3px;
+            background: #fff3cd;
+            border: 1px solid #664d03;
+            color: #664d03;
+            padding: 2px 4px;
+            border-radius: 1px;
+            font-weight: 600;
+            font-size: 7pt;
+            display: inline-block;
         }
 
         @media print {
@@ -193,10 +288,19 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
+        <!-- Professional Header with Logo -->
         <div class="header">
-            <h1>تقرير استهلاك المحروقات</h1>
-            <p>عرض مفصل لاستهلاك المحروقات والزيوت بجميع أنواعها</p>
+            <div class="logo-section">
+                <img src="{{ asset('assets/logo.png') }}" alt="شركة الأبراج">
+            </div>
+            <div class="company-info">
+                <div class="company-name">شركة الأبراج للمقاولات</div>
+                <div class="company-subtitle">للمقاولات المتخصصة</div>
+            </div>
+            <div class="report-title">
+                <h1>تقرير استهلاك المحروقات</h1>
+                <div class="report-date">{{ now()->locale('ar')->isoFormat('dddd، D MMMM YYYY') }}</div>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -312,6 +416,12 @@
         @else
             <p style="text-align: center; padding: 20px; color: #666;">لم يتم تسجيل أي استهلاك للمحروقات في الفترة المحددة</p>
         @endif
+
+        <!-- Footer -->
+        <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #d0dce8; font-size: 7pt; color: #7a8a9d; text-align: center;">
+            <p style="margin: 1px 0;">شركة الأبراج للمقاولات - نظام إدارة المحروقات والمعدات</p>
+            <p style="margin: 1px 0;">{{ now()->locale('ar')->isoFormat('dddd، D MMMM YYYY HH:mm') }}</p>
+        </div>
     </div>
 
     <script>

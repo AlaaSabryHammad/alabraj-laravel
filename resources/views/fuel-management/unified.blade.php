@@ -73,6 +73,7 @@
                 @if($fuelTrucks->count() > 0)
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         @foreach($fuelTrucks as $truck)
+                            @if($truck->fuelTruck)
                             <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 hover:shadow-lg transition-all duration-200"
                                  onclick="openTruckModal({{ $truck->id }}, '{{ $truck->name }}')">
 
@@ -151,6 +152,47 @@
                                     </button>
                                 </div>
                             </div>
+                            @else
+                            <div class="border-2 border-orange-300 rounded-lg p-6 bg-orange-50 hover:border-orange-500 transition-all duration-200">
+                                <!-- Header -->
+                                <div class="flex items-start justify-between mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">{{ $truck->name }}</h3>
+                                        <p class="text-sm text-gray-600">{{ $truck->type }}</p>
+                                    </div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-200 text-orange-800 font-semibold">
+                                        <i class="ri-alert-fill ml-1"></i>
+                                        غير مكتملة
+                                    </span>
+                                </div>
+
+                                <!-- Warning Message -->
+                                <div class="p-4 bg-orange-100 rounded-lg border border-orange-300 mb-4">
+                                    <p class="text-sm text-orange-800 leading-relaxed">
+                                        <i class="ri-alert-line ml-2"></i>
+                                        لم يتم إضافة بيانات المحروقات لهذه السيارة بعد. يجب إكمال بيانات الموقع والسائق والسعة قبل استخدامها.
+                                    </p>
+                                </div>
+
+                                <!-- Status Info -->
+                                <div class="space-y-2 mb-4">
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-600">الموقع:</span>
+                                        <span class="text-gray-900 font-medium">{{ $truck->location->name ?? 'غير محدد' }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-600">السائق:</span>
+                                        <span class="text-gray-900 font-medium">{{ $truck->driver->name ?? 'لم يتم التعيين' }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button -->
+                                <button class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50" disabled>
+                                    <i class="ri-lock-line ml-1"></i>
+                                    معطلة (تحتاج إكمال البيانات)
+                                </button>
+                            </div>
+                            @endif
                         @endforeach
                     </div>
                 @else
@@ -196,35 +238,67 @@
 
             <form id="distributeForm" class="mt-4 space-y-4">
                 @csrf
-                <div class="p-4 bg-blue-50 rounded-lg">
-                    <div class="flex items-center text-blue-800 mb-2">
+                <!-- معلومات سيارة المحروقات -->
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                    <div class="flex items-center text-blue-800 mb-3">
                         <i class="ri-truck-line ml-2"></i>
-                        <span class="font-medium">معلومات سيارة المحروقات</span>
+                        <span class="font-semibold">معلومات سيارة المحروقات</span>
                     </div>
-                    <div id="truckInfo" class="text-sm text-blue-700"></div>
+                    <div id="truckInfo" class="text-sm text-blue-800 space-y-2">
+                        <p class="text-gray-500">جاري تحميل البيانات...</p>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- اختيار نوع المحروقات -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">المعدة المستهدفة</label>
-                        <select name="target_equipment_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="">اختر المعدة</option>
-                            @foreach($targetEquipments as $equipment)
-                                <option value="{{ $equipment->id }}">
-                                    {{ $equipment->name }}
-                                    {{ $equipment->location ? '- ' . $equipment->location->name : '' }}
-                                </option>
-                            @endforeach
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">
+                            <i class="ri-droplet-line ml-1"></i>نوع المحروقات
+                        </label>
+                        <select name="fuel_type" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            id="fuelTypeSelect">
+                            <option value="">-- اختر نوع المحروقات --</option>
+                            <option value="diesel">ديزل</option>
+                            <option value="gasoline">بنزين</option>
+                            <option value="engine_oil">زيت ماكينة</option>
+                            <option value="hydraulic_oil">زيت هيدروليك</option>
+                            <option value="radiator_water">ماء ردياتير</option>
+                            <option value="brake_oil">زيت فرامل</option>
+                            <option value="other">أخرى</option>
                         </select>
                     </div>
 
+                    <!-- إدخال الكمية -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية (لتر)</label>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">
+                            <i class="ri-measure-line ml-1"></i>الكمية (لتر)
+                        </label>
                         <input type="number" name="quantity" step="0.01" min="0.1" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            placeholder="أدخل الكمية">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="أدخل الكمية المراد توزيعها"
+                            id="quantityInput"
+                            oninput="validateQuantityInput()">
+                        <p class="text-xs text-gray-500 mt-1">الكمية المتاحة: <span id="availableQty" class="font-semibold text-green-600">0</span> لتر</p>
+                        <p id="quantityWarning" class="text-xs text-red-600 mt-1 hidden">الكمية المدخلة تتجاوز الكمية المتاحة</p>
                     </div>
+                </div>
+
+                <!-- اختيار المعدة المستهدفة -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-2">
+                        <i class="ri-building-line ml-1"></i>المعدة المستهدفة
+                    </label>
+                    <select name="target_equipment_id" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">-- اختر المعدة المستهدفة --</option>
+                        @foreach($targetEquipments as $equipment)
+                            <option value="{{ $equipment->id }}">
+                                {{ $equipment->name }}
+                                {{ $equipment->location ? '(' . $equipment->location->name . ')' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div>
@@ -416,10 +490,40 @@
                         return;
                     }
                     availableQuantity = parseFloat(data.truck.remaining_quantity);
-                    let info = '<div><strong>اسم السيارة:</strong> ' + data.truck.name + '</div>';
-                    info += '<div><strong>نوع المحروقات:</strong> ' + data.truck.fuel_type + '</div>';
-                    info += '<div><strong>الكمية المتاحة:</strong> ' + parseFloat(data.truck.remaining_quantity).toFixed(2) + ' لتر</div>';
+
+                    // بناء معلومات السيارة بشكل احترافي
+                    let info = '<div class="space-y-2">';
+                    info += '<div class="flex justify-between items-center border-b pb-2">';
+                    info += '<span class="text-gray-700">اسم السيارة:</span>';
+                    info += '<span class="font-semibold text-blue-700">' + data.truck.name + '</span>';
+                    info += '</div>';
+
+                    info += '<div class="flex justify-between items-center border-b pb-2">';
+                    info += '<span class="text-gray-700">نوع المحروقات:</span>';
+                    info += '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">' + data.truck.fuel_type + '</span>';
+                    info += '</div>';
+
+                    info += '<div class="flex justify-between items-center border-b pb-2">';
+                    info += '<span class="text-gray-700">السعة الكلية:</span>';
+                    info += '<span class="font-semibold">' + parseFloat(data.truck.capacity).toFixed(2) + ' لتر</span>';
+                    info += '</div>';
+
+                    info += '<div class="flex justify-between items-center border-b pb-2">';
+                    info += '<span class="text-gray-700">الكمية الحالية:</span>';
+                    info += '<span class="font-semibold">' + parseFloat(data.truck.current_quantity).toFixed(2) + ' لتر</span>';
+                    info += '</div>';
+
+                    info += '<div class="flex justify-between items-center bg-green-50 -mx-4 px-4 py-2 rounded-b-lg">';
+                    info += '<span class="text-green-800 font-semibold">الكمية المتاحة:</span>';
+                    info += '<span class="text-green-700 font-bold text-lg">' + parseFloat(data.truck.remaining_quantity).toFixed(2) + ' لتر</span>';
+                    info += '</div>';
+                    info += '</div>';
+
                     document.getElementById('truckInfo').innerHTML = info;
+                    document.getElementById('availableQty').textContent = parseFloat(data.truck.remaining_quantity).toFixed(2);
+                    document.getElementById('quantityInput').max = availableQuantity;
+
+                    // تحديث قيمة Max للحقل
                     document.querySelector('[name="quantity"]').max = availableQuantity;
                 })
                 .catch(error => {
@@ -444,6 +548,21 @@
             document.getElementById('consumptionForm').reset();
         }
 
+        // Validate quantity input in real-time
+        function validateQuantityInput() {
+            const quantityInput = document.getElementById('quantityInput');
+            const quantityWarning = document.getElementById('quantityWarning');
+            const quantity = parseFloat(quantityInput.value) || 0;
+
+            if (quantity > availableQuantity && quantity > 0) {
+                quantityWarning.classList.remove('hidden');
+                quantityInput.classList.add('border-red-500');
+            } else {
+                quantityWarning.classList.add('hidden');
+                quantityInput.classList.remove('border-red-500');
+            }
+        }
+
         // Handle distribute form submission
         document.getElementById('distributeForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -451,6 +570,24 @@
 
             const formData = new FormData(this);
             const quantity = parseFloat(formData.get('quantity'));
+            const fuelType = formData.get('fuel_type');
+            const targetEquipmentId = formData.get('target_equipment_id');
+
+            // Validate required fields
+            if (!fuelType || fuelType.trim() === '') {
+                showNotification('الرجاء اختيار نوع المحروقات', 'error');
+                return;
+            }
+
+            if (!targetEquipmentId || targetEquipmentId.trim() === '') {
+                showNotification('الرجاء اختيار المعدة المستهدفة', 'error');
+                return;
+            }
+
+            if (!quantity || quantity <= 0) {
+                showNotification('الرجاء إدخال كمية صحيحة', 'error');
+                return;
+            }
 
             if (quantity > availableQuantity) {
                 showNotification('الكمية المطلوبة أكبر من الكمية المتاحة', 'error');
