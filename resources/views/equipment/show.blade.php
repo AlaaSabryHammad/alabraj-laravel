@@ -2468,50 +2468,56 @@
         }
 
         // Handle approval form submission
-        document.getElementById('approvalForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        const approvalForm = document.getElementById('approvalForm');
+        if (approvalForm) {
+            approvalForm.addEventListener('submit', function(e) {
+                e.preventDefault();
 
-            if (!currentConsumptionId) return;
+                if (!currentConsumptionId) return;
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/equipment-fuel-consumption/${currentConsumptionId}/approve`;
-            form.style.display = 'none';
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/equipment-fuel-consumption/${currentConsumptionId}/approve`;
+                form.style.display = 'none';
 
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
 
-            const methodField = document.createElement('input');
-            methodField.type = 'hidden';
-            methodField.name = '_method';
-            methodField.value = 'PATCH';
-            form.appendChild(methodField);
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'PATCH';
+                form.appendChild(methodField);
 
-            const notes = document.getElementById('approvalNotes').value;
-            if (notes.trim()) {
-                const notesField = document.createElement('input');
-                notesField.type = 'hidden';
-                notesField.name = 'approval_notes';
-                notesField.value = notes;
-                form.appendChild(notesField);
-            }
+                const notes = document.getElementById('approvalNotes').value;
+                if (notes.trim()) {
+                    const notesField = document.createElement('input');
+                    notesField.type = 'hidden';
+                    notesField.name = 'approval_notes';
+                    notesField.value = notes;
+                    form.appendChild(notesField);
+                }
 
-            // Close modal
-            closeApprovalModal();
+                // Close modal
+                closeApprovalModal();
 
-            document.body.appendChild(form);
-            form.submit();
-        });
+                document.body.appendChild(form);
+                form.submit();
+            });
+        }
 
         // Close modal when clicking outside
-        document.getElementById('approvalModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeApprovalModal();
-            }
-        });
+        const approvalModal = document.getElementById('approvalModal');
+        if (approvalModal) {
+            approvalModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeApprovalModal();
+                }
+            });
+        }
 
         // Close modal on Escape key
         document.addEventListener('keydown', function(e) {
@@ -2555,17 +2561,20 @@
         }
 
         // Handle rejection form submission
-        document.getElementById('rejectionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const notes = document.getElementById('rejectionNotes').value.trim();
+        const rejectionForm = document.getElementById('rejectionForm');
+        if (rejectionForm) {
+            rejectionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const notes = document.getElementById('rejectionNotes').value.trim();
 
-            if (!notes) {
-                alert('يجب تقديم سبب للرفض');
-                return;
-            }
+                if (!notes) {
+                    alert('يجب تقديم سبب للرفض');
+                    return;
+                }
 
-            this.submit();
-        });
+                this.submit();
+            });
+        }
 
         // Link equipment modal functions
         function openLinkModal() {
