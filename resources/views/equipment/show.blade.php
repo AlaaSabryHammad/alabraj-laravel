@@ -1657,7 +1657,14 @@
             loadFuelConsumptionSummary();
         } // Load fuel consumption data
         function loadFuelConsumptions() {
-            fetch(`/equipment-fuel-consumption/{{ $equipment->id }}/consumptions`)
+            fetch(`/equipment-fuel-consumption/{{ $equipment->id }}/consumptions`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP Error: ${response.status}`);
@@ -1748,7 +1755,14 @@
         }
 
         function loadFuelConsumptionSummary() {
-            fetch(`/equipment-fuel-consumption/{{ $equipment->id }}/summary`)
+            fetch(`/equipment-fuel-consumption/{{ $equipment->id }}/summary`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP Error: ${response.status}`);
