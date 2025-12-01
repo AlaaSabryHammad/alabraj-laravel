@@ -470,9 +470,11 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
                             <option value="">اختر سيارة المحروقات</option>
                             @foreach($fuelTrucks as $truck)
-                                <option value="{{ $truck->id }}">
-                                    {{ $truck->equipment->name }} - {{ $truck->fuel_type_text }}
-                                </option>
+                                @if($truck->fuelTruck)
+                                    <option value="{{ $truck->id }}">
+                                        {{ $truck->name }} - {{ $truck->fuelTruck->fuel_type_text }}
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                     </div>
