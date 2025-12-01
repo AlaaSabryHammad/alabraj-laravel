@@ -29,8 +29,8 @@ class FuelManagementUnifiedController extends Controller
         // Get all other equipment for distribution targets
         $targetEquipments = Equipment::where(function ($query) {
                 $query->where('type', 'NOT LIKE', '%تانكر%')
-                    ->andWhere('type', 'NOT LIKE', '%محروقات%')
-                    ->andWhere('type', 'NOT LIKE', '%وقود%');
+                    ->where('type', 'NOT LIKE', '%محروقات%')
+                    ->where('type', 'NOT LIKE', '%وقود%');
             })
             ->where('status', '!=', 'out_of_order')
             ->with(['location'])
