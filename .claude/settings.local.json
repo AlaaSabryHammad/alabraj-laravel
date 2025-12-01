@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(composer install:*)",
+      "Bash(php artisan:*)",
+      "Bash(npm install)"
     ],
     "deny": [],
     "ask": [],
