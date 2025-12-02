@@ -43,16 +43,14 @@ class FuelManagementUnifiedController extends Controller
         $totalCurrent = $fuelTrucks->sum(function ($equipment) {
             return $equipment->fuelTruck ? $equipment->fuelTruck->current_quantity : 0;
         });
-        $totalRemaining = $fuelTrucks->sum(function ($equipment) {
-            return $equipment->fuelTruck ? $equipment->fuelTruck->remaining_quantity : 0;
-        });
+        $totalConsumed = $totalCapacity - $totalCurrent;
 
         $summary = [
             'total_trucks' => $totalTrucks,
             'total_capacity' => $totalCapacity,
             'total_current' => $totalCurrent,
-            'total_remaining' => $totalRemaining,
-            'utilization_percentage' => $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0
+            'total_consumed' => $totalConsumed,
+            'utilization_percentage' => $totalCapacity > 0 ? (($totalCapacity - $totalCurrent) / $totalCapacity) * 100 : 0
         ];
 
         return view('fuel-management.unified', compact('fuelTrucks', 'targetEquipments', 'summary'));

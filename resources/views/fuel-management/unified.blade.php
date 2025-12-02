@@ -54,11 +54,11 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center">
                     <div class="flex-1">
-                        <p class="text-sm text-gray-600">الكمية المتبقية</p>
-                        <p class="text-2xl font-bold text-blue-600">{{ number_format($summary['total_remaining'], 0) }}</p>
+                        <p class="text-sm text-gray-600">الكمية المستهلكة</p>
+                        <p class="text-2xl font-bold text-red-600">{{ number_format($summary['total_consumed'], 0) }}</p>
                         <p class="text-xs text-gray-500 mt-1">{{ number_format($summary['utilization_percentage'], 1) }}%</p>
                     </div>
-                    <i class="ri-drop-line text-4xl text-blue-500 opacity-20"></i>
+                    <i class="ri-drop-line text-4xl text-red-500 opacity-20"></i>
                 </div>
             </div>
         </div>
