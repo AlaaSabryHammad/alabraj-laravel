@@ -63,7 +63,16 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-yellow-600 text-sm font-medium mb-1">تنتهي قريباً</p>
-                    <h3 class="text-2xl font-bold text-gray-900">3</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        @php
+                            $expiringCount = $documents->filter(function($doc) {
+                                if (!$doc->expiry_date) return false;
+                                $daysLeft = now()->diffInDays($doc->expiry_date, false);
+                                return $daysLeft <= 30 && $daysLeft >= 0;
+                            })->count();
+                        @endphp
+                        {{ $expiringCount }}
+                    </h3>
                 </div>
                 <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3 rounded-xl">
                     <i class="ri-alarm-warning-fill text-white text-lg"></i>
@@ -75,7 +84,12 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-purple-600 text-sm font-medium mb-1">أنواع المستندات</p>
-                    <h3 class="text-2xl font-bold text-gray-900">8</h3>
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        @php
+                            $documentTypesCount = $documents->groupBy('type')->count();
+                        @endphp
+                        {{ $documentTypesCount }}
+                    </h3>
                 </div>
                 <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl">
                     <i class="ri-folder-open-fill text-white text-lg"></i>
