@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use App\Models\Equipment;
 
 class ProfileController extends Controller
 {
@@ -22,7 +23,13 @@ class ProfileController extends Controller
             $user->load(['employee', 'role']);
         }
 
-        return view('profile.show', compact('user'));
+        // Get equipment registered under the current user
+        $equipments = Equipment::where('user_id', Auth::id())
+            ->with(['location', 'driver', 'equipmentType', 'internalTruck', 'fuelTruck'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('profile.show', compact('user', 'equipments'));
     }
 
     /**

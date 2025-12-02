@@ -713,6 +713,167 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Equipment Section -->
+            <div class="mt-12">
+                <div class="section-header mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">
+                        <i class="fas fa-tools text-blue-600 ml-3"></i>
+                        المعدات المسجلة
+                    </h2>
+                    <p class="text-gray-600 mt-2">عرض جميع المعدات المسجلة تحت حسابك</p>
+                </div>
+
+                @if($equipments->count() > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @foreach($equipments as $equipment)
+                            <div class="info-card rounded-xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 animate-slide-in">
+                                <!-- Equipment Header -->
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-bold text-gray-900">{{ $equipment->name }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $equipment->type ?? 'غير محدد' }}</p>
+                                    </div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{
+                                        $equipment->status == 'in_use' ? 'bg-green-100 text-green-800' :
+                                        ($equipment->status == 'available' ? 'bg-blue-100 text-blue-800' :
+                                        ($equipment->status == 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-red-100 text-red-800'))
+                                    }}">
+                                        {{ $equipment->status == 'in_use' ? 'قيد الاستخدام' :
+                                           ($equipment->status == 'available' ? 'متاح' :
+                                           ($equipment->status == 'maintenance' ? 'في الصيانة' :
+                                           'خارج الخدمة')) }}
+                                    </span>
+                                </div>
+
+                                <!-- Equipment Details -->
+                                <div class="space-y-3 mb-4 text-sm">
+                                    @if($equipment->code)
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-barcode text-blue-600 ml-2"></i>الرمز
+                                            </span>
+                                            <span class="font-medium text-gray-900">{{ $equipment->code }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($equipment->serial_number)
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-hashtag text-green-600 ml-2"></i>الرقم التسلسلي
+                                            </span>
+                                            <span class="font-medium text-gray-900">{{ $equipment->serial_number }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($equipment->location)
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-map-marker-alt text-red-600 ml-2"></i>الموقع
+                                            </span>
+                                            <span class="font-medium text-gray-900">{{ $equipment->location->name }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($equipment->driver)
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-user text-purple-600 ml-2"></i>السائق
+                                            </span>
+                                            <span class="font-medium text-gray-900">{{ $equipment->driver->name ?? 'غير معين' }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($equipment->purchase_date)
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-calendar text-indigo-600 ml-2"></i>تاريخ الشراء
+                                            </span>
+                                            <span class="font-medium text-gray-900">{{ $equipment->purchase_date->format('Y-m-d') }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($equipment->purchase_price)
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-money-bill-wave text-yellow-600 ml-2"></i>سعر الشراء
+                                            </span>
+                                            <span class="font-medium text-gray-900">{{ number_format($equipment->purchase_price) }} ريال</span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Special Info for Fuel Trucks -->
+                                @if($equipment->fuelTruck)
+                                    <div class="border-t border-gray-200 pt-4 mt-4">
+                                        <div class="text-xs font-bold text-blue-600 mb-3">
+                                            <i class="fas fa-gas-pump ml-1"></i>معلومات سيارة المحروقات
+                                        </div>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">نوع الوقود:</span>
+                                                <span class="font-medium">{{ $equipment->fuelTruck->fuel_type_text }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">السعة:</span>
+                                                <span class="font-medium">{{ number_format($equipment->fuelTruck->capacity, 0) }} لتر</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">الكمية الحالية:</span>
+                                                <span class="font-medium">{{ number_format($equipment->fuelTruck->current_quantity, 0) }} لتر</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Special Info for Internal Trucks -->
+                                @if($equipment->internalTruck)
+                                    <div class="border-t border-gray-200 pt-4 mt-4">
+                                        <div class="text-xs font-bold text-green-600 mb-3">
+                                            <i class="fas fa-truck ml-1"></i>معلومات الشاحنة
+                                        </div>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">رقم اللوحة:</span>
+                                                <span class="font-medium">{{ $equipment->internalTruck->plate_number }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">العلامة التجارية:</span>
+                                                <span class="font-medium">{{ $equipment->internalTruck->brand }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">الموديل:</span>
+                                                <span class="font-medium">{{ $equipment->internalTruck->model }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- View Button -->
+                                <div class="border-t border-gray-200 pt-4 mt-4">
+                                    <a href="{{ route('equipment.show', $equipment) }}"
+                                       class="inline-flex items-center justify-center w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300">
+                                        <i class="fas fa-eye ml-2"></i>
+                                        عرض التفاصيل الكاملة
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="bg-white rounded-xl shadow-xl p-12 text-center animate-slide-in">
+                        <i class="fas fa-tools text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">لا توجد معدات مسجلة</h3>
+                        <p class="text-gray-600 mb-6">لم تقم بتسجيل أي معدات تحت حسابك حتى الآن</p>
+                        <a href="{{ route('equipment.create') }}"
+                           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl text-sm font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300">
+                            <i class="fas fa-plus ml-2"></i>
+                            إضافة معدة جديدة
+                        </a>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
