@@ -25,19 +25,24 @@ class RevenueTypeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:revenue_types,name',
-            'code' => 'required|string|max:50|unique:revenue_types,code',
             'description' => 'nullable|string|max:1000',
-            'is_active' => 'boolean'
+            'is_active' => 'nullable|boolean'
         ], [
             'name.required' => 'اسم نوع الإيراد مطلوب',
-            'name.unique' => 'اسم نوع الإيراد موجود بالفعل',
-            'code.required' => 'كود نوع الإيراد مطلوب',
-            'code.unique' => 'كود نوع الإيراد موجود بالفعل'
+            'name.unique' => 'اسم نوع الإيراد موجود بالفعل'
         ]);
 
-        RevenueType::create($request->all());
+        // Generate code from name if not provided
+        if (!isset($validated['code'])) {
+            $validated['code'] = \Illuminate\Support\Str::slug($validated['name'], '_');
+        }
+
+        // Set is_active to true if checked, false otherwise
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+
+        RevenueType::create($validated);
 
         return response()->json(['success' => true, 'message' => 'تم إضافة نوع الإيراد بنجاح']);
     }
@@ -47,19 +52,24 @@ class RevenueTypeController extends Controller
      */
     public function update(Request $request, RevenueType $revenueType)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('revenue_types', 'name')->ignore($revenueType->id)],
-            'code' => ['required', 'string', 'max:50', Rule::unique('revenue_types', 'code')->ignore($revenueType->id)],
             'description' => 'nullable|string|max:1000',
-            'is_active' => 'boolean'
+            'is_active' => 'nullable|boolean'
         ], [
             'name.required' => 'اسم نوع الإيراد مطلوب',
-            'name.unique' => 'اسم نوع الإيراد موجود بالفعل',
-            'code.required' => 'كود نوع الإيراد مطلوب',
-            'code.unique' => 'كود نوع الإيراد موجود بالفعل'
+            'name.unique' => 'اسم نوع الإيراد موجود بالفعل'
         ]);
 
-        $revenueType->update($request->all());
+        // Generate code from name if not provided
+        if (!isset($validated['code'])) {
+            $validated['code'] = \Illuminate\Support\Str::slug($validated['name'], '_');
+        }
+
+        // Set is_active to true if checked, false otherwise
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+
+        $revenueType->update($validated);
 
         return response()->json(['success' => true, 'message' => 'تم تحديث نوع الإيراد بنجاح']);
     }

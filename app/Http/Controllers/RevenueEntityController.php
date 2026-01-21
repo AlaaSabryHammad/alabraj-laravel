@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RevenueEntity;
+use App\Models\RevenueType;
 use Illuminate\Http\Request;
 
 class RevenueEntityController extends Controller
@@ -21,7 +22,8 @@ class RevenueEntityController extends Controller
      */
     public function create()
     {
-        return view('revenue-entities.create');
+        $revenueTypes = RevenueType::where('is_active', true)->orderBy('name')->get();
+        return view('revenue-entities.create', compact('revenueTypes'));
     }
 
     /**
@@ -32,6 +34,7 @@ class RevenueEntityController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:client,government,company,individual',
+            'revenue_type_id' => 'required|exists:revenue_types,id',
             'contact_person' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -47,7 +50,7 @@ class RevenueEntityController extends Controller
             return response()->json(['success' => true, 'message' => 'تم إنشاء جهة الإيراد بنجاح']);
         }
 
-        return redirect()->route('settings.index')
+        return redirect()->route('settings.revenue-entities.show')
             ->with('success', 'تم إنشاء جهة الإيراد بنجاح');
     }
 
@@ -65,7 +68,8 @@ class RevenueEntityController extends Controller
     public function edit(RevenueEntity $revenueEntity)
     {
         $entity = $revenueEntity;
-        return view('settings.revenue-entities-edit', compact('entity'));
+        $revenueTypes = RevenueType::where('is_active', true)->orderBy('name')->get();
+        return view('settings.revenue-entities-edit', compact('entity', 'revenueTypes'));
     }
 
     /**
@@ -76,6 +80,7 @@ class RevenueEntityController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:client,government,company,individual',
+            'revenue_type_id' => 'required|exists:revenue_types,id',
             'contact_person' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -91,7 +96,7 @@ class RevenueEntityController extends Controller
             return response()->json(['success' => true, 'message' => 'تم تحديث جهة الإيراد بنجاح']);
         }
 
-        return redirect()->route('settings.index')
+        return redirect()->route('settings.revenue-entities.show')
             ->with('success', 'تم تحديث جهة الإيراد بنجاح');
     }
 
@@ -110,11 +115,11 @@ class RevenueEntityController extends Controller
     {
         // Check if entity is used in any revenue vouchers
         if ($revenueEntity->revenueVouchers()->exists()) {
-                    if (request()->ajax() || request()->wantsJson()) {
-            return response()->json(['success' => false, 'message' => 'لا يمكن حذف هذه الجهة لأنها مرتبطة بسندات قبض']);
-        }
-        return redirect()->route('settings.index')
-            ->with('error', 'لا يمكن حذف هذه الجهة لأنها مرتبطة بسندات قبض');
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'لا يمكن حذف هذه الجهة لأنها مرتبطة بسندات قبض']);
+            }
+            return redirect()->route('settings.revenue-entities.show')
+                ->with('error', 'لا يمكن حذف هذه الجهة لأنها مرتبطة بسندات قبض');
         }
 
         $revenueEntity->delete();
@@ -123,7 +128,7 @@ class RevenueEntityController extends Controller
             return response()->json(['success' => true, 'message' => 'تم حذف جهة الإيراد بنجاح']);
         }
 
-        return redirect()->route('settings.index')
+        return redirect()->route('settings.revenue-entities.show')
             ->with('success', 'تم حذف جهة الإيراد بنجاح');
     }
 }

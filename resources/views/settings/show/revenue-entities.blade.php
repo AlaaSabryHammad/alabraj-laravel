@@ -3,657 +3,410 @@
 @section('title', 'كيانات الإيرادات - الإعدادات')
 
 @section('content')
-    <div class="settings-container">
-        <!-- Header -->
-        <div class="settings-header">
-            <a href="{{ route('settings.index') }}" class="back-button">
-                <i class="ri-arrow-left-line"></i>
-            </a>
-            <div class="header-content">
-                <h1>كيانات الإيرادات</h1>
-                <p class="breadcrumb">الإعدادات / كيانات الإيرادات</p>
+<div class="space-y-6">
+    <!-- Header with Breadcrumb and Back Button -->
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="flex items-center space-x-2 space-x-reverse mb-4">
+                <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-blue-600 transition-colors">
+                    <i class="ri-home-line"></i>
+                </a>
+                <span class="text-gray-400">/</span>
+                <a href="{{ route('settings.index') }}" class="text-gray-600 hover:text-blue-600 transition-colors">
+                    الإعدادات
+                </a>
+                <span class="text-gray-400">/</span>
+                <span class="text-blue-600 font-medium">كيانات الإيرادات</span>
             </div>
-            <i class="ri-building-line section-icon" style="color: #059669;"></i>
+            <div class="flex items-center space-x-reverse space-x-4">
+                <a href="{{ route('settings.index') }}"
+                    class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <i class="ri-arrow-right-line ml-2"></i>
+                    العودة
+                </a>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">كيانات الإيرادات</h1>
+            </div>
+            <p class="text-gray-600 mt-2">إدارة الكيانات المختلفة المرتبطة بالإيرادات</p>
         </div>
-
-        <!-- Statistics Card -->
-        <div class="statistics-card" style="border-top: 4px solid #059669;">
-            <div class="stat-item">
-                <span class="stat-label">إجمالي الكيانات</span>
-                <span class="stat-value" style="color: #059669;">{{ $entities->total() }}</span>
+        <div class="hidden md:flex items-center justify-center">
+            <div class="w-24 h-24 bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <i class="ri-building-line text-white text-4xl"></i>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">نشط</span>
-                <span class="stat-value" style="color: #10B981;">{{ $entities->count() }}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">الصفحة الحالية</span>
-                <span class="stat-value" style="color: #059669;">{{ $entities->currentPage() }}</span>
-            </div>
-        </div>
-
-        <!-- Content Section -->
-        <div class="content-section">
-            @if ($entities->count() > 0)
-                <div class="section-header">
-                    <h2>قائمة كيانات الإيرادات</h2>
-                    <button onclick="openRevenueEntityModal()" class="btn btn-primary">
-                        <i class="ri-add-line"></i> إضافة كيان إيراد جديد
-                    </button>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>اسم الكيان</th>
-                                <th>نوع الإيراد</th>
-                                <th>الحالة</th>
-                                <th>التاريخ</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($entities as $entity)
-                                <tr>
-                                    <td><strong>{{ $entity->name }}</strong></td>
-                                    <td>{{ $entity->revenueType?->name ?? '-' }}</td>
-                                    <td>
-                                        @if ($entity->is_active)
-                                            <span class="badge badge-success">نشط</span>
-                                        @else
-                                            <span class="badge badge-danger">غير نشط</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $entity->created_at->format('Y-m-d') }}</td>
-                                    <td>
-                                        <button
-                                            onclick="editRevenueEntity({{ $entity->id }}, '{{ $entity->name }}', {{ $entity->revenue_type_id ?? 'null' }}, {{ $entity->is_active ? 'true' : 'false' }})"
-                                            class="btn btn-sm btn-info">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button onclick="deleteRevenueEntity({{ $entity->id }}, '{{ $entity->name }}')"
-                                            class="btn btn-sm btn-danger">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                @if ($entities->hasPages())
-                    <div class="pagination-wrapper">
-                        {{ $entities->links('pagination::bootstrap-4') }}
-                    </div>
-                @endif
-            @else
-                <div class="empty-state">
-                    <i class="ri-building-line"></i>
-                    <h3>لا توجد كيانات إيرادات</h3>
-                    <p>ابدأ بإضافة كيان إيراد جديد</p>
-                    <button onclick="openRevenueEntityModal()" class="btn btn-primary">
-                        <i class="ri-add-line"></i> إضافة كيان إيراد
-                    </button>
-                </div>
-            @endif
         </div>
     </div>
 
-    <!-- Add/Edit Modal -->
-    <div id="revenueEntityModal" class="modal">
-        <div class="modal-content" style="border-top: 4px solid #059669;">
-            <div class="modal-header">
-                <h2 id="modalTitle">إضافة كيان إيراد جديد</h2>
-                <button onclick="closeRevenueEntityModal()" class="close-btn">&times;</button>
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-14 h-14 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                    <i class="ri-building-4-line text-white text-3xl"></i>
+                </div>
+            </div>
+            <div class="text-4xl font-bold text-white mb-2">{{ $entities->total() }}</div>
+            <div class="text-emerald-100 font-medium">إجمالي الكيانات</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-14 h-14 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                    <i class="ri-checkbox-circle-line text-white text-3xl"></i>
+                </div>
+            </div>
+            <div class="text-4xl font-bold text-white mb-2">{{ $entities->where('status', 'active')->count() }}</div>
+            <div class="text-green-100 font-medium">الكيانات النشطة</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-14 h-14 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                    <i class="ri-file-list-3-line text-white text-3xl"></i>
+                </div>
+            </div>
+            <div class="text-4xl font-bold text-white mb-2">{{ $entities->currentPage() }}</div>
+            <div class="text-teal-100 font-medium">الصفحة الحالية</div>
+        </div>
+    </div>
+
+    <!-- Add Button -->
+    <div class="flex items-center justify-between">
+        <div></div>
+        <button onclick="openRevenueEntityModal()"
+                class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-200 font-medium shadow-lg hover:shadow-xl">
+            <i class="ri-add-line text-xl"></i>
+            إضافة كيان إيراد جديد
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        @if ($entities->count() > 0)
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">اسم الكيان</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">نوع الإيراد</th>
+                        <th class="px-6 py-4 text-center text-sm font-semibold text-gray-900">الحالة</th>
+                        <th class="px-6 py-4 text-center text-sm font-semibold text-gray-900">التاريخ</th>
+                        <th class="px-6 py-4 text-center text-sm font-semibold text-gray-900">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($entities as $entity)
+                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3 space-x-reverse">
+                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <i class="ri-building-line text-emerald-600"></i>
+                                    </div>
+                                    <span class="font-semibold text-gray-900">{{ $entity->name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                {{ $entity->revenueType?->name ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if ($entity->status === 'active')
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full ml-2"></span>
+                                        نشط
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
+                                        <span class="w-2 h-2 bg-gray-500 rounded-full ml-2"></span>
+                                        غير نشط
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-center text-sm text-gray-600">
+                                {{ $entity->created_at->format('Y/m/d') }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center space-x-2 space-x-reverse">
+                                    <button onclick="editRevenueEntity({{ $entity->id }}, '{{ $entity->name }}', '{{ $entity->type }}', {{ $entity->revenue_type_id ?? 'null' }}, '{{ $entity->status }}')"
+                                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="تعديل">
+                                        <i class="ri-edit-line text-lg"></i>
+                                    </button>
+                                    <button onclick="deleteRevenueEntity({{ $entity->id }}, '{{ $entity->name }}')"
+                                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="حذف">
+                                        <i class="ri-delete-bin-line text-lg"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            @if ($entities->hasPages())
+                <div class="px-6 py-4 border-t border-gray-100">
+                    {{ $entities->links() }}
+                </div>
+            @endif
+        @else
+            <!-- Empty State -->
+            <div class="flex flex-col items-center justify-center py-16 px-6">
+                <div class="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                    <i class="ri-building-line text-emerald-600 text-5xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">لا توجد كيانات إيرادات</h3>
+                <p class="text-gray-600 mb-6 text-center max-w-md">ابدأ بإضافة كيان إيراد جديد لإدارة الكيانات المختلفة</p>
+                <button onclick="openRevenueEntityModal()"
+                        class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-8 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 shadow-lg">
+                    <i class="ri-add-line text-xl"></i>
+                    إضافة كيان إيراد
+                </button>
+            </div>
+        @endif
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="revenueEntityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 animate-slide-up">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 id="modalTitle" class="text-2xl font-bold text-gray-900">إضافة كيان إيراد جديد</h2>
+                <button onclick="closeRevenueEntityModal()"
+                        class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
             </div>
 
-            <form id="revenueEntityForm" method="POST" action="{{ route('settings.revenue-entities.store') }}">
+            <!-- Modal Body -->
+            <form id="revenueEntityForm" method="POST" action="{{ route('settings.revenue-entities.store') }}" class="p-6 space-y-6">
                 @csrf
                 <input type="hidden" id="revenueEntityId" name="id" value="">
                 <input type="hidden" id="revenueEntityMethod" name="_method" value="POST">
 
-                <div class="form-group">
-                    <label for="revenueEntityName">اسم الكيان *</label>
-                    <input type="text" id="revenueEntityName" name="name" required class="form-control">
+                <div>
+                    <label for="revenueEntityName" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="ri-building-2-line ml-1 text-emerald-600"></i>
+                        اسم الكيان <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text"
+                           id="revenueEntityName"
+                           name="name"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                           placeholder="أدخل اسم الكيان">
                 </div>
 
-                <div class="form-group">
-                    <label for="revenueEntityTypeId">نوع الإيراد *</label>
-                    <select id="revenueEntityTypeId" name="revenue_type_id" required class="form-control">
-                        <option value="">-- اختر نوع الإيراد --</option>
-                        @if (isset($revenueTypes))
-                            @foreach ($revenueTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
-                        @endif
+                <div>
+                    <label for="revenueEntityType" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="ri-building-line ml-1 text-emerald-600"></i>
+                        نوع الجهة <span class="text-red-500">*</span>
+                    </label>
+                    <select id="revenueEntityType"
+                            name="type"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        <option value="">-- اختر نوع الجهة --</option>
+                        <option value="government">جهة حكومية</option>
+                        <option value="company">شركة</option>
+                        <option value="client">عميل</option>
+                        <option value="individual">فرد</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="revenueEntityActive" name="is_active" value="1">
-                        <span>نشط</span>
+                <div>
+                    <label for="revenueEntityTypeId" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="ri-price-tag-3-line ml-1 text-emerald-600"></i>
+                        نوع الإيراد <span class="text-red-500">*</span>
                     </label>
+                    <select id="revenueEntityTypeId"
+                            name="revenue_type_id"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        <option value="">-- اختر نوع الإيراد --</option>
+                        @forelse ($revenueTypes ?? [] as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @empty
+                            <option value="" disabled>لا توجد أنواع إيرادات نشطة</option>
+                        @endforelse
+                    </select>
                 </div>
 
-                <div class="form-actions">
-                    <button type="button" onclick="closeRevenueEntityModal()" class="btn btn-secondary">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">حفظ</button>
+                <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                    <input type="checkbox"
+                           id="revenueEntityActive"
+                           checked
+                           onchange="document.getElementById('revenueEntityStatus').value = this.checked ? 'active' : 'inactive'"
+                           class="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                    <label for="revenueEntityActive" class="text-sm font-semibold text-gray-700 cursor-pointer">
+                        <i class="ri-checkbox-circle-line ml-1 text-emerald-600"></i>
+                        الكيان نشط
+                    </label>
+                </div>
+                <input type="hidden" id="revenueEntityStatus" name="status" value="active">
+                <input type="hidden" name="contact_person" value="">
+                <input type="hidden" name="phone" value="">
+                <input type="hidden" name="email" value="">
+                <input type="hidden" name="address" value="">
+                <input type="hidden" name="tax_number" value="">
+                <input type="hidden" name="commercial_record" value="">
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button"
+                            onclick="closeRevenueEntityModal()"
+                            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                            class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-lg">
+                        <i class="ri-save-line ml-1"></i>
+                        حفظ
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+</div>
 
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteRevenueEntityModal" class="modal">
-        <div class="modal-content modal-danger">
-            <div class="modal-header">
-                <h2>تأكيد الحذف</h2>
-                <button onclick="closeDeleteRevenueEntityModal()" class="close-btn">&times;</button>
-            </div>
+<!-- Delete Confirmation Modal -->
+<div id="deleteRevenueEntityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 animate-slide-up">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 rounded-full mb-4">
+                    <i class="ri-delete-bin-line text-red-600 text-3xl"></i>
+                </div>
 
-            <div class="modal-body">
-                <p>هل أنت متأكد من حذف كيان الإيراد <strong id="deleteRevenueEntityName"></strong>؟</p>
-                <p class="warning-text">هذا الإجراء لا يمكن التراجع عنه</p>
-            </div>
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-2">حذف كيان الإيراد</h3>
+                <p class="text-gray-600 text-center mb-6">
+                    هل أنت متأكد من حذف كيان الإيراد
+                    <strong id="deleteRevenueEntityName" class="text-gray-900"></strong>؟
+                    <br>
+                    <span class="text-red-600 font-semibold text-sm">لا يمكن التراجع عن هذا الإجراء</span>
+                </p>
 
-            <div class="form-actions">
-                <button type="button" onclick="closeDeleteRevenueEntityModal()" class="btn btn-secondary">إلغاء</button>
-                <button type="button" onclick="confirmDeleteRevenueEntity()" class="btn btn-danger">حذف</button>
+                <div class="flex gap-3">
+                    <button type="button"
+                            onclick="closeDeleteRevenueEntityModal()"
+                            class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-xl hover:bg-gray-200 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="button"
+                            onclick="confirmDeleteRevenueEntity()"
+                            class="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-700 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg">
+                        <i class="ri-delete-bin-line ml-1"></i>
+                        حذف
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-
-    <style>
-        .settings-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .settings-header {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            position: relative;
-        }
-
-        .back-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #f0f0f0;
-            color: #059669;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            font-size: 20px;
-        }
-
-        .back-button:hover {
-            background: #059669;
-            color: white;
-            transform: translateX(-3px);
-        }
-
-        .header-content h1 {
-            margin: 0;
-            font-size: 28px;
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .header-content .breadcrumb {
-            color: #6b7280;
-            font-size: 14px;
-            margin: 5px 0 0 0;
-        }
-
-        .section-icon {
-            margin-left: auto;
-            font-size: 48px;
-            opacity: 0.2;
-        }
-
-        .statistics-card {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-        }
-
-        .content-section {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .section-header h2 {
-            margin: 0;
-            font-size: 20px;
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .data-table thead tr {
-            background: #f8f9fa;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .data-table th {
-            padding: 15px;
-            text-align: right;
-            font-weight: 600;
-            color: #374151;
-            font-size: 14px;
-        }
-
-        .data-table tbody tr {
-            border-bottom: 1px solid #e5e7eb;
-            transition: background 0.2s ease;
-        }
-
-        .data-table tbody tr:hover {
-            background: #f9fafb;
-        }
-
-        .data-table td {
-            padding: 15px;
-            text-align: right;
-            color: #4b5563;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge-success {
-            background: #d1fae5;
-            color: #059669;
-        }
-
-        .badge-danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: #059669;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #047857;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
-        .btn-info {
-            background: #dbeafe;
-            color: #0284c7;
-        }
-
-        .btn-info:hover {
-            background: #bfdbfe;
-        }
-
-        .btn-danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .btn-danger:hover {
-            background: #fecaca;
-        }
-
-        .btn-sm {
-            padding: 6px 10px;
-            font-size: 12px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            color: #d1d5db;
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            margin: 20px 0 10px 0;
-            color: #374151;
-            font-size: 20px;
-        }
-
-        .empty-state p {
-            color: #6b7280;
-            margin-bottom: 20px;
-        }
-
-        .pagination-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 0;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-danger {
-            border-top: 4px solid #dc2626 !important;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #9ca3af;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .close-btn:hover {
-            color: #374151;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-body p {
-            margin: 10px 0;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-
-        .warning-text {
-            color: #dc2626;
-            font-weight: 500;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
-            font-size: 14px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #059669;
-            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-        }
-
-        select.form-control {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23374151' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 10px center;
-            padding-left: 30px;
-            appearance: none;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #059669;
-        }
-
-        .checkbox-label span {
-            color: #374151;
-            font-weight: 500;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            padding: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .form-actions button {
-            padding: 10px 20px;
-        }
-    </style>
-
-    <script>
-        let currentRevenueEntityId = null;
-
-        function openRevenueEntityModal() {
-            clearRevenueEntityForm();
-            document.getElementById('modalTitle').textContent = 'إضافة كيان إيراد جديد';
-            document.getElementById('revenueEntityMethod').value = 'POST';
-            document.getElementById('revenueEntityForm').action = '{{ route('settings.revenue-entities.store') }}';
-            document.getElementById('revenueEntityModal').style.display = 'block';
-        }
-
-        function closeRevenueEntityModal() {
-            document.getElementById('revenueEntityModal').style.display = 'none';
-            clearRevenueEntityForm();
-        }
-
-        function clearRevenueEntityForm() {
-            document.getElementById('revenueEntityForm').reset();
-            document.getElementById('revenueEntityId').value = '';
-            document.getElementById('revenueEntityActive').checked = false;
-        }
-
-        function editRevenueEntity(id, name, typeId, isActive) {
-            currentRevenueEntityId = id;
-            document.getElementById('modalTitle').textContent = 'تحرير كيان الإيراد';
-            document.getElementById('revenueEntityId').value = id;
-            document.getElementById('revenueEntityName').value = name;
-            if (typeId) {
-                document.getElementById('revenueEntityTypeId').value = typeId;
-            }
-            document.getElementById('revenueEntityActive').checked = isActive;
-            document.getElementById('revenueEntityMethod').value = 'PUT';
-            document.getElementById('revenueEntityForm').action = `/settings/revenue-entities/${id}`;
-            document.getElementById('revenueEntityModal').style.display = 'block';
-        }
-
-        function deleteRevenueEntity(id, name) {
-            currentRevenueEntityId = id;
-            document.getElementById('deleteRevenueEntityName').textContent = name;
-            document.getElementById('deleteRevenueEntityModal').style.display = 'block';
-        }
-
-        function closeDeleteRevenueEntityModal() {
-            document.getElementById('deleteRevenueEntityModal').style.display = 'none';
-        }
-
-        function confirmDeleteRevenueEntity() {
-            if (!currentRevenueEntityId) return;
-
-            fetch(`/settings/revenue-entities/${currentRevenueEntityId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('حدث خطأ أثناء الحذف');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('حدث خطأ في الاتصال');
-                });
-
-            closeDeleteRevenueEntityModal();
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            let modal = document.getElementById('revenueEntityModal');
-            let deleteModal = document.getElementById('deleteRevenueEntityModal');
-
-            if (event.target === modal) {
-                closeRevenueEntityModal();
-            }
-            if (event.target === deleteModal) {
-                closeDeleteRevenueEntityModal();
-            }
-        }
-    </script>
+</div>
+
+<style>
+    @keyframes slide-up {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-up {
+        animation: slide-up 0.3s ease-out;
+    }
+</style>
+
+<script>
+    let currentRevenueEntityId = null;
+
+    function openRevenueEntityModal() {
+        clearRevenueEntityForm();
+        document.getElementById('modalTitle').textContent = 'إضافة كيان إيراد جديد';
+        document.getElementById('revenueEntityMethod').value = 'POST';
+        document.getElementById('revenueEntityForm').action = '{{ route('settings.revenue-entities.store') }}';
+        document.getElementById('revenueEntityModal').classList.remove('hidden');
+    }
+
+    function closeRevenueEntityModal() {
+        document.getElementById('revenueEntityModal').classList.add('hidden');
+        clearRevenueEntityForm();
+    }
+
+    function clearRevenueEntityForm() {
+        document.getElementById('revenueEntityForm').reset();
+        document.getElementById('revenueEntityId').value = '';
+        document.getElementById('revenueEntityType').value = '';
+        document.getElementById('revenueEntityTypeId').value = '';
+        document.getElementById('revenueEntityActive').checked = true;
+        document.getElementById('revenueEntityStatus').value = 'active';
+    }
+
+    function editRevenueEntity(id, name, type, typeId, status) {
+        currentRevenueEntityId = id;
+        document.getElementById('modalTitle').textContent = 'تعديل كيان الإيراد';
+        document.getElementById('revenueEntityId').value = id;
+        document.getElementById('revenueEntityName').value = name;
+        if (type) {
+            document.getElementById('revenueEntityType').value = type;
+        }
+        if (typeId) {
+            document.getElementById('revenueEntityTypeId').value = typeId;
+        }
+        const isActive = status === 'active';
+        document.getElementById('revenueEntityActive').checked = isActive;
+        document.getElementById('revenueEntityStatus').value = status || 'active';
+        document.getElementById('revenueEntityMethod').value = 'PUT';
+        document.getElementById('revenueEntityForm').action = `/settings/revenue-entities/${id}`;
+        document.getElementById('revenueEntityModal').classList.remove('hidden');
+    }
+
+    function deleteRevenueEntity(id, name) {
+        currentRevenueEntityId = id;
+        document.getElementById('deleteRevenueEntityName').textContent = name;
+        document.getElementById('deleteRevenueEntityModal').classList.remove('hidden');
+    }
+
+    function closeDeleteRevenueEntityModal() {
+        document.getElementById('deleteRevenueEntityModal').classList.add('hidden');
+    }
+
+    function confirmDeleteRevenueEntity() {
+        if (!currentRevenueEntityId) return;
+
+        fetch(`/settings/revenue-entities/${currentRevenueEntityId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success || data.message) {
+                    closeDeleteRevenueEntityModal();
+                    location.reload();
+                } else {
+                    alert('حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في الاتصال');
+            });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('revenueEntityModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeRevenueEntityModal();
+    });
+
+    document.getElementById('deleteRevenueEntityModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteRevenueEntityModal();
+    });
+</script>
 @endsection

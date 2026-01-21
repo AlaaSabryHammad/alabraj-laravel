@@ -160,460 +160,131 @@
     </div>
 
     <!-- Add/Edit Modal -->
-    <div id="revenueTypeModal" class="modal">
-        <div class="modal-content" style="border-top: 4px solid #059669;">
-            <div class="modal-header">
-                <h2 id="modalTitle">إضافة نوع إيراد جديد</h2>
-                <button onclick="closeRevenueTypeModal()" class="close-btn">&times;</button>
+    <div id="revenueTypeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 animate-slide-up pointer-events-auto">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                    <h2 id="modalTitle" class="text-2xl font-bold text-gray-900">إضافة نوع إيراد جديد</h2>
+                    <button onclick="closeRevenueTypeModal()"
+                            class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <form id="revenueTypeForm" method="POST"
+                    action="{{ isset($editingId) && $editingId ? route('settings.revenue-types.update', $editingId) : route('settings.revenue-types.store') }}"
+                    class="p-6 space-y-6">
+                    @csrf
+                    <input type="hidden" id="revenueTypeId" name="id" value="">
+                    <input type="hidden" id="revenueTypeMethod" name="_method" value="POST">
+
+                    <div>
+                        <label for="revenueTypeName" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="ri-text ml-1 text-emerald-600"></i>
+                            اسم نوع الإيراد <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text"
+                               id="revenueTypeName"
+                               name="name"
+                               required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                               placeholder="أدخل اسم نوع الإيراد">
+                    </div>
+
+                    <div>
+                        <label for="revenueTypeDescription" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="ri-file-text-line ml-1 text-emerald-600"></i>
+                            الوصف
+                        </label>
+                        <textarea id="revenueTypeDescription"
+                                  name="description"
+                                  rows="3"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+                                  placeholder="وصف مختصر لنوع الإيراد"></textarea>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                        <input type="checkbox"
+                               id="revenueTypeActive"
+                               name="is_active"
+                               value="1"
+                               class="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                        <label for="revenueTypeActive" class="text-sm font-semibold text-gray-700 cursor-pointer">
+                            <i class="ri-checkbox-circle-line ml-1 text-emerald-600"></i>
+                            نوع الإيراد نشط
+                        </label>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                        <button type="button"
+                                onclick="closeRevenueTypeModal()"
+                                class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                            إلغاء
+                        </button>
+                        <button type="submit"
+                                class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-lg">
+                            <i class="ri-save-line ml-1"></i>
+                            حفظ
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <form id="revenueTypeForm" method="POST"
-                action="{{ isset($editingId) && $editingId ? route('settings.revenue-types.update', $editingId) : route('settings.revenue-types.store') }}">
-                @csrf
-                <input type="hidden" id="revenueTypeId" name="id" value="">
-                <input type="hidden" id="revenueTypeMethod" name="_method" value="POST">
-
-                <div class="form-group">
-                    <label for="revenueTypeName">اسم نوع الإيراد *</label>
-                    <input type="text" id="revenueTypeName" name="name" required class="form-control">
-                </div>
-
-                <div class="form-group">
-                    <label for="revenueTypeDescription">الوصف</label>
-                    <textarea id="revenueTypeDescription" name="description" rows="3" class="form-control"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="revenueTypeActive" name="is_active" value="1">
-                        <span>نشط</span>
-                    </label>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" onclick="closeRevenueTypeModal()" class="btn btn-secondary">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">حفظ</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="deleteRevenueTypeModal" class="modal">
-        <div class="modal-content modal-danger">
-            <div class="modal-header">
-                <h2>تأكيد الحذف</h2>
-                <button onclick="closeDeleteRevenueTypeModal()" class="close-btn">&times;</button>
-            </div>
+    <div id="deleteRevenueTypeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 animate-slide-up pointer-events-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 rounded-full mb-4">
+                        <i class="ri-delete-bin-line text-red-600 text-3xl"></i>
+                    </div>
 
-            <div class="modal-body">
-                <p>هل أنت متأكد من حذف نوع الإيراد <strong id="deleteRevenueTypeName"></strong>؟</p>
-                <p class="warning-text">هذا الإجراء لا يمكن التراجع عنه</p>
-            </div>
+                    <h3 class="text-xl font-bold text-gray-900 text-center mb-2">حذف نوع الإيراد</h3>
+                    <p class="text-gray-600 text-center mb-6">
+                        هل أنت متأكد من حذف نوع الإيراد
+                        <strong id="deleteRevenueTypeName" class="text-gray-900"></strong>؟
+                        <br>
+                        <span class="text-red-600 font-semibold text-sm">لا يمكن التراجع عن هذا الإجراء</span>
+                    </p>
 
-            <div class="form-actions">
-                <button type="button" onclick="closeDeleteRevenueTypeModal()" class="btn btn-secondary">إلغاء</button>
-                <button type="button" onclick="confirmDeleteRevenueType()" class="btn btn-danger">حذف</button>
+                    <div class="flex gap-3">
+                        <button type="button"
+                                onclick="closeDeleteRevenueTypeModal()"
+                                class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-xl hover:bg-gray-200 transition-colors">
+                            إلغاء
+                        </button>
+                        <button type="button"
+                                onclick="confirmDeleteRevenueType()"
+                                class="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-700 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg">
+                            <i class="ri-delete-bin-line ml-1"></i>
+                            حذف
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <style>
-        .settings-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .settings-header {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            position: relative;
-        }
-
-        .back-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #f0f0f0;
-            color: #059669;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            font-size: 20px;
-        }
-
-        .back-button:hover {
-            background: #059669;
-            color: white;
-            transform: translateX(-3px);
-        }
-
-        .header-content h1 {
-            margin: 0;
-            font-size: 28px;
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .header-content .breadcrumb {
-            color: #6b7280;
-            font-size: 14px;
-            margin: 5px 0 0 0;
-        }
-
-        .section-icon {
-            margin-left: auto;
-            font-size: 48px;
-            opacity: 0.2;
-        }
-
-        .statistics-card {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-        }
-
-        .content-section {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .section-header h2 {
-            margin: 0;
-            font-size: 20px;
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .data-table thead tr {
-            background: #f8f9fa;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .data-table th {
-            padding: 15px;
-            text-align: right;
-            font-weight: 600;
-            color: #374151;
-            font-size: 14px;
-        }
-
-        .data-table tbody tr {
-            border-bottom: 1px solid #e5e7eb;
-            transition: background 0.2s ease;
-        }
-
-        .data-table tbody tr:hover {
-            background: #f9fafb;
-        }
-
-        .data-table td {
-            padding: 15px;
-            text-align: right;
-            color: #4b5563;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge-success {
-            background: #d1fae5;
-            color: #059669;
-        }
-
-        .badge-danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: #059669;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #047857;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
-        .btn-info {
-            background: #dbeafe;
-            color: #0284c7;
-        }
-
-        .btn-info:hover {
-            background: #bfdbfe;
-        }
-
-        .btn-danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .btn-danger:hover {
-            background: #fecaca;
-        }
-
-        .btn-sm {
-            padding: 6px 10px;
-            font-size: 12px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            color: #d1d5db;
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            margin: 20px 0 10px 0;
-            color: #374151;
-            font-size: 20px;
-        }
-
-        .empty-state p {
-            color: #6b7280;
-            margin-bottom: 20px;
-        }
-
-        .pagination-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
+        @keyframes slide-up {
             from {
+                transform: translateY(20px);
                 opacity: 0;
             }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 0;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-
             to {
                 transform: translateY(0);
                 opacity: 1;
             }
         }
 
-        .modal-danger {
-            border-top: 4px solid #dc2626 !important;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #9ca3af;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .close-btn:hover {
-            color: #374151;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-body p {
-            margin: 10px 0;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-
-        .warning-text {
-            color: #dc2626;
-            font-weight: 500;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
-            font-size: 14px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #059669;
-            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #059669;
-        }
-
-        .checkbox-label span {
-            color: #374151;
-            font-weight: 500;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            padding: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .form-actions button {
-            padding: 10px 20px;
+        .animate-slide-up {
+            animation: slide-up 0.3s ease-out;
         }
     </style>
+
 
     <script>
         let currentRevenueTypeId = null;
@@ -623,11 +294,11 @@
             document.getElementById('modalTitle').textContent = 'إضافة نوع إيراد جديد';
             document.getElementById('revenueTypeMethod').value = 'POST';
             document.getElementById('revenueTypeForm').action = '{{ route('settings.revenue-types.store') }}';
-            document.getElementById('revenueTypeModal').style.display = 'block';
+            document.getElementById('revenueTypeModal').classList.remove('hidden');
         }
 
         function closeRevenueTypeModal() {
-            document.getElementById('revenueTypeModal').style.display = 'none';
+            document.getElementById('revenueTypeModal').classList.add('hidden');
             clearRevenueTypeForm();
         }
 
@@ -639,24 +310,24 @@
 
         function editRevenueType(id, name, description, isActive) {
             currentRevenueTypeId = id;
-            document.getElementById('modalTitle').textContent = 'تحرير نوع الإيراد';
+            document.getElementById('modalTitle').textContent = 'تعديل نوع الإيراد';
             document.getElementById('revenueTypeId').value = id;
             document.getElementById('revenueTypeName').value = name;
             document.getElementById('revenueTypeDescription').value = description;
             document.getElementById('revenueTypeActive').checked = isActive;
             document.getElementById('revenueTypeMethod').value = 'PUT';
             document.getElementById('revenueTypeForm').action = `/settings/revenue-types/${id}`;
-            document.getElementById('revenueTypeModal').style.display = 'block';
+            document.getElementById('revenueTypeModal').classList.remove('hidden');
         }
 
         function deleteRevenueType(id, name) {
             currentRevenueTypeId = id;
             document.getElementById('deleteRevenueTypeName').textContent = name;
-            document.getElementById('deleteRevenueTypeModal').style.display = 'block';
+            document.getElementById('deleteRevenueTypeModal').classList.remove('hidden');
         }
 
         function closeDeleteRevenueTypeModal() {
-            document.getElementById('deleteRevenueTypeModal').style.display = 'none';
+            document.getElementById('deleteRevenueTypeModal').classList.add('hidden');
         }
 
         function confirmDeleteRevenueType() {
@@ -684,17 +355,59 @@
             closeDeleteRevenueTypeModal();
         }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            let modal = document.getElementById('revenueTypeModal');
-            let deleteModal = document.getElementById('deleteRevenueTypeModal');
+        // Handle form submission via AJAX
+        document.getElementById('revenueTypeForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-            if (event.target === modal) {
-                closeRevenueTypeModal();
+            const formData = new FormData(this);
+            const url = this.action;
+            const method = document.getElementById('revenueTypeMethod').value;
+
+            // Convert FormData to JSON
+            const data = {};
+            formData.forEach((value, key) => {
+                if (key !== '_method' && key !== 'id') {
+                    data[key] = value;
+                }
+            });
+
+            // Add _method for PUT requests
+            if (method === 'PUT') {
+                data._method = 'PUT';
             }
-            if (event.target === deleteModal) {
-                closeDeleteRevenueTypeModal();
-            }
-        }
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeRevenueTypeModal();
+                    location.reload();
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء الحفظ');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في الاتصال');
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('revenueTypeModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeRevenueTypeModal();
+        });
+
+        document.getElementById('deleteRevenueTypeModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteRevenueTypeModal();
+        });
     </script>
 @endsection

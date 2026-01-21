@@ -31,21 +31,39 @@
                     @enderror
                 </div>
 
-                <div>
-                    <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
-                        نوع الجهة <span class="text-red-500">*</span>
-                    </label>
-                    <select name="type" id="type" required
-                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="">اختر نوع الجهة</option>
-                        <option value="government">جهة حكومية</option>
-                        <option value="company">شركة</option>
-                        <option value="client">عميل</option>
-                        <option value="individual">فرد</option>
-                    </select>
-                    @error('type')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
+                            نوع الجهة <span class="text-red-500">*</span>
+                        </label>
+                        <select name="type" id="type" required
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">اختر نوع الجهة</option>
+                            <option value="government">جهة حكومية</option>
+                            <option value="company">شركة</option>
+                            <option value="client">عميل</option>
+                            <option value="individual">فرد</option>
+                        </select>
+                        @error('type')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="revenue_type_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            نوع الإيراد <span class="text-red-500">*</span>
+                        </label>
+                        <select name="revenue_type_id" id="revenue_type_id" required
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                            <option value="">-- اختر نوع الإيراد --</option>
+                            @foreach($revenueTypes as $revenueType)
+                                <option value="{{ $revenueType->id }}">{{ $revenueType->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('revenue_type_id')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <div>

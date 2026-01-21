@@ -25,19 +25,24 @@ class ExpenseCategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:expense_categories,name',
-            'code' => 'required|string|max:50|unique:expense_categories,code',
             'description' => 'nullable|string|max:1000',
-            'is_active' => 'boolean'
+            'is_active' => 'nullable|boolean'
         ], [
             'name.required' => 'اسم فئة المصروف مطلوب',
-            'name.unique' => 'اسم فئة المصروف موجود بالفعل',
-            'code.required' => 'كود فئة المصروف مطلوب',
-            'code.unique' => 'كود فئة المصروف موجود بالفعل'
+            'name.unique' => 'اسم فئة المصروف موجود بالفعل'
         ]);
 
-        ExpenseCategory::create($request->all());
+        // Auto-generate code from name if not provided
+        if (!isset($validated['code']) || empty($validated['code'])) {
+            $validated['code'] = \Illuminate\Support\Str::slug($validated['name'], '_');
+        }
+
+        // Set is_active to true if checked, false otherwise
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+
+        ExpenseCategory::create($validated);
 
         return response()->json(['success' => true, 'message' => 'تم إضافة فئة المصروف بنجاح']);
     }
@@ -47,19 +52,24 @@ class ExpenseCategoryController extends Controller
      */
     public function update(Request $request, ExpenseCategory $expenseCategory)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('expense_categories', 'name')->ignore($expenseCategory->id)],
-            'code' => ['required', 'string', 'max:50', Rule::unique('expense_categories', 'code')->ignore($expenseCategory->id)],
             'description' => 'nullable|string|max:1000',
-            'is_active' => 'boolean'
+            'is_active' => 'nullable|boolean'
         ], [
             'name.required' => 'اسم فئة المصروف مطلوب',
-            'name.unique' => 'اسم فئة المصروف موجود بالفعل',
-            'code.required' => 'كود فئة المصروف مطلوب',
-            'code.unique' => 'كود فئة المصروف موجود بالفعل'
+            'name.unique' => 'اسم فئة المصروف موجود بالفعل'
         ]);
 
-        $expenseCategory->update($request->all());
+        // Auto-generate code from name if not provided
+        if (!isset($validated['code']) || empty($validated['code'])) {
+            $validated['code'] = \Illuminate\Support\Str::slug($validated['name'], '_');
+        }
+
+        // Set is_active to true if checked, false otherwise
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+
+        $expenseCategory->update($validated);
 
         return response()->json(['success' => true, 'message' => 'تم تحديث فئة المصروف بنجاح']);
     }

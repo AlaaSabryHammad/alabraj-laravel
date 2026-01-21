@@ -81,7 +81,7 @@
                         <input type="text"
                                id="tags"
                                name="tags"
-                               value="{{ old('tags', $document->tags) }}"
+                               value="{{ old('tags', is_array($document->tags) ? implode(', ', $document->tags) : $document->tags) }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent @error('tags') border-red-500 @enderror"
                                placeholder="مشروع الرياض، مالية، عاجل (افصل بفاصلة)">
                         @error('tags')

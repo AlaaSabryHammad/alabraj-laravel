@@ -127,12 +127,11 @@
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex items-center justify-center space-x-2 space-x-reverse">
-                                            <button
-                                                onclick="editMaterial({{ $material->id }}, '{{ $material->name }}', '{{ $material->unit }}')"
+                                            <a href="{{ route('settings.materials.edit', $material) }}"
                                                 class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                 title="تعديل">
                                                 <i class="ri-edit-line"></i>
-                                            </button>
+                                            </a>
                                             <button
                                                 onclick="deleteMaterial({{ $material->id }}, '{{ $material->name }}', '{{ $material->unit }}')"
                                                 class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

@@ -162,23 +162,28 @@ class MaterialController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255|unique:materials,name,' . $material->id,
-                'unit' => 'required|string|max:255',
+                'unit_of_measure' => 'required|string|max:255',
+                'category' => 'required|string|max:255',
+                'status' => 'required|in:active,inactive,out_of_stock,discontinued',
             ]);
 
             // Create material unit first if it doesn't exist
             $materialUnit = \App\Models\MaterialUnit::firstOrCreate(
-                ['name' => $validated['unit']],
+                ['name' => $validated['unit_of_measure']],
                 [
-                    'name' => $validated['unit'],
-                    'symbol' => $validated['unit'],
+                    'name' => $validated['unit_of_measure'],
+                    'symbol' => $validated['unit_of_measure'],
                     'type' => 'weight',
                     'is_active' => true
                 ]
             );
 
+            // Update only the 4 essential fields
             $material->update([
                 'name' => $validated['name'],
-                'material_unit_id' => $materialUnit->id
+                'material_unit_id' => $materialUnit->id,
+                'category' => $validated['category'],
+                'status' => $validated['status'],
             ]);
 
             if ($request->wantsJson()) {

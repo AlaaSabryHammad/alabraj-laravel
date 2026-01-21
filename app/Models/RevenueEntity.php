@@ -13,6 +13,7 @@ class RevenueEntity extends Model
     protected $fillable = [
         'name',
         'type',
+        'revenue_type_id',
         'contact_person',
         'phone',
         'email',
@@ -26,6 +27,11 @@ class RevenueEntity extends Model
     public function revenueVouchers(): HasMany
     {
         return $this->hasMany(RevenueVoucher::class);
+    }
+
+    public function revenueType()
+    {
+        return $this->belongsTo(RevenueType::class);
     }
 
     // نص نوع الجهة

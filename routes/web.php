@@ -519,7 +519,8 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/revenue-entities/content', [App\Http\Controllers\RevenueEntityController::class, 'getContent'])->name('settings.revenue-entities.content');
         Route::get('/revenue-entities/show', function () {
             $entities = \App\Models\RevenueEntity::paginate(15);
-            return view('settings.show.revenue-entities', compact('entities'));
+            $revenueTypes = \App\Models\RevenueType::where('is_active', true)->orderBy('name')->get();
+            return view('settings.show.revenue-entities', compact('entities', 'revenueTypes'));
         })->name('settings.revenue-entities.show');
         Route::get('/revenue-entities/create', [App\Http\Controllers\RevenueEntityController::class, 'create'])->name('settings.revenue-entities.create');
         Route::post('/revenue-entities', [App\Http\Controllers\RevenueEntityController::class, 'store'])->name('settings.revenue-entities.store');

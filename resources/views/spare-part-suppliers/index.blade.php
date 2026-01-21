@@ -15,11 +15,11 @@
                 <span class="text-blue-600 font-medium">موردو قطع الغيار</span>
             </div>
             <div class="flex items-center space-x-reverse space-x-4">
-                <button onclick="history.back()"
-                    class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
+                <a href="{{ route('settings.index') }}"
+                    class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
                     <i class="ri-arrow-right-line ml-2"></i>
                     العودة
-                </button>
+                </a>
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900">موردو قطع الغيار</h1>
             </div>
             <p class="text-gray-600 mt-2">إدارة موردي قطع الغيار والقطع المصنعة</p>
@@ -130,13 +130,9 @@
                                 <a href="{{ route('spare-part-suppliers.edit', $supplier) }}" class="text-yellow-600 hover:text-yellow-900 transition-colors" title="تعديل">
                                     <i class="ri-edit-line text-lg"></i>
                                 </a>
-                                <form method="POST" action="{{ route('spare-part-suppliers.destroy', $supplier) }}" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المورد؟')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900 transition-colors" title="حذف">
-                                        <i class="ri-delete-bin-line text-lg"></i>
-                                    </button>
-                                </form>
+                                <button onclick="deleteSupplier({{ $supplier->id }}, '{{ $supplier->name }}')" class="text-red-600 hover:text-red-900 transition-colors" title="حذف">
+                                    <i class="ri-delete-bin-line text-lg"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -159,4 +155,103 @@
         {{ $suppliers->links() }}
     </div>
 </div>
+
+<!-- Delete Supplier Modal -->
+<div id="delete-supplier-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                    <i class="ri-delete-bin-line text-red-600 text-xl"></i>
+                </div>
+
+                <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">حذف المورد</h3>
+                <p class="text-gray-600 text-center mb-6">هل أنت متأكد من حذف هذا المورد؟ لا يمكن التراجع عن هذا الإجراء.</p>
+
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center">
+                            <i class="ri-truck-line text-cyan-600"></i>
+                        </div>
+                        <div class="mr-3">
+                            <div class="text-sm font-medium text-gray-900" id="delete-supplier-name">اسم المورد</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeDeleteSupplierModal()"
+                        class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-xl hover:bg-gray-200 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="button" onclick="confirmDeleteSupplier()" id="confirm-delete-btn"
+                        class="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-700 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200">
+                        حذف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteSupplier(id, name = '') {
+        window.supplierToDelete = { id, name };
+        document.getElementById('delete-supplier-name').textContent = name || 'مورد غير محدد';
+        document.getElementById('delete-supplier-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteSupplierModal() {
+        document.getElementById('delete-supplier-modal').classList.add('hidden');
+        window.supplierToDelete = null;
+    }
+
+    function confirmDeleteSupplier() {
+        if (!window.supplierToDelete) return;
+
+        const id = window.supplierToDelete.id;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+
+        if (!csrfToken) {
+            alert('لم يتم العثور على رمز CSRF');
+            return;
+        }
+
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+        const originalText = confirmBtn.textContent;
+        confirmBtn.textContent = 'جاري الحذف...';
+        confirmBtn.disabled = true;
+
+        fetch(`/spare-part-suppliers/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeDeleteSupplierModal();
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ في الاتصال');
+        })
+        .finally(() => {
+            confirmBtn.textContent = originalText;
+            confirmBtn.disabled = false;
+        });
+    }
+
+    // Handle modal close on background click
+    document.getElementById('delete-supplier-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteSupplierModal();
+    });
+</script>
 @endsection

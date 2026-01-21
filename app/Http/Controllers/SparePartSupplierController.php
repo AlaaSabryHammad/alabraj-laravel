@@ -159,14 +159,21 @@ class SparePartSupplierController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SparePartSupplier $sparePartSupplier)
+    public function destroy(Request $request, SparePartSupplier $sparePartSupplier)
     {
         // Check if supplier has spare parts
         if ($sparePartSupplier->spareParts()->exists()) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'لا يمكن حذف مورد لديه قطع غيار مرتبطة به'], 400);
+            }
             return back()->with('error', 'لا يمكن حذف مورد لديه قطع غيار مرتبطة به');
         }
 
         $sparePartSupplier->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'تم حذف المورد بنجاح']);
+        }
 
         return redirect()->route('spare-part-suppliers.index')
             ->with('success', 'تم حذف المورد بنجاح');
