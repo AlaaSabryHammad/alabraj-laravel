@@ -20,7 +20,11 @@
       "Bash(else echo \"Log file not found\")",
       "Bash(fi)",
       "Bash(curl:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(git rm:*)",
+      "Bash(ls \"c:\\\\xampp\\\\htdocs\\\\abraj-latest\\\\_dev_scripts\"\" 2>/dev/null || echo \"NOT_FOUND \")",
+      "Bash(ls:*)",
+      "Bash(git mv add_board_chairman_role.php add_demo_images.php add_manager_filter.php add_project_manager_filter.php add_project_permissions.php analyze_data.php assign_general_manager.php assign_role.php backup_current_system.php check_admin_accounts.php check_advanced_permissions.php check_current_roles.php check_db_direct.php check_distributions.php check_documents_permissions.php check_emad_data.php check_employee_2.php check_employee_columns.php check_employee_equipment.php check_employee_structure.php check_engineer_projects.php check_engineers.php check_equipment_structure.php check_existing_roles.php check_final_data.php check_fuel_types.php check_hierarchy_system.php check_images.php check_khaled_data.php check_khaled_user_role.php check_location_types.php check_migrations.php check_missing_columns.php check_mohammad_status.php check_project_permissions.php check_projects.php check_projects_permissions.php check_role_display.php check_roles_data.php check_status_values.php check_table_structure.php check_user_data.php check_user_roles.php check_user_roles_detailed.php check_user_roles_issue.php check_user_structure.php check_users.php check_users_table.php check_worker_role_issue.php cleanup_database.php _dev_scripts/)"
     ],
     "deny": [],
     "ask": [],
