@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             // إنشاء أنواع المعدات
             EquipmentTypeSeeder::class,
 
-            // إنشاء المستخدم الوحيد محمد الشهراني
+            // إنشاء حساب المدير (alaa.handaza@gmail.com)
             MinimalUserSeeder::class,
 
             // تعطيل: إنشاء المعدات

@@ -11,21 +11,28 @@ class MinimalUserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * إنشاء حساب المدير الوحيد - alaa.handaza@gmail.com
      */
     public function run(): void
     {
-        // إنشاء المستخدم الوحيد محمد الشهراني
         $generalManagerRole = Role::where('name', 'general_manager')->first();
 
-        User::create([
-            'name' => 'Alaa Sabry Hammad',
-            'email' => 'alaa.handaza@gmail.com',
-            'phone' => '0501234567',
-            'password' => Hash::make('123456789'),
-            'email_verified_at' => now(),
-            'role' => 'admin',
-            'department' => 'الإدارة العامة',
-            'role_id' => $generalManagerRole ? $generalManagerRole->id : null,
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'alaa.handaza@gmail.com'],
+            [
+                'name' => 'Alaa Sabry Hammad',
+                'phone' => '0501234567',
+                'password' => Hash::make('123456789'),
+                'email_verified_at' => now(),
+                'role' => 'admin',
+                'department' => 'الإدارة العامة',
+                'role_id' => $generalManagerRole?->id,
+            ]
+        );
+
+        // ربط دور المدير العام في جدول user_roles (many-to-many)
+        if ($generalManagerRole && !$admin->hasRole('general_manager')) {
+            $admin->roles()->attach($generalManagerRole->id);
+        }
     }
 }
