@@ -420,10 +420,6 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::get('/{project}/extract/create', [ProjectController::class, 'createExtract'])->name('projects.extract.create');
         Route::post('/projects/{project}/items', [ProjectController::class, 'storeItems'])->name('projects.items.store');
 
-        // Test route for image upload
-        Route::get('/test-upload', function () {
-            return view('test-upload');
-        })->name('test.upload');
         Route::post('/{project}/extract/store', [ProjectController::class, 'storeExtract'])->name('projects.extract.store');
         Route::get('/{project}/extract/{extract}', [ProjectController::class, 'showExtract'])->name('projects.extract.show');
         Route::get('/{project}/extract/{extract}/edit', [ProjectController::class, 'editExtract'])->name('projects.extract.edit');
@@ -608,24 +604,4 @@ Route::middleware(['auth', 'check.password.changed'])->group(function () {
         Route::put('/equipment/{equipment}', [FuelTruckController::class, 'update'])->name('update');
     });
 
-    // Test Route for Spare Part Creation
-    Route::get('/test-spare-part-form', function () {
-        return view('test-spare-part-form');
-    })->name('test-spare-part-form');
-
-    // Test Route for Image Upload
-    Route::get('/test-image-upload', function () {
-        return view('test-image-upload');
-    })->name('test-image-upload');
-
-    // Simple Upload Test Route
-    Route::get('/simple-upload-test', function () {
-        $projects = \App\Models\Project::select('id', 'name')->take(5)->get();
-        return view('simple-upload-test', compact('projects'));
-    })->name('simple-upload-test');
-
-    // Test Image Viewer Route
-    Route::get('/test-image-viewer', function () {
-        return view('test-image-viewer');
-    })->name('test-image-viewer');
 }); // End of auth middleware group

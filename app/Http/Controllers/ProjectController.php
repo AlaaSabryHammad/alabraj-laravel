@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Project;
 use App\Models\ProjectExtract;
@@ -14,6 +15,7 @@ use App\Models\ProjectRentalEquipment;
 use App\Models\ProjectLoan;
 use App\Models\ProjectDeliveryRequest;
 use Carbon\Carbon;
+use App\Http\Requests\StoreProjectRequest;
 
 class ProjectController extends Controller
 {
@@ -92,40 +94,9 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'project_number' => 'nullable|string|max:255|unique:projects',
-            'budget' => 'required|numeric|min:0',
-            'bank_guarantee_amount' => 'nullable|numeric|min:0',
-            'bank_guarantee_type' => 'nullable|in:cash,facilities',
-            'government_entity' => 'nullable|string|max:255',
-            'consulting_office' => 'nullable|string|max:255',
-            'project_scope' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'project_manager_id' => 'required|exists:employees,id',
-            'files.*.name' => 'nullable|string|max:255',
-            'files.*.file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
-            'files.*.description' => 'nullable|string|max:500',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-            'requests.*.number' => 'nullable|string|max:255',
-            'requests.*.description' => 'nullable|string|max:500',
-            'requests.*.file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
-            // Project items validation
-            'items.*.name' => 'nullable|string|max:255',
-            'items.*.quantity' => 'nullable|numeric|min:0',
-            'items.*.unit' => 'nullable|string|max:50',
-            'items.*.unit_price' => 'nullable|numeric|min:0',
-            'items.*.total_price' => 'nullable|numeric|min:0',
-            'items.*.total_with_tax' => 'nullable|numeric|min:0',
-            'subtotal' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'final_total' => 'nullable|numeric|min:0',
-            'tax_rate' => 'nullable|numeric|min:0|max:100',
-        ]);
+        $validated = $request->validated();
 
         // Get employee name for project_manager field (backward compatibility)
         $employee = \App\Models\Employee::find($validated['project_manager_id']);
@@ -134,83 +105,87 @@ class ProjectController extends Controller
         $validated['location'] = $request->project_scope ?? 'غير محدد';
         $validated['status'] = 'planning';
 
-        $project = Project::create($validated);
+        $project = DB::transaction(function () use ($validated, $request) {
+            $project = Project::create($validated);
 
-        // Handle file uploads
-        if ($request->has('files')) {
-            foreach ($request->files as $fileData) {
-                if (isset($fileData['file']) && $fileData['file']->isValid()) {
-                    $file = $fileData['file'];
-                    $fileName = time() . '_' . $file->getClientOriginalName();
-                    $filePath = $file->storeAs('project_files', $fileName, 'public');
-
-                    $project->projectFiles()->create([
-                        'name' => $fileData['name'] ?? $file->getClientOriginalName(),
-                        'file_path' => $filePath,
-                        'description' => $fileData['description'] ?? null,
-                        'file_size' => $file->getSize(),
-                        'file_type' => $file->getClientMimeType(),
-                    ]);
-                }
-            }
-        }
-
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                if ($image->isValid()) {
-                    $imageName = time() . '_' . $image->getClientOriginalName();
-                    $imagePath = $image->storeAs('project_images', $imageName, 'public');
-
-                    $project->projectImages()->create([
-                        'image_path' => $imagePath,
-                        'alt_text' => $project->name . ' - صورة'
-                    ]);
-                }
-            }
-        }
-
-        // Handle delivery requests
-        if ($request->has('requests')) {
-            foreach ($request->requests as $requestData) {
-                if (!empty($requestData['number']) || !empty($requestData['description'])) {
-                    $deliveryRequest = [
-                        'request_number' => $requestData['number'] ?? '',
-                        'description' => $requestData['description'] ?? '',
-                    ];
-
-                    if (isset($requestData['file']) && $requestData['file']->isValid()) {
-                        $file = $requestData['file'];
+            // Handle file uploads
+            if ($request->has('files')) {
+                foreach ($request->files as $fileData) {
+                    if (isset($fileData['file']) && $fileData['file']->isValid()) {
+                        $file = $fileData['file'];
                         $fileName = time() . '_' . $file->getClientOriginalName();
-                        $filePath = $file->storeAs('project_requests', $fileName, 'public');
-                        $deliveryRequest['file_path'] = $filePath;
+                        $filePath = $file->storeAs('project_files', $fileName, 'public');
+
+                        $project->projectFiles()->create([
+                            'name' => $fileData['name'] ?? $file->getClientOriginalName(),
+                            'file_path' => $filePath,
+                            'description' => $fileData['description'] ?? null,
+                            'file_size' => $file->getSize(),
+                            'file_type' => $file->getClientMimeType(),
+                        ]);
                     }
-
-                    $project->deliveryRequests()->create($deliveryRequest);
                 }
             }
-        }
 
-        // Handle project items
-        if ($request->has('items')) {
-            foreach ($request->items as $itemData) {
-                if (!empty($itemData['name']) && !empty($itemData['quantity']) && !empty($itemData['unit_price'])) {
-                    $project->projectItems()->create([
-                        'name' => $itemData['name'],
-                        'quantity' => $itemData['quantity'],
-                        'unit' => $itemData['unit'] ?? '',
-                        'unit_price' => $itemData['unit_price'],
-                        'total_price' => $itemData['total_price'] ?? ($itemData['quantity'] * $itemData['unit_price']),
-                        'total_with_tax' => $itemData['total_with_tax'] ?? 0,
-                    ]);
+            // Handle image uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    if ($image->isValid()) {
+                        $imageName = time() . '_' . $image->getClientOriginalName();
+                        $imagePath = $image->storeAs('project_images', $imageName, 'public');
+
+                        $project->projectImages()->create([
+                            'image_path' => $imagePath,
+                            'alt_text' => $project->name . ' - صورة'
+                        ]);
+                    }
                 }
             }
-        }
 
-        // Update project budget with final total if items exist
-        if ($request->filled('final_total') && $request->final_total > 0) {
-            $project->update(['budget' => $request->final_total]);
-        }
+            // Handle delivery requests
+            if ($request->has('requests')) {
+                foreach ($request->requests as $requestData) {
+                    if (!empty($requestData['number']) || !empty($requestData['description'])) {
+                        $deliveryRequest = [
+                            'request_number' => $requestData['number'] ?? '',
+                            'description' => $requestData['description'] ?? '',
+                        ];
+
+                        if (isset($requestData['file']) && $requestData['file']->isValid()) {
+                            $file = $requestData['file'];
+                            $fileName = time() . '_' . $file->getClientOriginalName();
+                            $filePath = $file->storeAs('project_requests', $fileName, 'public');
+                            $deliveryRequest['file_path'] = $filePath;
+                        }
+
+                        $project->deliveryRequests()->create($deliveryRequest);
+                    }
+                }
+            }
+
+            // Handle project items
+            if ($request->has('items')) {
+                foreach ($request->items as $itemData) {
+                    if (!empty($itemData['name']) && !empty($itemData['quantity']) && !empty($itemData['unit_price'])) {
+                        $project->projectItems()->create([
+                            'name' => $itemData['name'],
+                            'quantity' => $itemData['quantity'],
+                            'unit' => $itemData['unit'] ?? '',
+                            'unit_price' => $itemData['unit_price'],
+                            'total_price' => $itemData['total_price'] ?? ($itemData['quantity'] * $itemData['unit_price']),
+                            'total_with_tax' => $itemData['total_with_tax'] ?? 0,
+                        ]);
+                    }
+                }
+            }
+
+            // Update project budget with final total if items exist
+            if ($request->filled('final_total') && $request->final_total > 0) {
+                $project->update(['budget' => $request->final_total]);
+            }
+
+            return $project;
+        });
 
         return redirect()->route('projects.index')
             ->with('success', 'تم إضافة المشروع بنجاح مع جميع الملفات والصور والبنود');

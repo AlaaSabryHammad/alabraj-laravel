@@ -48,15 +48,21 @@ class SparePart extends Model
         return $this->hasMany(WarehouseInventory::class);
     }
 
-    // الحصول على إجمالي المخزون في جميع المستودعات
+    // الحصول على إجمالي المخزون في جميع المستودعات (cached to prevent N+1)
     public function getTotalStockAttribute()
     {
+        if ($this->relationLoaded('inventories')) {
+            return $this->inventories->sum('current_stock');
+        }
         return $this->inventories()->sum('current_stock');
     }
 
-    // الحصول على إجمالي القيمة
+    // الحصول على إجمالي القيمة (cached to prevent N+1)
     public function getTotalValueAttribute()
     {
+        if ($this->relationLoaded('inventories')) {
+            return $this->inventories->sum('total_value');
+        }
         return $this->inventories()->sum('total_value');
     }
 

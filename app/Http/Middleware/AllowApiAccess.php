@@ -8,13 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AllowApiAccess
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
+        if (!$request->user() && !$request->bearerToken()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         return $next($request);
     }
 }

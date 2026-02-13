@@ -20,12 +20,15 @@ use App\Http\Controllers\FuelManagementController;
 |
 */
 
-// Public routes (no authentication required)
-Route::post('login', [AuthController::class, 'login']);
-Route::get('fuel-truck/{fuelTruck}/distributions', [FuelManagementController::class, 'showDistributions']);
+// Public routes with rate limiting
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+});
 
-// Protected routes (authentication required)
-Route::middleware('auth:sanctum')->group(function () {
+// Protected routes (authentication required with rate limiting)
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+    // Fuel distribution routes (moved from public to protected)
+    Route::get('fuel-truck/{fuelTruck}/distributions', [FuelManagementController::class, 'showDistributions']);
     // Fuel consumption routes
     Route::get('driver/fuel-consumption', [FuelManagementController::class, 'getDriverFuelConsumption']);
     // Auth routes
@@ -75,7 +78,3 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('equipment/{equipment}/status', [EquipmentController::class, 'updateStatus']);
 });
 
-// Default user route for authenticated users
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});

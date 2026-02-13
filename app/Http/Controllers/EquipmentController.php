@@ -13,6 +13,7 @@ use App\Models\Location;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreEquipmentRequest;
 
 class EquipmentController extends Controller
 {
@@ -46,13 +47,16 @@ class EquipmentController extends Controller
 
         $equipment = $query->latest()->paginate(10)->withQueryString();
 
-        // Statistics for cards
+        // Statistics for cards (single grouped query instead of 5 separate queries)
+        $statusCounts = Equipment::selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
         $stats = [
-            'available' => Equipment::where('status', 'available')->count(),
-            'in_use' => Equipment::where('status', 'in_use')->count(),
-            'maintenance' => Equipment::where('status', 'maintenance')->count(),
-            'out_of_order' => Equipment::where('status', 'out_of_order')->count(),
-            'total' => Equipment::count()
+            'available' => $statusCounts->get('available', 0),
+            'in_use' => $statusCounts->get('in_use', 0),
+            'maintenance' => $statusCounts->get('maintenance', 0),
+            'out_of_order' => $statusCounts->get('out_of_order', 0),
+            'total' => $statusCounts->sum()
         ];
 
         // Get equipment types for filter dropdown
@@ -87,27 +91,9 @@ class EquipmentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEquipmentRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'type_id' => 'required|exists:equipment_types,id',
-            'model' => 'nullable|string|max:255',
-            'manufacturer' => 'nullable|string|max:255',
-            'serial_number' => 'required|string|max:255|unique:equipment',
-            'location_id' => 'nullable|exists:locations,id',
-            'driver_id' => 'nullable|exists:employees,id',
-            'purchase_date' => 'required|date',
-            'purchase_price' => 'required|numeric|min:0',
-            'warranty_expiry' => 'nullable|date',
-            'last_maintenance' => 'nullable|date',
-            'description' => 'nullable|string',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:40960', // 40MB max per image
-            'files.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:10240', // 10MB max per file
-            'file_names.*' => 'nullable|string|max:255',
-            'file_expiry_dates.*' => 'nullable|date',
-            'file_descriptions.*' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $validated['status'] = 'available';
 

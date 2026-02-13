@@ -153,29 +153,6 @@
                     <span>تسجيل الدخول</span>
                 </button>
 
-                <!-- Divider -->
-                <div class="relative my-6">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-white/20"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-4 bg-transparent text-blue-200">أو</span>
-                    </div>
-                </div>
-
-                <!-- Quick Access -->
-                <div class="grid grid-cols-2 gap-4">
-                    <button type="button" onclick="demoLogin('admin')"
-                        class="py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center justify-center gap-2">
-                        <i class="ri-admin-line"></i>
-                        <span class="text-sm">مدير</span>
-                    </button>
-                    <button type="button" onclick="demoLogin('user')"
-                        class="py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center justify-center gap-2">
-                        <i class="ri-user-line"></i>
-                        <span class="text-sm">موظف</span>
-                    </button>
-                </div>
             </form>
         </div>
 
@@ -210,20 +187,6 @@
             } else {
                 passwordInput.type = 'password';
                 passwordIcon.className = 'ri-eye-off-line';
-            }
-        }
-
-        // Demo login function
-        function demoLogin(role) {
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-
-            if (role === 'admin') {
-                emailInput.value = 'admin@abraj.com';
-                passwordInput.value = 'admin123';
-            } else {
-                emailInput.value = 'user@abraj.com';
-                passwordInput.value = 'user123';
             }
         }
 
