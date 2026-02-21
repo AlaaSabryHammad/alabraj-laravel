@@ -123,6 +123,11 @@ class Equipment extends Model
         return $this->belongsTo(Location::class, 'location_id');
     }
 
+    public function locationDetail()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
+    }
+
     public function equipmentType()
     {
         return $this->belongsTo(EquipmentType::class, 'type_id');
